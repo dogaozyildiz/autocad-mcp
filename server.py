@@ -56,7 +56,14 @@ def _get_acad():
     import win32com.client
 
     if _acad is not None:
-        return _acad
+        # Verify the cached connection is still alive. If the CAD program was
+        # closed since we last connected, the reference goes stale and any call
+        # raises "RPC server unavailable" — so drop it and reconnect below.
+        try:
+            _ = _acad.Name
+            return _acad
+        except Exception:
+            _acad = None
 
     last_error = None
     # First, try to attach to an AutoCAD that is already open.
@@ -77,8 +84,8 @@ def _get_acad():
             last_error = e
 
     raise RuntimeError(
-        "Could not connect to AutoCAD via COM. "
-        f"Tried ProgIDs {_PROGIDS}. Last error: {last_error}"
+        "Could not connect to AutoCAD or ZWCAD. Make sure the program is open, "
+        f"then try again. (Tried ProgIDs {_PROGIDS}; last error: {last_error})"
     )
 
 
@@ -229,6 +236,82 @@ def save_drawing(path: str = "") -> str:
         return f"Drawing saved as {path}."
     doc.Save()
     return "Drawing saved."
+
+
+@mcp.tool()
+def list_entities(limit: int = 200) -> str:
+    """List the objects in the active drawing's model space with their type and key geometry
+    (line endpoints, circle center/radius, polyline vertices, text content). Use this to read
+    what already exists in the drawing."""
+    import json
+    ms = _model_space()
+    total = ms.Count
+    shown = min(total, max(1, limit))
+
+    def pl(p):
+        return [round(float(c), 4) for c in p]
+
+    items = []
+    for i in range(shown):
+        e = ms.Item(i)
+        try:
+            kind = e.ObjectName
+        except Exception:
+            kind = "Unknown"
+        info = {"index": i, "type": kind}
+        try:
+            if "Circle" in kind:
+                info["center"] = pl(e.Center)
+                info["radius"] = round(float(e.Radius), 4)
+            elif "Arc" in kind:
+                info["center"] = pl(e.Center)
+                info["radius"] = round(float(e.Radius), 4)
+            elif "Polyline" in kind:
+                coords = list(e.Coordinates)
+                info["vertices"] = [
+                    [round(float(coords[j]), 4), round(float(coords[j + 1]), 4)]
+                    for j in range(0, len(coords) - 1, 2)
+                ]
+            elif "Line" in kind:
+                info["start"] = pl(e.StartPoint)
+                info["end"] = pl(e.EndPoint)
+            elif "Text" in kind:
+                info["text"] = e.TextString
+                info["position"] = pl(e.InsertionPoint)
+        except Exception as ex:
+            info["note"] = f"details unavailable: {ex}"
+        items.append(info)
+
+    header = f"{total} object(s) in model space"
+    if shown < total:
+        header += f" (showing first {shown})"
+    return header + "\n" + json.dumps(items, ensure_ascii=False)
+
+
+@mcp.tool()
+def get_drawing_extents() -> str:
+    """Return the overall bounding box (min and max corners) and overall width/height of all
+    geometry in the active drawing, in drawing units. Useful for the overall size of a part."""
+    ms = _model_space()
+    minx = miny = float("inf")
+    maxx = maxy = float("-inf")
+    found = False
+    for i in range(ms.Count):
+        try:
+            lo, hi = ms.Item(i).GetBoundingBox()
+            lo = [float(c) for c in lo]
+            hi = [float(c) for c in hi]
+            minx, miny = min(minx, lo[0]), min(miny, lo[1])
+            maxx, maxy = max(maxx, hi[0]), max(maxy, hi[1])
+            found = True
+        except Exception:
+            pass
+    if not found:
+        return "No measurable objects found in the drawing."
+    return (
+        f"min=({minx:.3f}, {miny:.3f}), max=({maxx:.3f}, {maxy:.3f}), "
+        f"width={maxx - minx:.3f}, height={maxy - miny:.3f} (drawing units)"
+    )
 
 
 def main():
