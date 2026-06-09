@@ -389,6 +389,43 @@ def delete_entities(indices: list[int]) -> str:
     return f"Deleted {deleted} of {len(indices)} requested object(s). {ms.Count} object(s) remain."
 
 
+@mcp.tool()
+def hatch_region(boundary_indices: list[int], spacing: float, angle_deg: float = 90.0) -> str:
+    """Fill a closed region with evenly spaced parallel lines (e.g. deck planking), automatically
+    clipped to the region's outline so the lines start and stop exactly at the boundary.
+    `boundary_indices` are the index/indices (from list_entities) of the closed outline: one closed
+    polyline, or several segments that together form a closed loop. `spacing` is the gap between
+    lines in drawing units; angle_deg=90 gives vertical lines, 0 gives horizontal."""
+    import math
+    import pythoncom
+    import win32com.client
+    ms = _model_space()
+    try:
+        boundaries = [ms.Item(i) for i in boundary_indices]
+        loop = win32com.client.VARIANT(
+            pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, boundaries
+        )
+        hatch = ms.AddHatch(0, "_USER", True)  # 0 = user-defined parallel lines
+        hatch.AppendOuterLoop(loop)            # must be the first call after AddHatch
+        hatch.PatternSpace = float(spacing)
+        hatch.PatternAngle = math.radians(float(angle_deg))
+        hatch.Evaluate()
+        try:
+            _get_acad().ActiveDocument.Regen(True)
+        except Exception:
+            pass
+        return (
+            f"Filled the region (boundary {boundary_indices}) with lines {spacing} units apart "
+            f"at {angle_deg}°, clipped to the outline."
+        )
+    except Exception as e:
+        return (
+            f"Could not create the hatch: {e}. The boundary must be a single closed shape, or "
+            f"connected segments that form one closed loop. Use list_entities to find the right "
+            f"index, and make sure the outline is actually closed."
+        )
+
+
 def main():
     log.info("Starting AutoCAD MCP server (stdio transport)")
     mcp.run(transport="stdio")
