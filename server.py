@@ -30,21 +30,52 @@ mcp = FastMCP("autocad")
 # ---------------------------------------------------------------------------
 # AutoCAD connection (lazy + cached)
 # ---------------------------------------------------------------------------
-_acad = None  # cached AutoCAD.Application COM object
+_acad = None  # cached AutoCAD COM object
+
+# AutoCAD registers a version-specific COM ProgID (e.g. "AutoCAD.Application.26"
+# for AutoCAD 2027). The generic "AutoCAD.Application" isn't always present, so we
+# try the generic name first and then fall back across recent version numbers.
+_PROGIDS = [
+    "AutoCAD.Application",
+    "AutoCAD.Application.26",
+    "AutoCAD.Application.25",
+    "AutoCAD.Application.24",
+    "AutoCAD.Application.23",
+]
 
 
 def _get_acad():
-    """Return a live AutoCAD.Application COM object, launching AutoCAD if needed."""
+    """Return a live AutoCAD COM object, attaching to a running AutoCAD or launching one."""
     global _acad
-    # win32com is imported lazily so the module can at least be inspected on
+    # win32com is imported lazily so the module can still be inspected on
     # non-Windows machines (e.g. when reading the code on GitHub).
     import win32com.client
 
-    if _acad is None:
-        # Dispatch attaches to a running AutoCAD or starts a new one.
-        _acad = win32com.client.Dispatch("AutoCAD.Application")
-        _acad.Visible = True
-    return _acad
+    if _acad is not None:
+        return _acad
+
+    last_error = None
+    # First, try to attach to an AutoCAD that is already open.
+    for progid in _PROGIDS:
+        try:
+            _acad = win32com.client.GetActiveObject(progid)
+            _acad.Visible = True
+            return _acad
+        except Exception as e:
+            last_error = e
+    # Otherwise, launch a new AutoCAD instance.
+    for progid in _PROGIDS:
+        try:
+            _acad = win32com.client.Dispatch(progid)
+            _acad.Visible = True
+            return _acad
+        except Exception as e:
+            last_error = e
+
+    raise RuntimeError(
+        "Could not connect to AutoCAD via COM. "
+        f"Tried ProgIDs {_PROGIDS}. Last error: {last_error}"
+    )
 
 
 def _model_space():
