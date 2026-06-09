@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# uv
+.uv/
+
+# Build
+build/
+dist/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# AutoCAD backups
+*.bak
+*.dwl
+*.dwl2
