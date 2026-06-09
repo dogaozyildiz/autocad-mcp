@@ -314,6 +314,41 @@ def get_drawing_extents() -> str:
     )
 
 
+@mcp.tool()
+def delete_last(count: int = 1) -> str:
+    """Delete the most recently added object(s) from the drawing. Handy for undoing shapes that
+    were just drawn. `count` is how many of the newest objects to remove."""
+    ms = _model_space()
+    total = ms.Count
+    n = min(max(1, count), total)
+    deleted = 0
+    for i in range(total - 1, total - 1 - n, -1):
+        try:
+            ms.Item(i).Delete()
+            deleted += 1
+        except Exception:
+            pass
+    return f"Deleted {deleted} of the most recent object(s). {ms.Count} object(s) remain."
+
+
+@mcp.tool()
+def delete_entities(indices: list[int]) -> str:
+    """Delete specific objects by their model-space index (the index shown by list_entities),
+    e.g. [3, 4, 5]. Re-run list_entities first if the drawing changed, since indices shift
+    after a delete."""
+    ms = _model_space()
+    count = ms.Count
+    valid = sorted({i for i in indices if 0 <= i < count}, reverse=True)
+    deleted = 0
+    for i in valid:
+        try:
+            ms.Item(i).Delete()
+            deleted += 1
+        except Exception:
+            pass
+    return f"Deleted {deleted} of {len(indices)} requested object(s). {ms.Count} object(s) remain."
+
+
 def main():
     log.info("Starting AutoCAD MCP server (stdio transport)")
     mcp.run(transport="stdio")
