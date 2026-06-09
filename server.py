@@ -35,12 +35,16 @@ _acad = None  # cached AutoCAD COM object
 # AutoCAD registers a version-specific COM ProgID (e.g. "AutoCAD.Application.26"
 # for AutoCAD 2027). The generic "AutoCAD.Application" isn't always present, so we
 # try the generic name first and then fall back across recent version numbers.
+# ZWCAD (an AutoCAD-compatible CAD app) exposes the same object model under the
+# ProgID "ZWCAD.Application", so we try it too — the drawing tools below work the
+# same way against either program.
 _PROGIDS = [
     "AutoCAD.Application",
     "AutoCAD.Application.26",
     "AutoCAD.Application.25",
     "AutoCAD.Application.24",
     "AutoCAD.Application.23",
+    "ZWCAD.Application",
 ]
 
 
