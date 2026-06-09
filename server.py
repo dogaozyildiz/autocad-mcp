@@ -114,14 +114,18 @@ def _coords(points):
 # ---------------------------------------------------------------------------
 @mcp.tool()
 def connect() -> str:
-    """Connect to AutoCAD (launching it if necessary) and report the active drawing."""
+    """Connect to the CAD application (AutoCAD or ZWCAD), launching it if needed, and report which one."""
     acad = _get_acad()
     try:
-        name = acad.ActiveDocument.Name
+        app_name = acad.Name  # "AutoCAD" or "ZWCAD"
+    except Exception:
+        app_name = "the CAD application"
+    try:
+        doc_name = acad.ActiveDocument.Name
     except Exception:
         acad.Documents.Add()
-        name = acad.ActiveDocument.Name
-    return f"Connected to AutoCAD. Active drawing: {name}"
+        doc_name = acad.ActiveDocument.Name
+    return f"Connected to {app_name}. Active drawing: {doc_name}"
 
 
 @mcp.tool()
