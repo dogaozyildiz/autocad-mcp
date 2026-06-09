@@ -116,6 +116,25 @@ def _coords(points):
     return win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_R8, flat)
 
 
+# Standard AutoCAD/ZWCAD lineweights, in hundredths of a millimetre.
+_LINEWEIGHTS = [0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70,
+                80, 90, 100, 106, 120, 140, 158, 200, 211]
+
+
+def _nearest_lineweight(mm):
+    """Map a thickness in millimetres to the nearest valid lineweight value (1/100 mm)."""
+    target = int(round(float(mm) * 100))
+    return min(_LINEWEIGHTS, key=lambda v: abs(v - target))
+
+
+def _show_lineweights():
+    """Turn on lineweight display so thickness is visible in model space."""
+    try:
+        _get_acad().ActiveDocument.SetVariable("LWDISPLAY", 1)
+    except Exception:
+        pass
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -136,10 +155,14 @@ def connect() -> str:
 
 
 @mcp.tool()
-def draw_line(x1: float, y1: float, x2: float, y2: float) -> str:
-    """Draw a line in model space from (x1, y1) to (x2, y2)."""
+def draw_line(x1: float, y1: float, x2: float, y2: float, lineweight_mm: float = 0.0) -> str:
+    """Draw a line in model space from (x1, y1) to (x2, y2). Optionally set its thickness in mm
+    (lineweight_mm); leave 0 to use the layer's default thickness."""
     ms = _model_space()
-    ms.AddLine(_point(x1, y1), _point(x2, y2))
+    line = ms.AddLine(_point(x1, y1), _point(x2, y2))
+    if lineweight_mm and lineweight_mm > 0:
+        line.Lineweight = _nearest_lineweight(lineweight_mm)
+        _show_lineweights()
     return f"Line drawn from ({x1}, {y1}) to ({x2}, {y2})."
 
 
@@ -162,12 +185,16 @@ def draw_rectangle(x1: float, y1: float, x2: float, y2: float) -> str:
 
 
 @mcp.tool()
-def draw_polyline(points: list[list[float]]) -> str:
-    """Draw a polyline through a list of [x, y] points, e.g. [[0,0],[10,0],[10,10]]."""
+def draw_polyline(points: list[list[float]], lineweight_mm: float = 0.0) -> str:
+    """Draw a polyline through a list of [x, y] points, e.g. [[0,0],[10,0],[10,10]]. Optionally
+    set its thickness in mm (lineweight_mm); leave 0 to use the layer's default thickness."""
     if len(points) < 2:
         return "Need at least 2 points to draw a polyline."
     ms = _model_space()
-    ms.AddLightWeightPolyline(_coords([(p[0], p[1]) for p in points]))
+    poly = ms.AddLightWeightPolyline(_coords([(p[0], p[1]) for p in points]))
+    if lineweight_mm and lineweight_mm > 0:
+        poly.Lineweight = _nearest_lineweight(lineweight_mm)
+        _show_lineweights()
     return f"Polyline drawn through {len(points)} points."
 
 
@@ -204,6 +231,19 @@ def list_layers() -> str:
     layers = acad.ActiveDocument.Layers
     names = [layers.Item(i).Name for i in range(layers.Count)]
     return "Layers: " + ", ".join(names)
+
+
+@mcp.tool()
+def set_layer_lineweight(name: str, lineweight_mm: float) -> str:
+    """Set a layer's line thickness (lineweight) in millimetres. Objects drawn on that layer with
+    default thickness will display and plot at this weight. Snaps to the nearest standard CAD
+    lineweight (e.g. 0.13, 0.25, 0.50, 1.00 mm)."""
+    acad = _get_acad()
+    layer = acad.ActiveDocument.Layers.Item(name)
+    lw = _nearest_lineweight(lineweight_mm)
+    layer.Lineweight = lw
+    _show_lineweights()
+    return f"Layer '{name}' lineweight set to {lw / 100:.2f} mm."
 
 
 @mcp.tool()
