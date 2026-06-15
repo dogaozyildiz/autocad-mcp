@@ -261,6 +261,28 @@ def insert_block(block_name: str, x: float, y: float,
 
 
 @mcp.tool()
+def list_blocks() -> str:
+    """List the named block definitions (reusable symbols) defined in the drawing, so they can be
+    placed with insert_block. Skips internal/anonymous blocks (names starting with '*' such as
+    model space, paper space, and hatch helpers)."""
+    acad = _get_acad()
+    blocks = acad.ActiveDocument.Blocks
+    names = []
+    for i in range(blocks.Count):
+        try:
+            name = blocks.Item(i).Name
+        except Exception:
+            continue
+        if name.startswith("*"):
+            continue
+        names.append(name)
+    names.sort()
+    if not names:
+        return "No named blocks (reusable symbols) found in this drawing."
+    return f"{len(names)} block(s): " + ", ".join(names)
+
+
+@mcp.tool()
 def zoom_extents() -> str:
     """Zoom the AutoCAD view to fit all drawing objects."""
     _get_acad().ZoomExtents()
