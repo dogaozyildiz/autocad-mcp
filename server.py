@@ -420,6 +420,68 @@ def get_drawing_extents() -> str:
 
 
 @mcp.tool()
+def get_selected_entities() -> str:
+    """Report the objects currently selected in the CAD window. Select them first (window-select so
+    they show grips), then run this. Lists each object's type, layer, and key geometry — block
+    symbols (with name + position + rotation), text, lines, circles, polylines. Use this to capture
+    exactly how a specific circuit or region of a drawing is built."""
+    import json
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+    try:
+        sel = doc.PickfirstSelectionSet
+        total = sel.Count
+    except Exception as e:
+        return f"Could not read the selection: {e}"
+    if total == 0:
+        return ("Nothing is selected. In the CAD window, window-select the objects you want (so they "
+                "show grips/highlight), then run get_selected_entities again.")
+
+    def pl(p):
+        return [round(float(c), 2) for c in p]
+
+    items = []
+    for i in range(total):
+        e = sel.Item(i)
+        try:
+            kind = e.ObjectName
+        except Exception:
+            kind = "Unknown"
+        info = {"type": kind}
+        try:
+            info["layer"] = e.Layer
+        except Exception:
+            pass
+        try:
+            if "BlockReference" in kind:
+                info["block"] = e.Name
+                info["position"] = pl(e.InsertionPoint)
+                try:
+                    info["rotation_deg"] = round(float(e.Rotation) * 180 / 3.141592653589793, 1)
+                except Exception:
+                    pass
+            elif "Circle" in kind:
+                info["center"] = pl(e.Center)
+                info["radius"] = round(float(e.Radius), 2)
+            elif "Polyline" in kind:
+                coords = list(e.Coordinates)
+                info["vertices"] = [
+                    [round(float(coords[j]), 2), round(float(coords[j + 1]), 2)]
+                    for j in range(0, len(coords) - 1, 2)
+                ]
+            elif "Line" in kind:
+                info["start"] = pl(e.StartPoint)
+                info["end"] = pl(e.EndPoint)
+            elif "Text" in kind:
+                info["text"] = e.TextString
+                info["position"] = pl(e.InsertionPoint)
+        except Exception as ex:
+            info["note"] = f"details unavailable: {ex}"
+        items.append(info)
+    return f"{total} object(s) selected:\n" + json.dumps(items, ensure_ascii=False)
+
+
+@mcp.tool()
 def delete_last(count: int = 1) -> str:
     """Delete the most recently added object(s) from the drawing. Handy for undoing shapes that
     were just drawn. `count` is how many of the newest objects to remove."""
