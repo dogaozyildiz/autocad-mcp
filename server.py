@@ -135,6 +135,34 @@ def _show_lineweights():
         pass
 
 
+# Text justification codes (AutoCAD acAlignment enum). "center" is treated as
+# middle-centre, which is what you usually want for centring a label inside a box.
+_ALIGN_CODES = {
+    "left": 0, "right": 2, "middle": 4,
+    "center": 9, "centre": 9, "centered": 9, "middlecenter": 9, "middlecentre": 9,
+    "topleft": 5, "topcenter": 6, "topright": 7,
+    "middleleft": 8, "middleright": 10,
+    "bottomleft": 11, "bottomcenter": 12, "bottomright": 13,
+}
+
+
+def _align_code(align):
+    return _ALIGN_CODES.get(str(align).lower().replace("_", "").replace(" ", ""), 0)
+
+
+def _add_text(ms, text, x, y, height, align="left"):
+    """Create a text object, applying justification if it isn't plain left."""
+    txt = ms.AddText(str(text), _point(x, y), float(height))
+    code = _align_code(align)
+    if code != 0:
+        try:
+            txt.Alignment = code
+            txt.TextAlignmentPoint = _point(x, y)
+        except Exception:
+            pass
+    return txt
+
+
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
@@ -199,11 +227,73 @@ def draw_polyline(points: list[list[float]], lineweight_mm: float = 0.0) -> str:
 
 
 @mcp.tool()
-def add_text(text: str, x: float, y: float, height: float = 2.5) -> str:
-    """Place single-line text at (x, y) with the given text height."""
+def add_text(text: str, x: float, y: float, height: float = 2.5, align: str = "left") -> str:
+    """Place single-line text at (x, y) with the given height. `align` sets justification:
+    "left" (default) puts the lower-left of the text at (x, y); "center" centres the text on
+    (x, y) — use that with a box's centre point to centre a label inside it. Other options:
+    "middleleft", "topcenter", "bottomcenter", "right", etc."""
     ms = _model_space()
-    ms.AddText(text, _point(x, y), float(height))
-    return f"Text '{text}' placed at ({x}, {y})."
+    _add_text(ms, text, x, y, height, align)
+    return f"Text '{text}' placed at ({x}, {y}) [{align}]."
+
+
+@mcp.tool()
+def draw_batch(items: list[dict], layer: str = "") -> str:
+    """Draw many objects in ONE call (instead of dozens of separate calls). `items` is a list of
+    dicts, each with a "type" plus its parameters:
+      {"type": "rectangle", "x1":.., "y1":.., "x2":.., "y2":..}
+      {"type": "line",      "x1":.., "y1":.., "x2":.., "y2":..}
+      {"type": "polyline",  "points": [[x,y], [x,y], ...]}
+      {"type": "circle",    "center_x":.., "center_y":.., "radius":..}
+      {"type": "text",      "text":"..", "x":.., "y":.., "height":2.5, "align":"left"|"center"}
+    Optionally pass `layer` to set the active layer first. Each item is drawn independently, so one
+    bad item won't stop the rest; the result reports how many succeeded and any errors."""
+    if layer:
+        try:
+            acad = _get_acad()
+            doc = acad.ActiveDocument
+            doc.ActiveLayer = doc.Layers.Item(layer)
+        except Exception:
+            pass
+    ms = _model_space()
+    ok = 0
+    errors = []
+    for i, it in enumerate(items):
+        try:
+            t = str(it.get("type", "")).lower()
+            if t in ("rectangle", "rect", "box"):
+                x1, y1, x2, y2 = float(it["x1"]), float(it["y1"]), float(it["x2"]), float(it["y2"])
+                poly = ms.AddLightWeightPolyline(
+                    _coords([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+                )
+                poly.Closed = True
+            elif t == "line":
+                ms.AddLine(
+                    _point(float(it["x1"]), float(it["y1"])),
+                    _point(float(it["x2"]), float(it["y2"])),
+                )
+            elif t in ("polyline", "pline"):
+                pts = [(float(p[0]), float(p[1])) for p in it["points"]]
+                if len(pts) < 2:
+                    raise ValueError("polyline needs at least 2 points")
+                ms.AddLightWeightPolyline(_coords(pts))
+            elif t == "circle":
+                ms.AddCircle(
+                    _point(float(it["center_x"]), float(it["center_y"])),
+                    float(it["radius"]),
+                )
+            elif t == "text":
+                _add_text(ms, it["text"], float(it["x"]), float(it["y"]),
+                          float(it.get("height", 2.5)), it.get("align", "left"))
+            else:
+                raise ValueError(f"unknown type '{t}'")
+            ok += 1
+        except Exception as e:
+            errors.append(f"#{i} ({it.get('type', '?')}): {e}")
+    msg = f"Drew {ok}/{len(items)} object(s)."
+    if errors:
+        msg += " Errors: " + "; ".join(errors[:10])
+    return msg
 
 
 @mcp.tool()
