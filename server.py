@@ -150,14 +150,20 @@ def _align_code(align):
     return _ALIGN_CODES.get(str(align).lower().replace("_", "").replace(" ", ""), 0)
 
 
-def _add_text(ms, text, x, y, height, align="left"):
-    """Create a text object, applying justification if it isn't plain left."""
+def _add_text(ms, text, x, y, height, align="left", rotation=0.0):
+    """Create a text object, applying justification and rotation if given."""
+    import math
     txt = ms.AddText(str(text), _point(x, y), float(height))
     code = _align_code(align)
     if code != 0:
         try:
             txt.Alignment = code
             txt.TextAlignmentPoint = _point(x, y)
+        except Exception:
+            pass
+    if rotation:
+        try:
+            txt.Rotation = math.radians(float(rotation))
         except Exception:
             pass
     return txt
@@ -227,13 +233,15 @@ def draw_polyline(points: list[list[float]], lineweight_mm: float = 0.0) -> str:
 
 
 @mcp.tool()
-def add_text(text: str, x: float, y: float, height: float = 2.5, align: str = "left") -> str:
+def add_text(text: str, x: float, y: float, height: float = 2.5, align: str = "left",
+             rotation: float = 0.0) -> str:
     """Place single-line text at (x, y) with the given height. `align` sets justification:
     "left" (default) puts the lower-left of the text at (x, y); "center" centres the text on
     (x, y) — use that with a box's centre point to centre a label inside it. Other options:
-    "middleleft", "topcenter", "bottomcenter", "right", etc."""
+    "middleleft", "topcenter", "bottomcenter", "right", etc. `rotation` is in degrees (90 = text
+    running up a vertical wire)."""
     ms = _model_space()
-    _add_text(ms, text, x, y, height, align)
+    _add_text(ms, text, x, y, height, align, rotation)
     return f"Text '{text}' placed at ({x}, {y}) [{align}]."
 
 
@@ -245,9 +253,13 @@ def draw_batch(items: list[dict], layer: str = "") -> str:
       {"type": "line",      "x1":.., "y1":.., "x2":.., "y2":..}
       {"type": "polyline",  "points": [[x,y], [x,y], ...]}
       {"type": "circle",    "center_x":.., "center_y":.., "radius":..}
-      {"type": "text",      "text":"..", "x":.., "y":.., "height":2.5, "align":"left"|"center"}
-    Optionally pass `layer` to set the active layer first. Each item is drawn independently, so one
+      {"type": "text",      "text":"..", "x":.., "y":.., "height":2.5, "align":"left", "rotation":0}
+      {"type": "block",     "name":"3RT2015-1AP01", "x":.., "y":.., "scale":1, "rotation":0,
+                            "layer":"", "attributes":{"TAG":"-K1"}}
+    The "block" type places a symbol from the drawing's library — ideal for schematics. Optionally
+    pass a top-level `layer` to set the active layer first. Each item is drawn independently, so one
     bad item won't stop the rest; the result reports how many succeeded and any errors."""
+    import math
     if layer:
         try:
             acad = _get_acad()
@@ -284,7 +296,29 @@ def draw_batch(items: list[dict], layer: str = "") -> str:
                 )
             elif t == "text":
                 _add_text(ms, it["text"], float(it["x"]), float(it["y"]),
-                          float(it.get("height", 2.5)), it.get("align", "left"))
+                          float(it.get("height", 2.5)), it.get("align", "left"),
+                          float(it.get("rotation", 0.0)))
+            elif t == "block":
+                scale = float(it.get("scale", 1.0))
+                ref = ms.InsertBlock(
+                    _point(float(it["x"]), float(it["y"])), str(it["name"]),
+                    scale, scale, scale, math.radians(float(it.get("rotation", 0.0))),
+                )
+                blayer = it.get("layer")
+                if blayer:
+                    try:
+                        ref.Layer = str(blayer)
+                    except Exception:
+                        pass
+                attrs = it.get("attributes")
+                if attrs:
+                    try:
+                        if ref.HasAttributes:
+                            for att in ref.GetAttributes():
+                                if att.TagString in attrs:
+                                    att.TextString = str(attrs[att.TagString])
+                    except Exception:
+                        pass
             else:
                 raise ValueError(f"unknown type '{t}'")
             ok += 1
@@ -312,6 +346,56 @@ def set_active_layer(name: str) -> str:
     doc = acad.ActiveDocument
     doc.ActiveLayer = doc.Layers.Item(name)
     return f"Active layer set to '{name}'."
+
+
+@mcp.tool()
+def activate_layout(name: str = "Model") -> str:
+    """Switch the active space/page. Pass "Model" for model space, or a paper-space layout name
+    such as "Layout1". This controls what capture_view shows and which page new paper-space work
+    goes onto — useful for multi-page drawing sets. Matching is case-insensitive."""
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+    try:
+        layouts = doc.Layouts
+        names = [layouts.Item(i).Name for i in range(layouts.Count)]
+    except Exception as e:
+        return f"Could not read layouts: {e}"
+    target = next((n for n in names if n.lower() == name.lower()), None)
+    if target is None:
+        return f"No layout named '{name}'. Available: {', '.join(names)}"
+    try:
+        doc.ActiveLayout = layouts.Item(target)
+    except Exception as e:
+        return f"Could not activate '{target}': {e}"
+    return f"Active space is now '{target}'. Available: {', '.join(names)}"
+
+
+@mcp.tool()
+def set_text_style(name: str = "EFF", font: str = "romans.shx", width_factor: float = 0.9) -> str:
+    """Create (or update) a text style with the given SHX font and width factor, and make it the
+    active style so new text uses it. A width_factor below 1.0 (e.g. 0.85) gives tidier, less
+    spread-out lettering. Common fonts: 'romans.shx', 'simplex.shx', 'txt.shx'. Run this once
+    before drawing text to get clean, consistent labels."""
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+    styles = doc.TextStyles
+    try:
+        style = styles.Item(name)
+    except Exception:
+        style = styles.Add(name)
+    try:
+        style.fontFile = font
+    except Exception as e:
+        return f"Style '{name}' created but the font '{font}' could not be set: {e}"
+    try:
+        style.Width = float(width_factor)
+    except Exception:
+        pass
+    try:
+        doc.ActiveTextStyle = style
+    except Exception:
+        pass
+    return f"Active text style set to '{name}' (font {font}, width {width_factor})."
 
 
 @mcp.tool()
