@@ -135,14 +135,24 @@ def _show_lineweights():
         pass
 
 
-# Text justification codes (AutoCAD acAlignment enum). "center" is treated as
-# middle-centre, which is what you usually want for centring a label inside a box.
+# Text justification codes — the AutoCAD/ZWCAD acAlignment enum. The exact
+# integers matter: getting them wrong silently anchors text by the wrong point.
+# Reference enum:
+#   0 left          1 center         2 right         3 aligned
+#   4 middle        5 fit
+#   6 top-left      7 top-center     8 top-right
+#   9 middle-left  10 middle-center 11 middle-right
+#  12 bottom-left  13 bottom-center 14 bottom-right
+# "center" is treated as middle-center (10) — what you want to centre a label
+# both horizontally and vertically inside a box.
 _ALIGN_CODES = {
-    "left": 0, "right": 2, "middle": 4,
-    "center": 9, "centre": 9, "centered": 9, "middlecenter": 9, "middlecentre": 9,
-    "topleft": 5, "topcenter": 6, "topright": 7,
-    "middleleft": 8, "middleright": 10,
-    "bottomleft": 11, "bottomcenter": 12, "bottomright": 13,
+    "left": 0,
+    "center": 10, "centre": 10, "centered": 10,
+    "middlecenter": 10, "middlecentre": 10,
+    "right": 2, "aligned": 3, "middle": 4, "fit": 5,
+    "topleft": 6, "topcenter": 7, "topright": 8,
+    "middleleft": 9, "middleright": 11,
+    "bottomleft": 12, "bottomcenter": 13, "bottomright": 14,
 }
 
 
@@ -167,6 +177,39 @@ def _add_text(ms, text, x, y, height, align="left", rotation=0.0):
         except Exception:
             pass
     return txt
+
+
+def _add_arc(ms, cx, cy, radius, start_deg, end_deg):
+    """Add an arc, sweeping counter-clockwise from start_deg to end_deg."""
+    import math
+    return ms.AddArc(_point(cx, cy), float(radius),
+                     math.radians(float(start_deg)), math.radians(float(end_deg)))
+
+
+def _add_rounded_rect(ms, x1, y1, x2, y2, radius):
+    """Add a rounded rectangle as four straight sides + four corner arcs.
+    Corners are clamped so the radius never exceeds half the shorter side."""
+    x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
+    if x2 < x1:
+        x1, x2 = x2, x1
+    if y2 < y1:
+        y1, y2 = y2, y1
+    r = max(0.0, min(float(radius), (x2 - x1) / 2.0, (y2 - y1) / 2.0))
+    if r == 0:
+        poly = ms.AddLightWeightPolyline(
+            _coords([(x1, y1), (x2, y1), (x2, y2), (x1, y2)]))
+        poly.Closed = True
+        return
+    # straight sides
+    ms.AddLine(_point(x1 + r, y1), _point(x2 - r, y1))  # bottom
+    ms.AddLine(_point(x2, y1 + r), _point(x2, y2 - r))  # right
+    ms.AddLine(_point(x2 - r, y2), _point(x1 + r, y2))  # top
+    ms.AddLine(_point(x1, y2 - r), _point(x1, y1 + r))  # left
+    # corner arcs (CCW)
+    _add_arc(ms, x1 + r, y1 + r, r, 180, 270)  # bottom-left
+    _add_arc(ms, x2 - r, y1 + r, r, 270, 360)  # bottom-right
+    _add_arc(ms, x2 - r, y2 - r, r, 0, 90)     # top-right
+    _add_arc(ms, x1 + r, y2 - r, r, 90, 180)   # top-left
 
 
 # ---------------------------------------------------------------------------
@@ -250,9 +293,11 @@ def draw_batch(items: list[dict], layer: str = "") -> str:
     """Draw many objects in ONE call (instead of dozens of separate calls). `items` is a list of
     dicts, each with a "type" plus its parameters:
       {"type": "rectangle", "x1":.., "y1":.., "x2":.., "y2":..}
+      {"type": "rounded_rectangle", "x1":.., "y1":.., "x2":.., "y2":.., "radius":..}
       {"type": "line",      "x1":.., "y1":.., "x2":.., "y2":..}
       {"type": "polyline",  "points": [[x,y], [x,y], ...]}
       {"type": "circle",    "center_x":.., "center_y":.., "radius":..}
+      {"type": "arc",       "center_x":.., "center_y":.., "radius":.., "start_deg":.., "end_deg":..}
       {"type": "text",      "text":"..", "x":.., "y":.., "height":2.5, "align":"left", "rotation":0}
       {"type": "block",     "name":"3RT2015-1AP01", "x":.., "y":.., "scale":1, "rotation":0,
                             "layer":"", "attributes":{"TAG":"-K1"}}
@@ -294,6 +339,12 @@ def draw_batch(items: list[dict], layer: str = "") -> str:
                     _point(float(it["center_x"]), float(it["center_y"])),
                     float(it["radius"]),
                 )
+            elif t == "arc":
+                _add_arc(ms, float(it["center_x"]), float(it["center_y"]),
+                         float(it["radius"]), float(it["start_deg"]), float(it["end_deg"]))
+            elif t in ("rounded_rectangle", "rounded_rect", "rrect"):
+                _add_rounded_rect(ms, float(it["x1"]), float(it["y1"]),
+                                  float(it["x2"]), float(it["y2"]), float(it.get("radius", 0)))
             elif t == "text":
                 _add_text(ms, it["text"], float(it["x"]), float(it["y"]),
                           float(it.get("height", 2.5)), it.get("align", "left"),
@@ -778,6 +829,115 @@ def hatch_region(boundary_indices: list[int], spacing: float, angle_deg: float =
             f"connected segments that form one closed loop. Use list_entities to find the right "
             f"index, and make sure the outline is actually closed."
         )
+
+
+@mcp.tool()
+def draw_arc(center_x: float, center_y: float, radius: float,
+             start_deg: float, end_deg: float) -> str:
+    """Draw an arc centred at (center_x, center_y), sweeping counter-clockwise from start_deg to
+    end_deg. Angles are in degrees measured from the +X axis (0 = east, 90 = north). Use for
+    rounded corners, curved symbol parts, cable bends, etc."""
+    ms = _model_space()
+    _add_arc(ms, center_x, center_y, radius, start_deg, end_deg)
+    return f"Arc drawn at ({center_x}, {center_y}) r={radius}, {start_deg}\u00b0 to {end_deg}\u00b0."
+
+
+@mcp.tool()
+def draw_rounded_rectangle(x1: float, y1: float, x2: float, y2: float, radius: float) -> str:
+    """Draw a rectangle with rounded corners between corners (x1, y1) and (x2, y2). `radius` is the
+    corner fillet radius (e.g. 30 for the R30 remote-control cut-out). The radius is clamped so it
+    never exceeds half the shorter side. Ideal for panel outlines, cut-outs and device bezels."""
+    ms = _model_space()
+    _add_rounded_rect(ms, x1, y1, x2, y2, radius)
+    return f"Rounded rectangle drawn from ({x1}, {y1}) to ({x2}, {y2}), corner radius {radius}."
+
+
+@mcp.tool()
+def add_dimension(x1: float, y1: float, x2: float, y2: float,
+                  dim_line_x: float, dim_line_y: float, direction: str = "aligned") -> str:
+    """Add a dimension measuring between (x1, y1) and (x2, y2). (dim_line_x, dim_line_y) is a point
+    the dimension line passes through — offset it away from the part so the dimension sits clear.
+    `direction`: "horizontal" measures the X distance, "vertical" the Y distance, "aligned" the
+    true straight-line distance (parallel to the two points). Use this to reproduce dimensioned
+    sheets such as the mounting drawing (600 x 1000 cabinet, the cut-out, etc.)."""
+    import math
+    ms = _model_space()
+    p1, p2, dl = _point(x1, y1), _point(x2, y2), _point(dim_line_x, dim_line_y)
+    d = str(direction).lower()
+    try:
+        if d.startswith("h"):
+            ms.AddDimRotated(p1, p2, dl, 0.0)
+        elif d.startswith("v"):
+            ms.AddDimRotated(p1, p2, dl, math.radians(90.0))
+        else:
+            ms.AddDimAligned(p1, p2, dl)
+    except Exception as e:
+        return f"Could not create the dimension: {e}"
+    return f"{direction} dimension added between ({x1}, {y1}) and ({x2}, {y2})."
+
+
+@mcp.tool()
+def add_mtext(text: str, x: float, y: float, width: float = 100.0, height: float = 2.5) -> str:
+    """Place a multi-line (paragraph) text box with its top-left corner at (x, y). `width` is the
+    wrapping width in drawing units; `height` is the character height. Use \\n in `text` for line
+    breaks. Good for title-block notes and longer labels that a single-line add_text can't hold."""
+    ms = _model_space()
+    try:
+        mt = ms.AddMText(_point(x, y), float(width), str(text).replace("\\n", "\n"))
+        try:
+            mt.Height = float(height)
+        except Exception:
+            pass
+    except Exception as e:
+        return f"Could not create the mtext: {e}"
+    return f"MText placed at ({x}, {y}), width {width}, height {height}."
+
+
+@mcp.tool()
+def define_block(name: str, indices: list[int], base_x: float, base_y: float,
+                 erase_source: bool = True) -> str:
+    """Turn existing model-space objects into a reusable block (symbol) named `name`, so it can be
+    stamped repeatedly with insert_block / a "block" item in draw_batch. `indices` are the
+    model-space indices (from list_entities) of the objects to capture; (base_x, base_y) is the
+    block's insertion/origin point. By default the originals are erased after the block is made
+    (set erase_source=false to keep them). This is the key to schematic sheets: draw one relay /
+    terminal / monitor symbol, capture it once, then place it everywhere with consistent geometry."""
+    import pythoncom
+    import win32com.client
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+    ms = doc.ModelSpace
+    count = ms.Count
+    sources = []
+    for i in indices:
+        if 0 <= i < count:
+            try:
+                sources.append(ms.Item(i))
+            except Exception:
+                pass
+    if not sources:
+        return f"No valid objects at indices {indices} (drawing has {count} objects)."
+    try:
+        blk = doc.Blocks.Add(_point(base_x, base_y), name)
+    except Exception as e:
+        return f"Could not create block '{name}': {e}"
+    try:
+        arr = win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, sources)
+        doc.CopyObjects(arr, blk)
+    except Exception as e:
+        return (f"Block '{name}' was created but copying the {len(sources)} object(s) into it "
+                f"failed: {e}")
+    erased = 0
+    if erase_source:
+        for e in sources:
+            try:
+                e.Delete()
+                erased += 1
+            except Exception:
+                pass
+    tail = f", erased {erased} source object(s)" if erase_source else ""
+    return (f"Block '{name}' defined from {len(sources)} object(s) at base "
+            f"({base_x}, {base_y}){tail}. Place it with insert_block('{name}', x, y).")
 
 
 def main():
