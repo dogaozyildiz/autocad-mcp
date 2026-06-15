@@ -247,17 +247,38 @@ def set_layer_lineweight(name: str, lineweight_mm: float) -> str:
 
 
 @mcp.tool()
-def insert_block(block_name: str, x: float, y: float,
-                 scale: float = 1.0, rotation_deg: float = 0.0) -> str:
-    """Insert a block reference by name at (x, y) with uniform scale and rotation (degrees)."""
+def insert_block(block_name: str, x: float, y: float, scale: float = 1.0,
+                 rotation_deg: float = 0.0, layer: str = "",
+                 attributes: dict | None = None) -> str:
+    """Insert a block reference (symbol) by name at (x, y) with uniform scale and rotation (deg).
+    Optionally place it on a given layer and fill in its attribute values, e.g.
+    attributes={"TAG": "-K1", "PARTNO": "3RT2015-1AP01"}. Use get_block_attributes(block_name)
+    first to see which attribute tags a symbol has."""
     import math
     ms = _model_space()
-    ms.InsertBlock(
+    ref = ms.InsertBlock(
         _point(x, y), block_name,
         float(scale), float(scale), float(scale),
         math.radians(float(rotation_deg)),
     )
-    return f"Block '{block_name}' inserted at ({x}, {y})."
+    if layer:
+        try:
+            ref.Layer = layer
+        except Exception:
+            pass
+    set_count = 0
+    if attributes:
+        try:
+            if ref.HasAttributes:
+                for att in ref.GetAttributes():
+                    if att.TagString in attributes:
+                        att.TextString = str(attributes[att.TagString])
+                        set_count += 1
+        except Exception:
+            pass
+    extra = f", set {set_count} attribute(s)" if attributes else ""
+    on_layer = f" on layer '{layer}'" if layer else ""
+    return f"Block '{block_name}' inserted at ({x}, {y}){on_layer}{extra}."
 
 
 @mcp.tool()
@@ -280,6 +301,28 @@ def list_blocks() -> str:
     if not names:
         return "No named blocks (reusable symbols) found in this drawing."
     return f"{len(names)} block(s): " + ", ".join(names)
+
+
+@mcp.tool()
+def get_block_attributes(block_name: str) -> str:
+    """List the attribute tags (editable text fields, e.g. a component tag or part number) defined
+    on a block, so you know what values insert_block can fill in for that symbol."""
+    acad = _get_acad()
+    try:
+        block = acad.ActiveDocument.Blocks.Item(block_name)
+    except Exception:
+        return f"No block named '{block_name}' in this drawing."
+    tags = []
+    for i in range(block.Count):
+        try:
+            e = block.Item(i)
+            if "AttributeDefinition" in e.ObjectName:
+                tags.append(e.TagString)
+        except Exception:
+            pass
+    if not tags:
+        return f"Block '{block_name}' has no attributes (it's a fixed symbol)."
+    return f"Block '{block_name}' attributes: " + ", ".join(tags)
 
 
 @mcp.tool()
