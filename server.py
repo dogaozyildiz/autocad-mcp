@@ -420,6 +420,44 @@ def get_drawing_extents() -> str:
 
 
 @mcp.tool()
+def capture_view():
+    """Take a screenshot of the live ZWCAD/AutoCAD window and return it as an image, so you can see
+    what is currently on screen in the drawing. Zoom/pan in the CAD window first to frame the area
+    you want to look at, then call this to inspect it, locate circuits, or check your own work."""
+    import io
+    acad = _get_acad()
+
+    # Find the CAD window so we can crop to it; fall back to the full screen.
+    bbox = None
+    try:
+        import win32gui
+        hwnd = int(acad.HWND)
+        try:
+            win32gui.ShowWindow(hwnd, 9)        # SW_RESTORE
+            win32gui.SetForegroundWindow(hwnd)  # bring it to the front
+        except Exception:
+            pass
+        bbox = win32gui.GetWindowRect(hwnd)
+    except Exception:
+        bbox = None
+
+    try:
+        from PIL import ImageGrab
+    except Exception:
+        return ("Screenshot support isn't installed on this machine. In the repo folder run: "
+                "  .venv\\Scripts\\activate ; uv pip install -e .   then fully restart Claude.")
+
+    try:
+        from mcp.server.fastmcp import Image
+        img = ImageGrab.grab(bbox=bbox) if bbox else ImageGrab.grab()
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return Image(data=buf.getvalue(), format="png")
+    except Exception as e:
+        return f"Could not capture the CAD window: {e}"
+
+
+@mcp.tool()
 def get_selected_entities() -> str:
     """Report the objects currently selected in the CAD window. Select them first (window-select so
     they show grips), then run this. Lists each object's type, layer, and key geometry — block
