@@ -36,7 +36,7 @@ _acad = None  # cached AutoCAD COM object
 # for AutoCAD 2027). The generic "AutoCAD.Application" isn't always present, so we
 # try the generic name first and then fall back across recent version numbers.
 # ZWCAD (an AutoCAD-compatible CAD app) exposes the same object model under the
-# ProgID "ZWCAD.Application", so we try it too — the drawing tools below work the
+# ProgID "ZWCAD.Application", so we try it too -- the drawing tools below work the
 # same way against either program.
 _PROGIDS = [
     "AutoCAD.Application",
@@ -58,7 +58,7 @@ def _get_acad():
     if _acad is not None:
         # Verify the cached connection is still alive. If the CAD program was
         # closed since we last connected, the reference goes stale and any call
-        # raises "RPC server unavailable" — so drop it and reconnect below.
+        # raises "RPC server unavailable" -- so drop it and reconnect below.
         try:
             _ = _acad.Name
             return _acad
@@ -135,7 +135,7 @@ def _show_lineweights():
         pass
 
 
-# Text justification codes — the AutoCAD/ZWCAD acAlignment enum. The exact
+# Text justification codes -- the AutoCAD/ZWCAD acAlignment enum. The exact
 # integers matter: getting them wrong silently anchors text by the wrong point.
 # Reference enum:
 #   0 left          1 center         2 right         3 aligned
@@ -143,7 +143,7 @@ def _show_lineweights():
 #   6 top-left      7 top-center     8 top-right
 #   9 middle-left  10 middle-center 11 middle-right
 #  12 bottom-left  13 bottom-center 14 bottom-right
-# "center" is treated as middle-center (10) — what you want to centre a label
+# "center" is treated as middle-center (10) -- what you want to centre a label
 # both horizontally and vertically inside a box.
 _ALIGN_CODES = {
     "left": 0,
@@ -280,7 +280,7 @@ def add_text(text: str, x: float, y: float, height: float = 2.5, align: str = "l
              rotation: float = 0.0) -> str:
     """Place single-line text at (x, y) with the given height. `align` sets justification:
     "left" (default) puts the lower-left of the text at (x, y); "center" centres the text on
-    (x, y) — use that with a box's centre point to centre a label inside it. Other options:
+    (x, y) -- use that with a box's centre point to centre a label inside it. Other options:
     "middleleft", "topcenter", "bottomcenter", "right", etc. `rotation` is in degrees (90 = text
     running up a vertical wire)."""
     ms = _model_space()
@@ -301,7 +301,7 @@ def draw_batch(items: list[dict], layer: str = "") -> str:
       {"type": "text",      "text":"..", "x":.., "y":.., "height":2.5, "align":"left", "rotation":0}
       {"type": "block",     "name":"3RT2015-1AP01", "x":.., "y":.., "scale":1, "rotation":0,
                             "layer":"", "attributes":{"TAG":"-K1"}}
-    The "block" type places a symbol from the drawing's library — ideal for schematics. Optionally
+    The "block" type places a symbol from the drawing's library -- ideal for schematics. Optionally
     pass a top-level `layer` to set the active layer first. Each item is drawn independently, so one
     bad item won't stop the rest; the result reports how many succeeded and any errors."""
     import math
@@ -403,7 +403,7 @@ def set_active_layer(name: str) -> str:
 def activate_layout(name: str = "Model") -> str:
     """Switch the active space/page. Pass "Model" for model space, or a paper-space layout name
     such as "Layout1". This controls what capture_view shows and which page new paper-space work
-    goes onto — useful for multi-page drawing sets. Matching is case-insensitive."""
+    goes onto -- useful for multi-page drawing sets. Matching is case-insensitive."""
     acad = _get_acad()
     doc = acad.ActiveDocument
     try:
@@ -700,7 +700,7 @@ def capture_view():
 @mcp.tool()
 def get_selected_entities() -> str:
     """Report the objects currently selected in the CAD window. Select them first (window-select so
-    they show grips), then run this. Lists each object's type, layer, and key geometry — block
+    they show grips), then run this. Lists each object's type, layer, and key geometry -- block
     symbols (with name + position + rotation), text, lines, circles, polylines. Use this to capture
     exactly how a specific circuit or region of a drawing is built."""
     import json
@@ -821,7 +821,7 @@ def hatch_region(boundary_indices: list[int], spacing: float, angle_deg: float =
             pass
         return (
             f"Filled the region (boundary {boundary_indices}) with lines {spacing} units apart "
-            f"at {angle_deg}°, clipped to the outline."
+            f"at {angle_deg} deg, clipped to the outline."
         )
     except Exception as e:
         return (
@@ -839,7 +839,7 @@ def draw_arc(center_x: float, center_y: float, radius: float,
     rounded corners, curved symbol parts, cable bends, etc."""
     ms = _model_space()
     _add_arc(ms, center_x, center_y, radius, start_deg, end_deg)
-    return f"Arc drawn at ({center_x}, {center_y}) r={radius}, {start_deg}\u00b0 to {end_deg}\u00b0."
+    return f"Arc drawn at ({center_x}, {center_y}) r={radius}, {start_deg} to {end_deg} deg."
 
 
 @mcp.tool()
@@ -856,7 +856,7 @@ def draw_rounded_rectangle(x1: float, y1: float, x2: float, y2: float, radius: f
 def add_dimension(x1: float, y1: float, x2: float, y2: float,
                   dim_line_x: float, dim_line_y: float, direction: str = "aligned") -> str:
     """Add a dimension measuring between (x1, y1) and (x2, y2). (dim_line_x, dim_line_y) is a point
-    the dimension line passes through — offset it away from the part so the dimension sits clear.
+    the dimension line passes through -- offset it away from the part so the dimension sits clear.
     `direction`: "horizontal" measures the X distance, "vertical" the Y distance, "aligned" the
     true straight-line distance (parallel to the two points). Use this to reproduce dimensioned
     sheets such as the mounting drawing (600 x 1000 cabinet, the cut-out, etc.)."""
@@ -1035,7 +1035,7 @@ def get_block_geometry(name: str, limit: int = 400) -> str:
 @mcp.tool()
 def get_entity_bounds(indices: list[int]) -> str:
     """Return the bounding box (min/max corner + width/height) of model-space objects by index
-    (from list_entities), e.g. [12, 13]. Works for block references too — use it to find where a
+    (from list_entities), e.g. [12, 13]. Works for block references too -- use it to find where a
     placed symbol actually sits and how much room it takes, so you can route wires clear of it."""
     import json
     ms = _model_space()
@@ -1136,6 +1136,253 @@ def mirror_entities(indices: list[int], x1: float, y1: float, x2: float, y2: flo
         except Exception:
             pass
     return f"Mirrored {made} of {len(indices)} object(s) about ({x1},{y1})-({x2},{y2})."
+
+
+# ===========================================================================
+# BUILT-IN SYMBOL LIBRARY
+# ---------------------------------------------------------------------------
+# A self-contained set of IEC electrical symbols, defined as block definitions
+# directly via COM (doc.Blocks.Add + drawing into the block). This means you can
+# draw a full schematic in ANY drawing -- including a brand-new blank file with
+# no blocks in it -- by calling load_symbol_library() once, then placing the
+# EFF_* symbols with insert_block / draw_batch.
+#
+# These are generic IEC symbols (not the MARSIS house blocks). All multi-pole
+# power devices use an 8.6-unit pole pitch so they align on the same 3-phase bus.
+# Terminal coordinates (relative to the insertion point) are in _SYMBOL_TERMINALS
+# and reported by symbol_info().
+# ===========================================================================
+
+POLE = 8.6  # pole-to-pole pitch for 3-phase power symbols (L1, L2, L3 columns)
+
+
+# -- tiny helpers that draw INTO a block-definition container ---------------
+# A Block object exposes the same Add* methods as ModelSpace, so we reuse the
+# server's _point / _coords / _add_text helpers and pass the block as container.
+def _bl(blk, x1, y1, x2, y2):
+    blk.AddLine(_point(x1, y1), _point(x2, y2))
+
+
+def _bp(blk, pts, closed=False):
+    poly = blk.AddLightWeightPolyline(_coords([(p[0], p[1]) for p in pts]))
+    if closed:
+        poly.Closed = True
+    return poly
+
+
+def _bc(blk, cx, cy, r):
+    blk.AddCircle(_point(cx, cy), float(r))
+
+
+def _bt(blk, text, x, y, height, align="center"):
+    _add_text(blk, text, x, y, height, align)
+
+
+# -- symbol builders --------------------------------------------------------
+# Origin (0,0) is the block insertion point. Power symbols: L1 at x=0,
+# L2 at x=8.6, L3 at x=17.2; line side at the top (y=0), load side at the bottom.
+
+def _contactor_3p(blk):
+    """3-pole contactor main (NO) contacts. Top 1/3/5 at y=0, bottom 2/4/6 at y=-30."""
+    for px in (0.0, POLE, 2 * POLE):
+        _bl(blk, px, 0, px, -10)          # top terminal stub
+        _bl(blk, px, -20, px, -30)        # bottom terminal stub
+        _bl(blk, px, -20, px - 4, -10)    # NO moving contact (open, angled)
+    _bl(blk, -4, -10, 2 * POLE - 4, -10)  # mechanical link across the blades
+
+
+def _mcb(blk, poles):
+    """Miniature circuit breaker, `poles` poles. Top at y=0, bottom at y=-30."""
+    span = (poles - 1) * POLE
+    for k in range(poles):
+        px = k * POLE
+        _bl(blk, px, 0, px, -7)                                   # top stub
+        _bl(blk, px, -7, px + 4, -13)                             # switch blade
+        _bp(blk, [(px - 2, -15), (px + 2, -15),
+                  (px + 2, -22), (px - 2, -22)], closed=True)      # thermal element
+        _bl(blk, px, -22, px, -30)                                # bottom stub
+    if poles > 1:
+        _bl(blk, 0, -10, span, -10)                               # ganged link
+
+
+def _motor_prot_3p(blk):
+    """3RV-style motor protective breaker, 3 poles. Top y=0, bottom y=-35."""
+    for px in (0.0, POLE, 2 * POLE):
+        _bl(blk, px, 0, px, -8)
+        _bp(blk, [(px - 2.5, -8), (px + 2.5, -8),
+                  (px + 2.5, -18), (px - 2.5, -18)], closed=True)  # thermal-mag body
+        _bl(blk, px - 2.5, -13, px + 2.5, -13)                     # element divider
+        _bl(blk, px, -18, px, -35)
+    _bl(blk, 0, -11, 2 * POLE, -11)                                # ganged link
+
+
+def _motor_3ph(blk):
+    """3-phase motor. Terminals U/V/W at (0,0), (8.6,0), (17.2,0); circle below."""
+    for px in (0.0, POLE, 2 * POLE):
+        _bl(blk, px, 0, px, -6)
+        _bl(blk, px, -6, POLE, -10)          # converge to circle top
+    _bc(blk, POLE, -22, 12)
+    _bt(blk, "M", POLE, -19, 6)
+    _bt(blk, "3~", POLE, -27, 3.5)
+
+
+def _phase_monitor(blk):
+    """Phase-sequence/loss relay. 3 phase terminals on top, 2 output on bottom."""
+    _bp(blk, [(-3, 3), (2 * POLE + 3, 3),
+              (2 * POLE + 3, -22), (-3, -22)], closed=True)        # body box
+    for px in (0.0, POLE, 2 * POLE):
+        _bl(blk, px, 3, px, 7)                                     # phase terminal stubs
+    _bl(blk, POLE - 4, -22, POLE - 4, -26)                         # output stub 1
+    _bl(blk, POLE + 4, -22, POLE + 4, -26)                         # output stub 2
+    _bt(blk, "U<", POLE, -6, 5)
+    _bt(blk, "3~", POLE, -14, 3)
+
+
+def _coil(blk):
+    """Contactor/relay coil (A1 top, A2 bottom)."""
+    _bp(blk, [(0, 0), (8, 0), (8, -6), (0, -6)], closed=True)
+    _bl(blk, 4, 0, 4, 4)        # A1 stub up
+    _bl(blk, 4, -6, 4, -10)     # A2 stub down
+
+
+def _contact_no(blk):
+    """NO auxiliary/control contact. Terminals (0,0) and (0,-12)."""
+    _bl(blk, 0, 0, 0, -3)       # top fixed
+    _bl(blk, 0, -9, 0, -12)     # bottom fixed
+    _bl(blk, 0, -9, -4, -2)     # moving blade (open)
+
+
+def _contact_nc(blk):
+    """NC auxiliary/control contact. Terminals (0,0) and (0,-12)."""
+    _bl(blk, 0, 0, 0, -3)
+    _bl(blk, 0, -9, 0, -12)
+    _bl(blk, 0, -9, -4, -2)     # moving blade
+    _bl(blk, -4, -2, -4, -5)    # NC bar
+
+
+def _limit_switch(blk):
+    """Travel/torque limit switch: a NO contact with an actuating lever."""
+    _contact_no(blk)
+    _bl(blk, -4, -2, -8, 1)     # lever
+
+
+def _terminal(blk):
+    """Single field terminal (klem)."""
+    _bc(blk, 0, 0, 1.3)
+
+
+# -- registry + terminal map ------------------------------------------------
+_SYMBOLS = {
+    "EFF_CONTACTOR_3P":  _contactor_3p,
+    "EFF_MCB_1P":        lambda b: _mcb(b, 1),
+    "EFF_MCB_2P":        lambda b: _mcb(b, 2),
+    "EFF_MCB_3P":        lambda b: _mcb(b, 3),
+    "EFF_MOTORPROT_3P":  _motor_prot_3p,
+    "EFF_MOTOR_3PH":     _motor_3ph,
+    "EFF_PHASE_MONITOR": _phase_monitor,
+    "EFF_COIL":          _coil,
+    "EFF_CONTACT_NO":    _contact_no,
+    "EFF_CONTACT_NC":    _contact_nc,
+    "EFF_LIMIT_SWITCH":  _limit_switch,
+    "EFF_TERMINAL":      _terminal,
+}
+
+# Terminal connection points relative to the insertion point (for wiring).
+_SYMBOL_TERMINALS = {
+    "EFF_CONTACTOR_3P":  {"top(1,3,5)": [(0, 0), (POLE, 0), (2 * POLE, 0)],
+                          "bottom(2,4,6)": [(0, -30), (POLE, -30), (2 * POLE, -30)]},
+    "EFF_MCB_3P":        {"top(1,3,5)": [(0, 0), (POLE, 0), (2 * POLE, 0)],
+                          "bottom(2,4,6)": [(0, -30), (POLE, -30), (2 * POLE, -30)]},
+    "EFF_MCB_2P":        {"top": [(0, 0), (POLE, 0)], "bottom": [(0, -30), (POLE, -30)]},
+    "EFF_MCB_1P":        {"top": [(0, 0)], "bottom": [(0, -30)]},
+    "EFF_MOTORPROT_3P":  {"top": [(0, 0), (POLE, 0), (2 * POLE, 0)],
+                          "bottom": [(0, -35), (POLE, -35), (2 * POLE, -35)]},
+    "EFF_MOTOR_3PH":     {"U/V/W": [(0, 0), (POLE, 0), (2 * POLE, 0)]},
+    "EFF_PHASE_MONITOR": {"phases": [(0, 7), (POLE, 7), (2 * POLE, 7)],
+                          "output": [(POLE - 4, -26), (POLE + 4, -26)]},
+    "EFF_COIL":          {"A1": [(4, 4)], "A2": [(4, -10)]},
+    "EFF_CONTACT_NO":    {"terminals": [(0, 0), (0, -12)]},
+    "EFF_CONTACT_NC":    {"terminals": [(0, 0), (0, -12)]},
+    "EFF_LIMIT_SWITCH":  {"terminals": [(0, 0), (0, -12)]},
+    "EFF_TERMINAL":      {"point": [(0, 0)]},
+}
+
+
+def _block_exists(doc, name):
+    try:
+        doc.Blocks.Item(name)
+        return True
+    except Exception:
+        return False
+
+
+@mcp.tool()
+def load_symbol_library(overwrite: bool = False) -> str:
+    """Create the built-in IEC electrical symbol library as block definitions in the active
+    drawing, so they can be placed with insert_block / draw_batch even in a blank file. Symbols:
+    EFF_CONTACTOR_3P, EFF_MCB_1P/2P/3P, EFF_MOTORPROT_3P, EFF_MOTOR_3PH, EFF_PHASE_MONITOR,
+    EFF_COIL, EFF_CONTACT_NO, EFF_CONTACT_NC, EFF_LIMIT_SWITCH, EFF_TERMINAL. Run once per drawing
+    (or save the drawing as a .dwt template so new drawings already include them). Set overwrite=True
+    to rebuild symbols that already exist. Use symbol_info() to see terminal coordinates for wiring."""
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+
+    # Build symbol geometry on layer "0" so each placed block inherits the
+    # insertion layer's colour/lineweight (standard block practice).
+    prev_layer = None
+    try:
+        prev_layer = doc.ActiveLayer
+        doc.ActiveLayer = doc.Layers.Item("0")
+    except Exception:
+        pass
+
+    created, skipped, errors = [], [], []
+    for name, builder in _SYMBOLS.items():
+        try:
+            if _block_exists(doc, name):
+                if not overwrite:
+                    skipped.append(name)
+                    continue
+                try:
+                    doc.Blocks.Item(name).Delete()  # fails if already referenced
+                except Exception:
+                    skipped.append(name + "(in use)")
+                    continue
+            blk = doc.Blocks.Add(_point(0, 0), name)
+            builder(blk)
+            created.append(name)
+        except Exception as e:
+            errors.append(f"{name}: {e}")
+
+    if prev_layer is not None:
+        try:
+            doc.ActiveLayer = prev_layer
+        except Exception:
+            pass
+
+    msg = f"Symbol library: created {len(created)}"
+    if created:
+        msg += " (" + ", ".join(created) + ")"
+    if skipped:
+        msg += f"; skipped {len(skipped)} existing"
+    if errors:
+        msg += "; errors: " + "; ".join(errors[:8])
+    return msg
+
+
+@mcp.tool()
+def symbol_info(name: str = "") -> str:
+    """List the built-in library symbols, or -- if `name` is given -- the terminal connection points
+    of one symbol (relative to its insertion point, in drawing units), so you know exactly where to
+    attach wires after placing it."""
+    import json
+    if not name:
+        return "Library symbols: " + ", ".join(_SYMBOLS.keys())
+    if name not in _SYMBOL_TERMINALS:
+        return f"No symbol '{name}'. Available: " + ", ".join(_SYMBOLS.keys())
+    return f"{name} terminals (relative to insertion point):\n" + json.dumps(
+        _SYMBOL_TERMINALS[name], ensure_ascii=False
+    )
 
 
 def main():
