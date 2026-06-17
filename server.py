@@ -883,7 +883,7 @@ def add_mtext(text: str, x: float, y: float, width: float = 100.0, height: float
     breaks. Good for title-block notes and longer labels that a single-line add_text can't hold."""
     ms = _model_space()
     try:
-        mt = ms.AddMText(_point(x, y), float(width), str(text).replace("\\n", "\n"))
+        mt = ms.AddMText(_point(x, y), float(width), str(text).replace("\\n", "\n").replace("\n", "\\P"))
         try:
             mt.Height = float(height)
         except Exception:
@@ -1453,7 +1453,7 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
 
     def mtext(t, x, y, w, h):
         try:
-            m = ms.AddMText(_point(x + ox, y + oy), float(w), str(t))
+            m = ms.AddMText(_point(x + ox, y + oy), float(w), str(t).replace("\\n", "\n").replace("\n", "\\P"))
             try:
                 m.Height = float(h)
             except Exception:
