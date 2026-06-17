@@ -1385,6 +1385,237 @@ def symbol_info(name: str = "") -> str:
     )
 
 
+
+# ===========================================================================
+# STANDARD MACRO  -  Bernard AQ valve control (power + PLC/HMI), one call
+# ===========================================================================
+
+@mcp.tool()
+def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
+                          size: str = "AQ20", tag_prefix: str = "") -> str:
+    """Draw the STANDARD Bernard AQ 3x400VAC motor-operated valve control schematic
+    (power circuit + PLC/HMI control sheet) onto the active drawing, starting from a blank
+    sheet. Encodes the Bernard AQ datasheet interface: power on terminals 1-2-3, S1/S2 travel
+    + torque limit switches, NC motor thermostat, 230V heater, reverse-by-phase-swap (SWITCH
+    type), a 3UG phase-monitor permissive, a 3RV backup breaker, a reversing contactor pair
+    with hardware + software interlock, an S7-1200 (1214C) with 8 DI / 2 DO, and a KTP700 HMI
+    over PROFINET. `origin_x`/`origin_y` shift the whole drawing (use to place it clear of other
+    work). `size` sets the actuator label (e.g. "AQ20", "AQ25"). `tag_prefix` is prepended to
+    device tags. The EFF_* symbol library is loaded automatically if missing."""
+    import math
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+
+    # --- layer + symbol library ------------------------------------------------
+    try:
+        try:
+            lay = doc.Layers.Item("EFF-VALVE")
+        except Exception:
+            lay = doc.Layers.Add("EFF-VALVE")
+            lay.color = 7
+        doc.ActiveLayer = lay
+    except Exception:
+        pass
+    for nm, builder in _SYMBOLS.items():
+        if not _block_exists(doc, nm):
+            try:
+                builder(doc.Blocks.Add(_point(0, 0), nm))
+            except Exception:
+                pass
+
+    ms = doc.ModelSpace
+    ox, oy = float(origin_x), float(origin_y)
+    pre = str(tag_prefix)
+
+    # --- local drawing helpers (apply the origin offset) -----------------------
+    def block(name, x, y, s=1.0, rot=0.0):
+        ref = ms.InsertBlock(_point(x + ox, y + oy), name,
+                             float(s), float(s), float(s), math.radians(rot))
+        try:
+            ref.Layer = "EFF-VALVE"
+        except Exception:
+            pass
+        return ref
+
+    def line(x1, y1, x2, y2):
+        ms.AddLine(_point(x1 + ox, y1 + oy), _point(x2 + ox, y2 + oy))
+
+    def poly(pts):
+        ms.AddLightWeightPolyline(_coords([(p[0] + ox, p[1] + oy) for p in pts]))
+
+    def rect(x1, y1, x2, y2):
+        p = ms.AddLightWeightPolyline(_coords([(x1 + ox, y1 + oy), (x2 + ox, y1 + oy),
+                                               (x2 + ox, y2 + oy), (x1 + ox, y2 + oy)]))
+        p.Closed = True
+
+    def text(t, x, y, h, a="left"):
+        _add_text(ms, t, x + ox, y + oy, h, a)
+
+    def mtext(t, x, y, w, h):
+        try:
+            m = ms.AddMText(_point(x + ox, y + oy), float(w), str(t))
+            try:
+                m.Height = float(h)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    def dot(x, y, r=1.5):
+        _add_dot(ms, x + ox, y + oy, r)
+
+    L1, L2, L3 = 100.0, 108.6, 117.2          # 3-phase bus columns
+    K1 = (160.0, 168.6, 177.2)                # KM2 pole columns
+
+    # =====================================================================
+    # POWER SHEET
+    # =====================================================================
+    text(f"VALVE ACTUATOR  -  BERNARD {size} (SWITCH)  3x400VAC  -  POWER CIRCUIT", 40, 560, 7)
+    for lbl, x in (("L1", L1), ("L2", L2), ("L3", L3), ("PE", 126)):
+        text(lbl, x, 546, 4, "center")
+    text("3 x 400 VAC  50 Hz  (+PE)", 92, 554, 4)
+
+    # symbols
+    block("EFF_MCB_3P", L1, 510)              # -Q1 supply MCB
+    block("EFF_PHASE_MONITOR", 200, 455)      # -K0 phase monitor
+    block("EFF_CONTACTOR_3P", L1, 430)        # -KM1 OPEN
+    block("EFF_CONTACTOR_3P", K1[0], 430)     # -KM2 CLOSE
+    block("EFF_MOTORPROT_3P", L1, 360)        # -Q2 motor protection
+    block("EFF_MOTOR_3PH", L1, 300)           # actuator motor
+
+    # tags
+    text(f"{pre}-Q1  5SL6316-7", 70, 512, 5)
+    text(f"{pre}-K0  3UG4512", 222, 462, 4)
+    text(f"{pre}-KM1 (OPEN)", 70, 445, 5)
+    text(f"{pre}-KM2 (CLOSE)", K1[0], 445, 5)
+    text(f"{pre}-Q2  3RV2011", 40, 345, 5)
+    text("U1", L1, 286, 3.5, "center")
+    text("V1", L2, 286, 3.5, "center")
+    text("W1", L3, 286, 3.5, "center")
+
+    # supply -> Q1 -> bus down to KM1 tops
+    for L in (L1, L2, L3):
+        line(L, 540, L, 510)
+        line(L, 480, L, 430)
+    # PE
+    line(126, 540, 126, 300)
+    text("PE", 130, 300, 3)
+
+    # phase-monitor sense taps (bus -> monitor phase terminals at y=462)
+    mon = (200.0, 208.6, 217.2)
+    for (L, mx, ty) in ((L1, mon[0], 478), (L2, mon[1], 474), (L3, mon[2], 470)):
+        poly([(L, ty), (mx, ty), (mx, 462)])
+        dot(L, ty)
+
+    # KM2 line-side feed (bus -> KM2 tops), staggered
+    for (L, kx, ty) in ((L1, K1[0], 455), (L2, K1[1], 450), (L3, K1[2], 445)):
+        poly([(L, ty), (kx, ty), (kx, 430)])
+        dot(L, ty)
+
+    # KM1 load -> Q2 top (straight L1->U, L2->V, L3->W)
+    for L in (L1, L2, L3):
+        line(L, 400, L, 360)
+    # KM2 load -> motor bus CROSSED (KM2-L1->W, KM2-L2->V, KM2-L3->U)
+    for (kx, dest, ty) in ((K1[0], L3, 392), (K1[1], L2, 388), (K1[2], L1, 384)):
+        poly([(kx, 400), (kx, ty), (dest, ty)])
+        dot(dest, ty)
+    # Q2 load -> motor
+    for L in (L1, L2, L3):
+        line(L, 325, L, 300)
+
+    # contactor terminal numbers
+    for (cols, dy, nums) in (((L1, L2, L3), 432, ("1", "3", "5")),
+                             ((L1, L2, L3), 393, ("2", "4", "6")),
+                             (K1, 432, ("1", "3", "5")),
+                             (K1, 393, ("2", "4", "6"))):
+        for c, n in zip(cols, nums):
+            text(n, c, dy, 3, "center")
+
+    mtext("NOTES:\\n1. Reversing pair -KM1 (OPEN/CW) / -KM2 (CLOSE/CCW). -KM2 swaps "
+          "L1<->L3 to reverse. Hardware (NC aux) + software interlock.\\n2. SWITCH-type "
+          f"{size}: no auto phase correction; reverse by swapping two phases.\\n3. -Q2 (3RV) = "
+          "short-circuit/backup. Actuator thermostat (NC) is primary protection -> STOP + PLC "
+          "DI.\\n4. Terminal numbers are PLACEHOLDERS - confirm on the Bernard order wiring sheet.",
+          135, 340, 150, 3.2)
+
+    # =====================================================================
+    # CONTROL / PLC SHEET  (to the right)
+    # =====================================================================
+    text("VALVE ACTUATOR  -  CONTROL & PLC I/O", 420, 545, 7)
+    # rails
+    line(430, 470, 430, 270)        # +24V vertical
+    line(430, 468, 605, 468)        # +24V top feeder
+    line(605, 458, 605, 468)        # 2L+ riser
+    line(425, 258, 730, 258)        # 0V rail
+    text("+24V (L+)", 432, 473, 3)
+    text("0V (M)", 705, 251, 3)
+    text(f"24 VDC CONTROL  ({pre}-Q3 5SL6216-7 + PSU)", 360, 500, 3)
+
+    # PLC box
+    rect(520, 275, 610, 460)
+    mtext(f"{pre}-A1  PLC  S7-1200  CPU 1214C  (6ES7 214-1AG40)", 523, 457, 84, 2.8)
+    di = [("I0.0", 440, "OPEN LIMIT (CW)  -S1", "no"),
+          ("I0.1", 425, "CLOSE LIMIT (CCW)  -S2", "no"),
+          ("I0.2", 410, "OPEN TORQUE  -S3", "no"),
+          ("I0.3", 395, "CLOSE TORQUE  -S4", "no"),
+          ("I0.4", 380, "MOTOR THERMOSTAT  -F1 (NC)", "nc"),
+          ("I0.5", 365, "3RV TRIP  -Q2 (3RV2901)", "no"),
+          ("I0.6", 350, "PHASE OK  -K0 (3UG4512)", "no"),
+          ("I0.7", 335, "LOCAL / REMOTE  -S5", "no")]
+    for (ch, y, lbl, kind) in di:
+        text(ch, 524, y - 1.2, 2.6)
+        # field contact on the rung
+        line(430, y, 463, y)
+        line(463, y, 471, y + 4)        # blade
+        if kind == "nc":
+            line(463, y + 6, 471, y + 6)  # NC bar
+        line(471, y, 520, y)
+        dot(430, y)
+        text(lbl, 437, y + 5, 2.2)
+    # DI common
+    text("1M", 533, 283, 2.4)
+    line(530, 275, 530, 258)
+    dot(530, 258)
+    text("2L+", 590, 454, 2.4)
+
+    # DO rungs (Q -> opposite-contactor NC interlock -> coil -> 0V)
+    do = [("Q0.0", 440, "-KM2", "-KM1  (OPEN)", 700),
+          ("Q0.1", 420, "-KM1", "-KM2  (CLOSE)", 710)]
+    for (ch, y, ilk, coil, drop) in do:
+        text(ch, 606, y - 1.2, 2.6, "right")
+        line(610, y, 642, y)
+        line(642, y, 650, y + 4)        # interlock NC blade
+        line(642, y + 6, 650, y + 6)    # NC bar
+        line(650, y, 672, y)
+        rect(672, y - 6, 688, y + 6)    # coil
+        line(688, y, drop, y)
+        line(drop, y, drop, 258)
+        dot(drop, 258)
+        text(ilk, 646, y + 8, 2.2, "center")
+        text(coil, 693, y - 2, 2.6)
+
+    # HMI over PROFINET
+    text("PN", 563, 283, 2.4)
+    line(560, 275, 560, 225)
+    rect(535, 205, 600, 225)
+    text("ETHERNET SWITCH", 567, 213, 2.5, "center")
+    line(567, 205, 567, 198)
+    rect(520, 163, 600, 198)
+    text("HMI   KTP700", 560, 188, 3.2, "center")
+    text("OPEN / CLOSE / STOP", 560, 180, 2.2, "center")
+    text("+ STATUS  (PROFINET)", 560, 173, 2.2, "center")
+
+    mtext("CONTROL NOTES:\\n1. 24 VDC control; PLC DO drive 24 VDC contactor coils directly.\\n"
+          "2. -KM1/-KM2 coils = the power-sheet contactors. Each rung carries the opposite "
+          "contactor's NC aux (hardware interlock) plus the PLC software interlock.\\n3. Source "
+          "DI: each field contact switches +24 V into the channel; 1M -> 0 V.\\n4. HMI gives "
+          "OPEN/CLOSE/STOP + status over PROFINET.",
+          420, 150, 320, 3.2)
+
+    return (f"Drew the standard Bernard {size} valve control schematic "
+            f"(power + PLC/HMI) at origin ({ox}, {oy}) on layer EFF-VALVE.")
+
+
 def main():
     log.info("Starting AutoCAD MCP server (stdio transport)")
     mcp.run(transport="stdio")
