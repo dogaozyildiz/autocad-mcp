@@ -940,6 +940,204 @@ def define_block(name: str, indices: list[int], base_x: float, base_y: float,
             f"({base_x}, {base_y}){tail}. Place it with insert_block('{name}', x, y).")
 
 
+def _add_dot(ms, x, y, radius=1.0):
+    """Add a filled connection dot (a small circle flooded with a SOLID hatch)."""
+    import pythoncom
+    import win32com.client
+    c = ms.AddCircle(_point(x, y), float(radius))
+    try:
+        loop = win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, [c])
+        h = ms.AddHatch(1, "SOLID", True)  # 1 = predefined pattern
+        h.AppendOuterLoop(loop)
+        h.Evaluate()
+    except Exception:
+        pass  # leave the outline if the fill fails
+    return c
+
+
+@mcp.tool()
+def get_block_geometry(name: str, limit: int = 400) -> str:
+    """Read the geometry *inside* a block definition (symbol), in the block's own coordinate system.
+    This is how you find a symbol's connection points before wiring to it: the library symbols carry
+    no attribute pins, so their terminals are the free ends of the internal lines. Returns each
+    primitive with coordinates (line start/end, circle/arc centre+radius, polyline vertices, text /
+    attribute-definition positions) plus the block's base point. Place the block with insert_block at
+    (X, Y); a point (px, py) listed here then lands near (X + px, Y + py) at scale 1, rotation 0."""
+    import json
+    acad = _get_acad()
+    doc = acad.ActiveDocument
+    try:
+        blk = doc.Blocks.Item(name)
+    except Exception as e:
+        return f"No block named '{name}': {e}. Use list_blocks to see the available symbols."
+
+    def pl(p):
+        return [round(float(c), 4) for c in p]
+
+    base = None
+    try:
+        base = pl(blk.Origin)
+    except Exception:
+        pass
+    total = blk.Count
+    shown = min(total, max(1, int(limit)))
+    deg = 180.0 / 3.141592653589793
+    items = []
+    for i in range(shown):
+        e = blk.Item(i)
+        try:
+            kind = e.ObjectName
+        except Exception:
+            kind = "Unknown"
+        info = {"type": kind}
+        try:
+            if "Arc" in kind:
+                info["center"] = pl(e.Center)
+                info["radius"] = round(float(e.Radius), 4)
+                info["start_deg"] = round(float(e.StartAngle) * deg, 2)
+                info["end_deg"] = round(float(e.EndAngle) * deg, 2)
+            elif "Circle" in kind:
+                info["center"] = pl(e.Center)
+                info["radius"] = round(float(e.Radius), 4)
+            elif "Polyline" in kind:
+                c = list(e.Coordinates)
+                info["vertices"] = [
+                    [round(float(c[j]), 4), round(float(c[j + 1]), 4)]
+                    for j in range(0, len(c) - 1, 2)
+                ]
+            elif "Line" in kind:
+                info["start"] = pl(e.StartPoint)
+                info["end"] = pl(e.EndPoint)
+            elif "AttributeDefinition" in kind:
+                info["tag"] = e.TagString
+                info["position"] = pl(e.InsertionPoint)
+            elif "Text" in kind:
+                info["text"] = e.TextString
+                info["position"] = pl(e.InsertionPoint)
+            elif "BlockReference" in kind:
+                info["block"] = e.Name
+                info["position"] = pl(e.InsertionPoint)
+            elif "Point" in kind:
+                info["position"] = pl(e.Coordinates)
+        except Exception as ex:
+            info["note"] = f"details unavailable: {ex}"
+        items.append(info)
+
+    header = f"Block '{name}': {total} entit(ies)"
+    if base is not None:
+        header += f", base point {base[:2]}"
+    if shown < total:
+        header += f" (showing first {shown})"
+    header += ". Free line ends and attribute positions are usually the terminals."
+    return header + "\n" + json.dumps(items, ensure_ascii=False)
+
+
+@mcp.tool()
+def get_entity_bounds(indices: list[int]) -> str:
+    """Return the bounding box (min/max corner + width/height) of model-space objects by index
+    (from list_entities), e.g. [12, 13]. Works for block references too — use it to find where a
+    placed symbol actually sits and how much room it takes, so you can route wires clear of it."""
+    import json
+    ms = _model_space()
+    count = ms.Count
+    out = []
+    for i in indices:
+        if not (0 <= i < count):
+            out.append({"index": i, "note": "out of range"})
+            continue
+        try:
+            lo, hi = ms.Item(i).GetBoundingBox()
+            lo = [round(float(c), 3) for c in lo]
+            hi = [round(float(c), 3) for c in hi]
+            out.append({
+                "index": i, "min": lo[:2], "max": hi[:2],
+                "width": round(hi[0] - lo[0], 3), "height": round(hi[1] - lo[1], 3),
+            })
+        except Exception as e:
+            out.append({"index": i, "note": f"no bounds: {e}"})
+    return json.dumps(out, ensure_ascii=False)
+
+
+@mcp.tool()
+def draw_wire(x1: float, y1: float, x2: float, y2: float,
+              route: str = "auto", dots: bool = False, dot_radius: float = 1.0) -> str:
+    """Draw a schematic wire from (x1, y1) to (x2, y2) as a polyline. `route`: "hv" goes horizontal
+    then vertical (corner at x2,y1), "vh" goes vertical then horizontal (corner at x1,y2), "direct"
+    is a straight segment, "auto" picks an L-bend when the points differ in both axes (else straight).
+    Set dots=True to drop a filled junction dot at each end (radius `dot_radius`)."""
+    ms = _model_space()
+    x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
+    r = str(route).lower()
+    if r == "direct" or x1 == x2 or y1 == y2:
+        pts = [(x1, y1), (x2, y2)]
+    elif r == "vh":
+        pts = [(x1, y1), (x1, y2), (x2, y2)]
+    else:  # "hv" or "auto"
+        pts = [(x1, y1), (x2, y1), (x2, y2)]
+    ms.AddLightWeightPolyline(_coords(pts))
+    if dots:
+        _add_dot(ms, x1, y1, dot_radius)
+        _add_dot(ms, x2, y2, dot_radius)
+    return f"Wire drawn ({route}) from ({x1}, {y1}) to ({x2}, {y2})."
+
+
+@mcp.tool()
+def draw_dot(x: float, y: float, radius: float = 1.0) -> str:
+    """Place a filled connection/junction dot at (x, y). Use at points where wires join (a tee),
+    so the connection reads as intentional rather than a crossing."""
+    ms = _model_space()
+    _add_dot(ms, x, y, radius)
+    return f"Connection dot placed at ({x}, {y}), radius {radius}."
+
+
+@mcp.tool()
+def copy_entities(indices: list[int], dx: float, dy: float) -> str:
+    """Copy model-space objects (by index from list_entities) by an offset (dx, dy). Good for
+    repeating a rung, a terminal, or a whole sub-circuit across a sheet. Originals are kept; the
+    copies are added at the end of the drawing."""
+    ms = _model_space()
+    count = ms.Count
+    made = 0
+    for i in indices:
+        if 0 <= i < count:
+            try:
+                cp = ms.Item(i).Copy()
+                cp.Move(_point(0, 0, 0), _point(float(dx), float(dy), 0))
+                made += 1
+            except Exception:
+                pass
+    return f"Copied {made} of {len(indices)} object(s) by ({dx}, {dy}). {ms.Count} object(s) now."
+
+
+@mcp.tool()
+def mirror_entities(indices: list[int], x1: float, y1: float, x2: float, y2: float,
+                    keep_original: bool = True) -> str:
+    """Mirror model-space objects (by index) about the line through (x1, y1)-(x2, y2). Ideal for the
+    reversing contactor (draw KM1, mirror it to KM1's twin) or a symmetric panel half. By default the
+    original is kept; set keep_original=false to flip in place."""
+    ms = _model_space()
+    count = ms.Count
+    p1, p2 = _point(float(x1), float(y1)), _point(float(x2), float(y2))
+    made = 0
+    originals = []
+    for i in indices:
+        if 0 <= i < count:
+            try:
+                e = ms.Item(i)
+                e.Mirror(p1, p2)
+                made += 1
+                if not keep_original:
+                    originals.append(e)
+            except Exception:
+                pass
+    for e in originals:
+        try:
+            e.Delete()
+        except Exception:
+            pass
+    return f"Mirrored {made} of {len(indices)} object(s) about ({x1},{y1})-({x2},{y2})."
+
+
 def main():
     log.info("Starting AutoCAD MCP server (stdio transport)")
     mcp.run(transport="stdio")
