@@ -1399,13 +1399,120 @@ def symbol_info(name: str = "") -> str:
 # rungs (hardware stop), while the signalling switches feed the PLC for position.
 # The SWITCH type has NO automatic phase correction, so reversing = swap two
 # phases and a phase-sequence monitor is used as a permissive.
-# NOTE: exact terminal NUMBERS come from the order-specific Bernard wiring sheet
-# inside the unit's cover; placeholders are marked [t?] and must be confirmed.
+# NOTE: the terminal NUMBERS below are now baked in from Bernard datasheet
+# TEC01-03 rev06B, sheet 3.2 (AQ SWITCH, 3-phase). The only thing still marked
+# "TBC" is the NO/NC polarity WITHIN each 3-wire switch group, which is set on
+# the order-specific sheet inside the unit cover.
 # ===========================================================================
+
+
+# ===========================================================================
+# DATASHEET TABLES  -  Bernard AQ range, TEC01-03_E+F_GRP_rev06B
+# Baked in so the schematic carries real wiring-sheet terminal numbers and so a
+# client can look mechanical/electrical figures up over MCP (aq_model_data).
+# Locked source for wiring = sheet 3.2 (SWITCH, 3-phase, no positioner).
+# ===========================================================================
+
+# --- Terminal map: sheet 3.2 "AQ SWITCH: 3-phases / Triphase" ---------------
+# Each travel/torque switch is a 3-wire group: common + two contacts. Which of
+# the pair is NO vs NC ("polarity") is order-specific -> labelled "TBC".
+AQ_SWITCH_TERMINALS = {
+    "source": "Bernard TEC01-03 rev06B, sheet 3.2 (SWITCH 3-phase)",
+    "motor_3ph":        {"terminals": [1, 2, 3], "pe": "PE",
+                         "note": "3Ph direct wiring = Closing (swap 2 phases to reverse)"},
+    "motor_thermostat": {"terminals": [40, 41], "type": "NC",
+                         "note": "Th* motor thermal protection - wire as a STOP"},
+    "torque_open":      {"terminals": [4, 5, 6],    "polarity": "TBC",
+                         "label": "Limiteur d'effort Ouvert / Torque limit OPEN"},
+    "torque_close":     {"terminals": [7, 8, 9],    "polarity": "TBC",
+                         "label": "Limiteur d'effort Ferme / Torque limit CLOSE"},
+    "travel_open":      {"terminals": [10, 11, 12], "polarity": "TBC",
+                         "label": "Fin de course Ouvert / Travel limit OPEN"},
+    "travel_close":     {"terminals": [13, 14, 15], "polarity": "TBC",
+                         "label": "Fin de course Ferme / Travel limit CLOSE"},
+    "aux_travel_open":  {"terminals": [20, 21, 22], "polarity": "TBC",
+                         "label": "Fin de course aux. Ouvert / Extra travel OPEN"},
+    "aux_travel_close": {"terminals": [23, 24, 25], "polarity": "TBC",
+                         "label": "Fin de course aux. Ferme / Extra travel CLOSE"},
+    "heater":           {"terminals": [26, 27],
+                         "label": "Resistance de chauffage / Anti-condensation heater"},
+    "potentiometer":    {"terminals": [16, 17, 18], "option": True},
+    "position_xmitter_4_20mA": {"terminals": {"+": 80, "-": 81},
+                                "supply": "12-32 VDC", "option": True},
+}
+
+# Single-phase SWITCH (sheet 3.1) kept for completeness.
+AQ_SWITCH_TERMINALS_1PH = {
+    "source": "Bernard TEC01-03 rev06B, sheet 3.1 (SWITCH 1-phase)",
+    "supply":         {"L": 1, "N": "N", "pe": "PE", "open_cmd": 2, "close_cmd": 3},
+    "HO_open_travel": 5, "HF_close_travel": 6, "heater": 4,
+    "HLF_close_torque": 8, "HLO_open_torque": 7,
+    "aux_travel": [20, 21, 22, 23, 24, 25],
+    "potentiometer": [16, 17, 18],
+    "position_xmitter_4_20mA": {"+": 80, "-": 81, "supply": "12-32 VDC"},
+}
+
+# --- Mechanical data: section 2 (Dimensions) --------------------------------
+AQ_DIMENSIONS = {
+    "AQ5":   {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
+    "AQ10":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
+    "AQ15":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
+    "AQ25":  {"weight_kg": 13, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
+    "AQ30":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
+    "AQ50":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
+    "AQ80":  {"weight_kg": 18, "square_mm": 27, "bore_mm": 36, "flange": "F10/F12"},
+    "AQ150": {"weight_kg": 38, "max_bore_mm": 46, "flange": "F12/F14"},
+    "AQ280": {"weight_kg": 50, "max_bore_mm": 60, "flange": "F14/F16"},
+    "AQ430": {"weight_kg": 79, "max_bore_mm": 75, "flange": "F16"},
+    "AQ610": {"weight_kg": 86, "max_bore_mm": 80, "flange": "F25"},
+    "AQ830": {"weight_kg": 94, "max_bore_mm": 95, "flange": "F25"},
+    "AQ1000":{"weight_kg": 115,"max_bore_mm": 95, "flange": "F25"},
+}
+
+# --- Performance: section 1, 3x400VAC 50Hz column (the NB198 supply) ---------
+AQ_PERFORMANCE_3x400V_50HZ = {
+    "AQ5":   {"torque_Nm": 50,    "time_s": 16,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
+    "AQ10":  {"torque_Nm": 100,   "time_s": 25,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
+    "AQ15":  {"torque_Nm": 150,   "time_s": 30,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
+    "AQ25":  {"torque_Nm": 250,   "time_s": 30,  "kW": 0.04, "nom_A": 0.22, "start_A": 0.43},
+    "AQ30":  {"torque_Nm": 300,   "time_s": 35,  "kW": 0.04, "nom_A": 0.22, "start_A": 0.43},
+    "AQ50":  {"torque_Nm": 500,   "time_s": 35,  "kW": 0.07, "nom_A": 0.43, "start_A": 0.75},
+    "AQ80":  {"torque_Nm": 800,   "time_s": 55,  "kW": 0.07, "nom_A": 0.43, "start_A": 0.75},
+    "AQ150": {"torque_Nm": 1500,  "time_s": 40,  "kW": 0.4,  "nom_A": 0.97, "start_A": 3.8},
+    "AQ280": {"torque_Nm": 2800,  "time_s": 70,  "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
+    "AQ430": {"torque_Nm": 4300,  "time_s": 40,  "kW": 0.9,  "nom_A": 2.7,  "start_A": 14},
+    "AQ610": {"torque_Nm": 6100,  "time_s": 100, "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
+    "AQ830": {"torque_Nm": 8300,  "time_s": 115, "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
+    "AQ1000":{"torque_Nm": 10400, "time_s": 56,  "kW": 1.3,  "nom_A": 3.2,  "start_A": 14},
+}
+
+
+@mcp.tool()
+def aq_terminals(phase: str = "3ph") -> str:
+    """Return the Bernard AQ SWITCH terminal map (TEC01-03 sheet 3.2 for 3-phase,
+    sheet 3.1 for single-phase). phase = '3ph' or '1ph'."""
+    import json
+    data = AQ_SWITCH_TERMINALS if phase.lower().startswith("3") else AQ_SWITCH_TERMINALS_1PH
+    return json.dumps(data, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def aq_model_data(size: str = "AQ25") -> str:
+    """Return mechanical + 3x400VAC/50Hz electrical data for an AQ model
+    (e.g. AQ25). Source: Bernard TEC01-03 sections 1 and 2."""
+    import json
+    size = size.upper().replace(" ", "")
+    out = {
+        "model": size,
+        "mechanical": AQ_DIMENSIONS.get(size, "unknown model"),
+        "performance_3x400V_50Hz": AQ_PERFORMANCE_3x400V_50HZ.get(size, "unknown model"),
+    }
+    return json.dumps(out, indent=2, ensure_ascii=False)
+
 
 @mcp.tool()
 def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
-                          size: str = "AQ20", tag_prefix: str = "") -> str:
+                          size: str = "AQ25", tag_prefix: str = "") -> str:
     """Draw the Bernard AQ 3x400VAC motor-operated valve control schematic
     (power + PLC/HMI control sheet), wired to the AQ SWITCH datasheet interface
     (SUG_17003 Ch.11.1, without positioner): 3-phase motor, S1/S2 travel-limit
@@ -1417,8 +1524,12 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
     phase monitor permissive; -Q2 3RV backup breaker; S7-1200 (1214C) 8DI/2DO;
     KTP700 HMI over PROFINET. `origin_x/_y` shift the sheet, `size` sets the
     actuator label, `tag_prefix` prepends device tags. EFF_* library auto-loads.
-    NOTE: terminal numbers follow the order-specific Bernard wiring sheet --
-    placeholders [t?] here must be confirmed against that sheet."""
+    TERMINAL NUMBERS are baked in from Bernard datasheet TEC01-03 sheet 3.2
+    (AQ SWITCH, 3-phase): motor 1/2/3 +PE, thermostat 40/41 (NC), torque OPEN
+    4-5-6 / CLOSE 7-8-9, travel OPEN 10-11-12 / CLOSE 13-14-15, aux travel
+    20-25, heater 26/27, potentiometer 16-18, 4-20mA 80(+)/81(-). The only
+    open item is the NO/NC polarity WITHIN each 3-wire switch group, labelled
+    'TBC' -- confirm against the order-specific sheet inside the unit cover."""
     import math
     acad = _get_acad()
     doc = acad.ActiveDocument
@@ -1563,7 +1674,7 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
     line(258.6, 260, 258.6, 240)
     rect(244, 222, 286, 240)
     text("HEATER (D) 230VAC", 265, 231, 3, "center")
-    text("[t? / t?]", 265, 225, 2.4, "center")
+    text("26 / 27", 265, 225, 2.4, "center")
 
     mtext("POWER NOTES (Bernard AQ SWITCH, SUG_17003 Ch.11.1):\\n"
           "1. Reversing pair -KM1 (OPEN/CCW=S1) / -KM2 (CLOSE/CW=S2). -KM2 swaps "
@@ -1574,31 +1685,39 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
           "is primary thermal protection and is wired into the coil control (see control "
           "sheet), per SUG_17003 7.3.\\n"
           "4. Heater (D) 230VAC kept permanently energised (anti-condensation).\\n"
-          "5. Terminal numbers [t?] follow this unit's Bernard order wiring sheet - confirm.",
+          "5. Terminal numbers per TEC01-03 sheet 3.2: motor 1/2/3 +PE, "
+          "thermostat 40/41, heater 26/27. NO/NC polarity within each switch "
+          "group = confirm vs order sheet.",
           40, 290, 175, 3.0)
 
     # =====================================================================
     # ACTUATOR TERMINAL STRIP (centre)
     # =====================================================================
-    text(f"{size} ACTUATOR TERMINALS (per Bernard order wiring sheet)", 300, 200, 4)
-    rect(300, 60, 470, 185)
+    text(f"{size} ACTUATOR TERMINALS (Bernard TEC01-03 sheet 3.2)", 300, 200, 4)
+    rect(300, 40, 470, 192)
+    # (terminal numbers, function/destination) per TEC01-03 rev06B sheet 3.2.
+    # Each travel/torque is a 3-wire group: common + two contacts; NO/NC within
+    # the group is order-specific -> "TBC" (see footnote).
     strip = [
-        ("U / V / W", "3~ motor (E)  ->  -Q2 load"),
-        ("Th1 / Th2", "Motor thermostat (NC)  -> coil string + PLC"),
-        ("S2 close LS (B)", "CW travel limit -> stops -KM2 coil"),
-        ("S1 open LS (B)", "CCW travel limit -> stops -KM1 coil"),
-        ("CL torque (A)", "Close torque -> stops -KM2 coil + PLC"),
-        ("OP torque (A)", "Open torque -> stops -KM1 coil + PLC"),
-        ("CL sig (C)", "Closed signalling -> PLC DI"),
-        ("OP sig (C)", "Open signalling -> PLC DI"),
-        ("Heater (D)", "230 VAC anti-condensation"),
-        ("PE", "Internal ground post"),
+        ("1 / 2 / 3  +PE", "3~ motor U/V/W (E) -> -Q2 load"),
+        ("40 / 41",        "Motor thermostat (NC) -> coil string + PLC"),
+        ("13 / 14 / 15",   "S2 CW close travel limit -> stops -KM2"),
+        ("10 / 11 / 12",   "S1 CCW open travel limit -> stops -KM1"),
+        ("7 / 8 / 9",      "Close torque -> stops -KM2 + PLC"),
+        ("4 / 5 / 6",      "Open torque -> stops -KM1 + PLC"),
+        ("23 / 24 / 25",   "Aux travel CLOSE - fn per order sheet (TBC)"),
+        ("20 / 21 / 22",   "Aux travel OPEN - fn per order sheet (TBC)"),
+        ("26 / 27",        "Heater (D) 230VAC anti-condensation"),
+        ("16 / 17 / 18",   "Potentiometer (option)"),
+        ("80(+) / 81(-)",  "4-20mA position xmitter (opt) 12-32VDC"),
+        ("PE",             "Internal ground post"),
     ]
-    yy = 178
+    yy = 184
     for term, desc in strip:
         text(term, 305, yy, 2.7)
-        text(desc, 365, yy, 2.4)
+        text(desc, 332, yy, 2.4)
         yy -= 12
+    text("NO/NC within each 3-wire switch group = TBC vs order sheet", 300, 33, 2.2)
 
     # =====================================================================
     # CONTROL / PLC SHEET (right)
@@ -1615,7 +1734,7 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
     # common: +24V -> thermostat NC -> node -> two coil rungs
     line(505, 540, 540, 540)
     contact(548, 540, "nc")
-    text(f"{pre}-F  THERMOSTAT (NC)", 525, 547, 2.4)
+    text(f"{pre}-F  THERMOSTAT 40/41 (NC)", 525, 547, 2.4)
     line(556, 540, 575, 540)
     dot(575, 540)
     line(575, 540, 575, 500)
@@ -1623,9 +1742,9 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
     # OPEN rung -> -KM1
     yO = 500
     line(575, yO, 590, yO)
-    contact(598, yO, "nc"); text("S1 OPEN LIMIT", 588, yO + 5, 2.1)
+    contact(598, yO, "nc"); text("S1 OPEN LIMIT 10-11-12", 588, yO + 5, 2.1)
     line(606, yO, 618, yO)
-    contact(626, yO, "nc"); text("OPEN TORQUE", 616, yO + 5, 2.1)
+    contact(626, yO, "nc"); text("OPEN TORQUE 4-5-6", 616, yO + 5, 2.1)
     line(634, yO, 646, yO)
     contact(654, yO, "nc"); text("-KM2 (ILK)", 646, yO + 5, 2.1)
     line(662, yO, 678, yO)
@@ -1640,9 +1759,9 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
     yC = 470
     line(575, 500, 575, yC)
     line(575, yC, 590, yC)
-    contact(598, yC, "nc"); text("S2 CLOSE LIMIT", 588, yC + 5, 2.1)
+    contact(598, yC, "nc"); text("S2 CLOSE LIMIT 13-14-15", 588, yC + 5, 2.1)
     line(606, yC, 618, yC)
-    contact(626, yC, "nc"); text("CLOSE TORQUE", 616, yC + 5, 2.1)
+    contact(626, yC, "nc"); text("CLOSE TORQUE 7-8-9", 616, yC + 5, 2.1)
     line(634, yC, 646, yC)
     contact(654, yC, "nc"); text("-KM1 (ILK)", 646, yC + 5, 2.1)
     line(662, yC, 678, yC)
@@ -1698,12 +1817,16 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
           "torque, thermostat, 3RV trip and phase-OK are also PLC inputs for diagnostics.\\n"
           "4. HMI gives OPEN/CLOSE/STOP + status over PROFINET; PLC software interlock "
           "is in addition to the hardware string.\\n"
-          "5. Terminal numbers per this unit's Bernard order wiring sheet - confirm.",
+          "5. Terminal numbers per Bernard TEC01-03 sheet 3.2 (AQ SWITCH 3-ph). "
+          "Only the NO/NC polarity within each switch group is TBC vs the "
+          "order-specific sheet in the unit cover.",
           500, 130, 290, 3.0)
 
     return (f"Drew the datasheet-wired Bernard {size} valve control schematic "
             f"(power + actuator terminals + PLC/HMI, hardware-integrated limit/"
-            f"torque/thermostat) at origin ({ox}, {oy}) on layer EFF-VALVE.")
+            f"torque/thermostat) at origin ({ox}, {oy}) on layer EFF-VALVE. "
+            f"Terminal numbers baked in from TEC01-03 sheet 3.2; NO/NC polarity "
+            f"within each switch group flagged TBC vs the order sheet.")
 
 
 def main():
