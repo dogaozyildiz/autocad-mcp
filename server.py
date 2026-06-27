@@ -1417,7 +1417,7 @@ def symbol_info(name: str = "") -> str:
 # Each travel/torque switch is a 3-wire group: common + two contacts. Which of
 # the pair is NO vs NC ("polarity") is order-specific -> labelled "TBC".
 AQ_SWITCH_TERMINALS = {
-    "source": "Bernard TEC01-03 rev06B, sheet 3.2 (SWITCH 3-phase)",
+    "source": "Bernard TEC01-03 rev06B, sheet 3.2 (SWITCH 3-phase); identical layout reprinted on sheet 3.21 for AQ150-1000 SWITCH, so this map covers the whole SWITCH range",
     "motor_3ph":        {"terminals": [1, 2, 3], "pe": "PE",
                          "note": "3Ph direct wiring = Closing (swap 2 phases to reverse)"},
     "motor_thermostat": {"terminals": [40, 41], "type": "NC",
@@ -1457,7 +1457,10 @@ AQ_DIMENSIONS = {
     "AQ5":   {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
     "AQ10":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
     "AQ15":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
-    "AQ25":  {"weight_kg": 13, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
+    "AQ25":  {"weight_kg": 13, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10",
+              "flange_bolts": {"F07": "4 x M8, depth 12mm, register d70",
+                               "F10": "4 x M10, depth 18mm, register d102"},
+              "envelope_mm": {"height": 317, "width": 224, "handwheel_d": 125}},
     "AQ30":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
     "AQ50":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
     "AQ80":  {"weight_kg": 18, "square_mm": 27, "bore_mm": 36, "flange": "F10/F12"},
@@ -1471,19 +1474,19 @@ AQ_DIMENSIONS = {
 
 # --- Performance: section 1, 3x400VAC 50Hz column (the NB198 supply) ---------
 AQ_PERFORMANCE_3x400V_50HZ = {
-    "AQ5":   {"torque_Nm": 50,    "time_s": 16,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
-    "AQ10":  {"torque_Nm": 100,   "time_s": 25,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
-    "AQ15":  {"torque_Nm": 150,   "time_s": 30,  "kW": 0.03, "nom_A": 0.16, "start_A": 0.43},
-    "AQ25":  {"torque_Nm": 250,   "time_s": 30,  "kW": 0.04, "nom_A": 0.22, "start_A": 0.43},
-    "AQ30":  {"torque_Nm": 300,   "time_s": 35,  "kW": 0.04, "nom_A": 0.22, "start_A": 0.43},
-    "AQ50":  {"torque_Nm": 500,   "time_s": 35,  "kW": 0.07, "nom_A": 0.43, "start_A": 0.75},
-    "AQ80":  {"torque_Nm": 800,   "time_s": 55,  "kW": 0.07, "nom_A": 0.43, "start_A": 0.75},
-    "AQ150": {"torque_Nm": 1500,  "time_s": 40,  "kW": 0.4,  "nom_A": 0.97, "start_A": 3.8},
-    "AQ280": {"torque_Nm": 2800,  "time_s": 70,  "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
-    "AQ430": {"torque_Nm": 4300,  "time_s": 40,  "kW": 0.9,  "nom_A": 2.7,  "start_A": 14},
-    "AQ610": {"torque_Nm": 6100,  "time_s": 100, "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
-    "AQ830": {"torque_Nm": 8300,  "time_s": 115, "kW": 0.8,  "nom_A": 1.9,  "start_A": 6.7},
-    "AQ1000":{"torque_Nm": 10400, "time_s": 56,  "kW": 1.3,  "nom_A": 3.2,  "start_A": 14},
+    "AQ5":   {"torque_Nm": 50,    "time_s": 16,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
+    "AQ10":  {"torque_Nm": 100,   "time_s": 25,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
+    "AQ15":  {"torque_Nm": 150,   "time_s": 30,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
+    "AQ25":  {"torque_Nm": 250,   "time_s": 30,  "kW": 0.05, "nom_A": 0.23, "start_A": 0.45},
+    "AQ30":  {"torque_Nm": 300,   "time_s": 35,  "kW": 0.05, "nom_A": 0.23, "start_A": 0.45},
+    "AQ50":  {"torque_Nm": 500,   "time_s": 35,  "kW": 0.07, "nom_A": 0.45, "start_A": 0.79},
+    "AQ80":  {"torque_Nm": 800,   "time_s": 55,  "kW": 0.07, "nom_A": 0.45, "start_A": 0.79},
+    "AQ150": {"torque_Nm": 1500,  "time_s": 40,  "kW": 0.28, "nom_A": 0.65, "start_A": 2.6},
+    "AQ280": {"torque_Nm": 2800,  "time_s": 70,  "kW": 0.87, "nom_A": 2.0,  "start_A": 7.0},
+    "AQ430": {"torque_Nm": 4300,  "time_s": 40,  "kW": 0.97, "nom_A": 2.9,  "start_A": 15},
+    "AQ610": {"torque_Nm": 6100,  "time_s": 100, "kW": 0.97, "nom_A": 2.9,  "start_A": 15},
+    "AQ830": {"torque_Nm": 8300,  "time_s": 115, "kW": 0.87, "nom_A": 2.0,  "start_A": 7.0},
+    "AQ1000":{"torque_Nm": 10400, "time_s": 56,  "kW": 1.4,  "nom_A": 3.3,  "start_A": 14},
 }
 
 
