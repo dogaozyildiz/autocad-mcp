@@ -1452,65 +1452,634 @@ AQ_SWITCH_TERMINALS_1PH = {
     "position_xmitter_4_20mA": {"+": 80, "-": 81, "supply": "12-32 VDC"},
 }
 
-# --- Mechanical data: section 2 (Dimensions) --------------------------------
+# ── Mechanical data: section 2 (all models) ─────────────────────────────────
+# switch_kg = SWITCH variant bare; logic_kg = LOGIC variant (integrated controller ~+5 kg)
+# flanges = standard ISO5211 flanges; optional_flanges = non-standard option
 AQ_DIMENSIONS = {
-    "AQ5":   {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
-    "AQ10":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
-    "AQ15":  {"weight_kg": 10, "square_mm": 19, "bore_mm": 22, "flange": "F05/F07"},
-    "AQ25":  {"weight_kg": 13, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10",
-              "flange_bolts": {"F07": "4 x M8, depth 12mm, register d70",
-                               "F10": "4 x M10, depth 18mm, register d102"},
-              "envelope_mm": {"height": 317, "width": 224, "handwheel_d": 125}},
-    "AQ30":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
-    "AQ50":  {"weight_kg": 15, "square_mm": 27, "bore_mm": 32, "flange": "F07/F10"},
-    "AQ80":  {"weight_kg": 18, "square_mm": 27, "bore_mm": 36, "flange": "F10/F12"},
-    "AQ150": {"weight_kg": 38, "max_bore_mm": 46, "flange": "F12/F14"},
-    "AQ280": {"weight_kg": 50, "max_bore_mm": 60, "flange": "F14/F16"},
-    "AQ430": {"weight_kg": 79, "max_bore_mm": 75, "flange": "F16"},
-    "AQ610": {"weight_kg": 86, "max_bore_mm": 80, "flange": "F25"},
-    "AQ830": {"weight_kg": 94, "max_bore_mm": 95, "flange": "F25"},
-    "AQ1000":{"weight_kg": 115,"max_bore_mm": 95, "flange": "F25"},
+    "AQ5":   {"switch_kg": 10, "logic_kg": 15, "square_mm": 19, "max_bore_mm": 22,
+              "flanges": ["F05","F07"],
+              "bolts": {"F05":"4xM6 depth 8mm register d50",
+                        "F07":"4xM8 depth 12mm register d70"}},
+    "AQ10":  {"switch_kg": 10, "logic_kg": 15, "square_mm": 19, "max_bore_mm": 22,
+              "flanges": ["F05","F07"],
+              "bolts": {"F05":"4xM6 depth 8mm register d50",
+                        "F07":"4xM8 depth 12mm register d70"}},
+    "AQ15":  {"switch_kg": 10, "logic_kg": 15, "square_mm": 19, "max_bore_mm": 22,
+              "flanges": ["F05","F07"],
+              "bolts": {"F05":"4xM6 depth 8mm register d50",
+                        "F07":"4xM8 depth 12mm register d70"}},
+    "AQ25":  {"switch_kg": 13, "logic_kg": 18, "square_mm": 27, "max_bore_mm": 32,
+              "flanges": ["F07","F10"],
+              "bolts": {"F07":"4xM8 depth 12mm register d70",
+                        "F10":"4xM10 depth 18mm register d102"}},
+    "AQ30":  {"switch_kg": 15, "logic_kg": 20, "square_mm": 27, "max_bore_mm": 32,
+              "flanges": ["F07","F10"],
+              "bolts": {"F07":"4xM8 depth 12mm register d70",
+                        "F10":"4xM10 depth 18mm register d102"}},
+    "AQ50":  {"switch_kg": 15, "logic_kg": 20, "square_mm": 27, "max_bore_mm": 32,
+              "flanges": ["F07","F10"],
+              "bolts": {"F07":"4xM8 depth 12mm register d70",
+                        "F10":"4xM10 depth 18mm register d102"}},
+    "AQ80":  {"switch_kg": 18, "logic_kg": 23, "square_mm": 27, "max_bore_mm": 36,
+              "flanges": ["F10","F12"],
+              "bolts": {"F10":"4xM10 depth 18mm register d102",
+                        "F12":"4xM12 depth 25mm register d125"}},
+    "AQ150": {"switch_kg": 38, "logic_kg": 43, "square_mm": 36, "max_bore_mm": 46,
+              "flanges": ["F12","F14"], "optional_flanges": ["F10"],
+              "bolts": {"F10":"4xM10 depth 18mm register d102",
+                        "F12":"4xM12 depth 25mm register d125",
+                        "F14":"4xM16 depth 28mm register d140"}},
+    "AQ280": {"switch_kg": 50, "logic_kg": 55, "square_mm": 46, "max_bore_mm": 60,
+              "flanges": ["F14","F16"], "optional_flanges": ["F12"],
+              "bolts": {"F12":"4xM12 depth 25mm register d125",
+                        "F14":"4xM16 depth 28mm register d140",
+                        "F16":"4xM20 depth 35mm register d160"}},
+    "AQ430": {"switch_kg": 79, "logic_kg": 83, "square_mm": 55, "max_bore_mm": 75,
+              "flanges": ["F16"],
+              "bolts": {"F16":"4xM20 depth 35mm register d160"}},
+    "AQ610": {"switch_kg": 86, "logic_kg": 90, "square_mm": 70, "max_bore_mm": 80,
+              "flanges": ["F25"],
+              "bolts": {"F25":"4xM30 depth 55mm register d225"}},
+    "AQ830": {"switch_kg": 94, "logic_kg": 99, "square_mm": 70, "max_bore_mm": 95,
+              "flanges": ["F25"], "logic_flanges": ["F16","F20","F25"],
+              "bolts": {"F16":"4xM20 depth 35mm register d160",
+                        "F20":"4xM24 depth 45mm register d200",
+                        "F25":"4xM30 depth 55mm register d225"}},
+    "AQ1000":{"switch_kg": 115,"logic_kg": 119,"square_mm": 70, "max_bore_mm": 95,
+              "flanges": ["F25"], "logic_flanges": ["F16","F20","F25"],
+              "bolts": {"F16":"4xM20 depth 35mm register d160",
+                        "F20":"4xM24 depth 45mm register d200",
+                        "F25":"4xM30 depth 55mm register d225"}},
 }
 
-# --- Performance: section 1, 3x400VAC 50Hz column (the NB198 supply) ---------
-AQ_PERFORMANCE_3x400V_50HZ = {
-    "AQ5":   {"torque_Nm": 50,    "time_s": 16,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
-    "AQ10":  {"torque_Nm": 100,   "time_s": 25,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
-    "AQ15":  {"torque_Nm": 150,   "time_s": 30,  "kW": 0.03, "nom_A": 0.17, "start_A": 0.45},
-    "AQ25":  {"torque_Nm": 250,   "time_s": 30,  "kW": 0.05, "nom_A": 0.23, "start_A": 0.45},
-    "AQ30":  {"torque_Nm": 300,   "time_s": 35,  "kW": 0.05, "nom_A": 0.23, "start_A": 0.45},
-    "AQ50":  {"torque_Nm": 500,   "time_s": 35,  "kW": 0.07, "nom_A": 0.45, "start_A": 0.79},
-    "AQ80":  {"torque_Nm": 800,   "time_s": 55,  "kW": 0.07, "nom_A": 0.45, "start_A": 0.79},
-    "AQ150": {"torque_Nm": 1500,  "time_s": 40,  "kW": 0.28, "nom_A": 0.65, "start_A": 2.6},
-    "AQ280": {"torque_Nm": 2800,  "time_s": 70,  "kW": 0.87, "nom_A": 2.0,  "start_A": 7.0},
-    "AQ430": {"torque_Nm": 4300,  "time_s": 40,  "kW": 0.97, "nom_A": 2.9,  "start_A": 15},
-    "AQ610": {"torque_Nm": 6100,  "time_s": 100, "kW": 0.97, "nom_A": 2.9,  "start_A": 15},
-    "AQ830": {"torque_Nm": 8300,  "time_s": 115, "kW": 0.87, "nom_A": 2.0,  "start_A": 7.0},
-    "AQ1000":{"torque_Nm": 10400, "time_s": 56,  "kW": 1.4,  "nom_A": 3.3,  "start_A": 14},
+# ── Performance tables: section 1, all supply voltages ───────────────────────
+# Source: Bernard TEC01-03_E+F_GRP_rev06B pages 4-10
+# Values are indicative (no-load). Power = at 33% of max torque.
+# Each model entry is a list of speed options [{torque_Nm, time_s, kW, nom_A, start_A}].
+# Note: former dict AQ_PERFORMANCE_3x400V_50HZ had mislabelled 3x415V data — corrected here.
+AQ_PERFORMANCE = {
+    "1x110-115VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.02,"nom_A":1.3, "start_A":1.6}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.06,"nom_A":2.5, "start_A":4.2},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.06,"nom_A":2.5, "start_A":4.2}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 20, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.3, "nom_A":4.5, "start_A":11}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s": 70, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.5, "nom_A":8.5, "start_A":19}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":3.0, "nom_A":39,  "start_A":142},
+                 {"torque_Nm":6100, "time_s":100, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":6100, "time_s":140, "kW":1.8, "nom_A":21,  "start_A":77}],
+        "AQ830":[{"torque_Nm":6015, "time_s":115, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.7, "nom_A":8.3, "start_A":33},
+                  {"torque_Nm":10400,"time_s":135,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s":100,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.8, "nom_A":21,  "start_A":77}],
+    },
+    "1x110-115VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.02,"nom_A":1.3, "start_A":1.6}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.06,"nom_A":2.5, "start_A":4.2},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.06,"nom_A":2.5, "start_A":4.2}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 17, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.3, "nom_A":4.5, "start_A":11}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s": 58, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.5, "nom_A":8.5, "start_A":19}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":3.0, "nom_A":39,  "start_A":142},
+                 {"torque_Nm":6100, "time_s": 83, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":6100, "time_s":117, "kW":1.8, "nom_A":21,  "start_A":77}],
+        "AQ830":[{"torque_Nm":6015, "time_s": 96, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.7, "nom_A":8.3, "start_A":33},
+                  {"torque_Nm":10400,"time_s":112,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.8, "nom_A":21,  "start_A":77}],
+    },
+    # 1x120VAC 60Hz covers AQ5-AQ80 only (larger models not available)
+    "1x120VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.02,"nom_A":1.3, "start_A":1.6}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.06,"nom_A":2.5, "start_A":4.2},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.06,"nom_A":2.5, "start_A":4.2}],
+    },
+    "1x120VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.02,"nom_A":1.1, "start_A":1.4}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.02,"nom_A":1.3, "start_A":1.6}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.06,"nom_A":2.5, "start_A":4.2},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.04,"nom_A":1.5, "start_A":1.7}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.06,"nom_A":2.5, "start_A":4.2}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 17, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.3, "nom_A":4.5, "start_A":11}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s": 58, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.5, "nom_A":8.5, "start_A":19}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":3.0, "nom_A":39,  "start_A":142},
+                 {"torque_Nm":6100, "time_s": 83, "kW":1.8, "nom_A":21,  "start_A":77},
+                 {"torque_Nm":6100, "time_s":117, "kW":1.8, "nom_A":21,  "start_A":77}],
+        "AQ830":[{"torque_Nm":6015, "time_s": 96, "kW":0.7, "nom_A":8.3, "start_A":33},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.7, "nom_A":8.3, "start_A":33}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.7, "nom_A":8.3, "start_A":33},
+                  {"torque_Nm":10400,"time_s":112,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.2, "nom_A":15,  "start_A":61},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.8, "nom_A":21,  "start_A":77}],
+    },
+    "1x220-230VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.02,"nom_A":0.8, "start_A":1.1}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.06,"nom_A":1.2, "start_A":1.7},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.06,"nom_A":1.2, "start_A":1.7}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 20, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.3, "nom_A":2.1, "start_A":3.9}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s": 70, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.5, "nom_A":3.5, "start_A":7.7}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":3.0, "nom_A":19,  "start_A":55},
+                 {"torque_Nm":6100, "time_s":100, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":6100, "time_s":140, "kW":1.8, "nom_A":11,  "start_A":34}],
+        "AQ830":[{"torque_Nm":6015, "time_s":115, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.7, "nom_A":4.5, "start_A":11},
+                  {"torque_Nm":10400,"time_s":135,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s":100,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.8, "nom_A":11,  "start_A":34}],
+    },
+    "1x220-230VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.02,"nom_A":0.8, "start_A":1.1}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.06,"nom_A":1.2, "start_A":1.7},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.06,"nom_A":1.2, "start_A":1.7}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 17, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.3, "nom_A":2.1, "start_A":3.9}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s": 58, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.5, "nom_A":3.5, "start_A":7.7}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":3.0, "nom_A":19,  "start_A":55},
+                 {"torque_Nm":6100, "time_s": 83, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":6100, "time_s":117, "kW":1.8, "nom_A":11,  "start_A":34}],
+        "AQ830":[{"torque_Nm":6015, "time_s": 96, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.7, "nom_A":4.5, "start_A":11},
+                  {"torque_Nm":10400,"time_s":112,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.8, "nom_A":11,  "start_A":34}],
+    },
+    "1x240VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":0.6, "start_A":0.7}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.02,"nom_A":0.8, "start_A":1.1}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.06,"nom_A":1.2, "start_A":1.7},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":1.1, "start_A":1.4}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.06,"nom_A":1.2, "start_A":1.7}],
+        "AQ150":[{"torque_Nm":1140, "time_s": 20, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.3, "nom_A":2.1, "start_A":3.9}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s": 70, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.5, "nom_A":3.5, "start_A":7.7}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":3.0, "nom_A":19,  "start_A":55},
+                 {"torque_Nm":6100, "time_s":100, "kW":1.8, "nom_A":11,  "start_A":34},
+                 {"torque_Nm":6100, "time_s":140, "kW":1.8, "nom_A":11,  "start_A":34}],
+        "AQ830":[{"torque_Nm":6015, "time_s":115, "kW":0.7, "nom_A":4.5, "start_A":11},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.7, "nom_A":4.5, "start_A":11}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.7, "nom_A":4.5, "start_A":11},
+                  {"torque_Nm":10400,"time_s":135,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s":100,"kW":1.2, "nom_A":8.0, "start_A":21},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.8, "nom_A":11,  "start_A":34}],
+    },
+    "3x380VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.02,"nom_A":0.15,"start_A":0.4}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":0.15,"start_A":0.4}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.02,"nom_A":0.15,"start_A":0.4}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":0.2, "start_A":0.4}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":0.2, "start_A":0.4}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.06,"nom_A":0.4, "start_A":0.7},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":0.2, "start_A":0.4}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.06,"nom_A":0.4, "start_A":0.7}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 20, "kW":0.73,"nom_A":1.8, "start_A":6.3},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.37,"nom_A":0.92,"start_A":3.6},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.14,"nom_A":0.66,"start_A":2.0}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.73,"nom_A":1.8, "start_A":6.3},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.37,"nom_A":0.92,"start_A":3.6},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.37,"nom_A":0.92,"start_A":3.6}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":0.82,"nom_A":2.6, "start_A":14},
+                 {"torque_Nm":4300, "time_s": 70, "kW":0.82,"nom_A":2.6, "start_A":14},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.29,"nom_A":0.98,"start_A":3.0}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":1.4, "nom_A":3.3, "start_A":23},
+                 {"torque_Nm":6100, "time_s":100, "kW":0.82,"nom_A":2.6, "start_A":14},
+                 {"torque_Nm":6100, "time_s":140, "kW":0.73,"nom_A":1.8, "start_A":6.3}],
+        "AQ830":[{"torque_Nm":8300, "time_s":115, "kW":0.73,"nom_A":1.8, "start_A":6.3},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.37,"nom_A":0.92,"start_A":3.6}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.37,"nom_A":0.92,"start_A":3.6},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.9, "nom_A":4.7, "start_A":20},
+                  {"torque_Nm":10400,"time_s":100,"kW":0.87,"nom_A":1.8, "start_A":10},
+                  {"torque_Nm":10400,"time_s":135,"kW":0.46,"nom_A":1.6, "start_A":4.8}],
+    },
+    "3x380VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.02,"nom_A":0.13,"start_A":0.33}],
+        "AQ10": [{"torque_Nm":  90, "time_s": 21, "kW":0.02,"nom_A":0.13,"start_A":0.33}],
+        "AQ15": [{"torque_Nm": 100, "time_s": 25, "kW":0.02,"nom_A":0.13,"start_A":0.33}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.03,"nom_A":0.17,"start_A":0.33}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.03,"nom_A":0.17,"start_A":0.33}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.05,"nom_A":0.33,"start_A":0.58},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.03,"nom_A":0.17,"start_A":0.33}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.05,"nom_A":0.33,"start_A":0.58}],
+        "AQ150":[{"torque_Nm":1190, "time_s": 17, "kW":0.61,"nom_A":1.5, "start_A":5.2},
+                 {"torque_Nm":1459, "time_s": 33, "kW":0.31,"nom_A":0.76,"start_A":3.0},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.12,"nom_A":0.55,"start_A":1.7}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.61,"nom_A":1.5, "start_A":5.2},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.61,"nom_A":1.5, "start_A":5.2},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.31,"nom_A":0.76,"start_A":3.0}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.6, "nom_A":3.9, "start_A":17},
+                 {"torque_Nm":4300, "time_s": 58, "kW":0.68,"nom_A":2.1, "start_A":11},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.38,"nom_A":1.3, "start_A":3.9}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":1.9, "nom_A":3.9, "start_A":26},
+                 {"torque_Nm":6100, "time_s": 83, "kW":0.68,"nom_A":2.1, "start_A":11},
+                 {"torque_Nm":6100, "time_s":117, "kW":0.68,"nom_A":2.1, "start_A":11}],
+        "AQ830":[{"torque_Nm":6283, "time_s": 96, "kW":0.61,"nom_A":1.5, "start_A":5.2},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.31,"nom_A":0.76,"start_A":3.0}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.61,"nom_A":1.5, "start_A":5.2},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.6, "nom_A":3.9, "start_A":17},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.2, "nom_A":2.7, "start_A":19},
+                  {"torque_Nm":10400,"time_s":112,"kW":0.38,"nom_A":1.3, "start_A":3.9}],
+    },
+    # 3x400VAC 50Hz — standard European supply. Values corrected (old dict had 3x415V data).
+    "3x400VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.04,"nom_A":0.22,"start_A":0.43}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.04,"nom_A":0.22,"start_A":0.43}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.07,"nom_A":0.43,"start_A":0.75},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.04,"nom_A":0.22,"start_A":0.43}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.07,"nom_A":0.43,"start_A":0.75}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 20, "kW":0.8, "nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.4, "nom_A":0.97,"start_A":3.8},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.15,"nom_A":0.7, "start_A":2.1}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.8, "nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.4, "nom_A":0.97,"start_A":3.8},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.4, "nom_A":0.97,"start_A":3.8}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":0.9, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":4300, "time_s": 70, "kW":0.9, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.32,"nom_A":1.1, "start_A":3.2}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":1.6, "nom_A":3.1, "start_A":20},
+                 {"torque_Nm":6100, "time_s":100, "kW":0.9, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":6100, "time_s":140, "kW":0.8, "nom_A":1.9, "start_A":6.7}],
+        "AQ830":[{"torque_Nm":8300, "time_s":115, "kW":0.8, "nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.4, "nom_A":0.97,"start_A":3.8}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.4, "nom_A":0.97,"start_A":3.8},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.3, "nom_A":3.2, "start_A":14},
+                  {"torque_Nm":10400,"time_s":100,"kW":0.96,"nom_A":1.9, "start_A":11},
+                  {"torque_Nm":10400,"time_s":135,"kW":0.5, "nom_A":1.6, "start_A":5.0}],
+    },
+    "3x400VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.02,"nom_A":0.13,"start_A":0.35}],
+        "AQ10": [{"torque_Nm":  90, "time_s": 21, "kW":0.02,"nom_A":0.13,"start_A":0.35}],
+        "AQ15": [{"torque_Nm": 110, "time_s": 25, "kW":0.02,"nom_A":0.13,"start_A":0.35}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.04,"nom_A":0.18,"start_A":0.35}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.04,"nom_A":0.18,"start_A":0.35}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.06,"nom_A":0.35,"start_A":0.61},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.04,"nom_A":0.18,"start_A":0.35}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.06,"nom_A":0.35,"start_A":0.61}],
+        "AQ150":[{"torque_Nm":1319, "time_s": 17, "kW":0.67,"nom_A":1.6, "start_A":5.5},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.34,"nom_A":0.8, "start_A":3.1},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.13,"nom_A":0.58,"start_A":1.8}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.67,"nom_A":1.6, "start_A":5.5},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.67,"nom_A":1.6, "start_A":5.5},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.34,"nom_A":0.8, "start_A":3.1}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.7, "nom_A":4.1, "start_A":18},
+                 {"torque_Nm":4300, "time_s": 58, "kW":0.75,"nom_A":2.3, "start_A":12},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.42,"nom_A":1.4, "start_A":4.1}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":1.3, "nom_A":2.8, "start_A":20},
+                 {"torque_Nm":6100, "time_s": 83, "kW":0.75,"nom_A":2.3, "start_A":12},
+                 {"torque_Nm":6100, "time_s":117, "kW":0.75,"nom_A":2.3, "start_A":12}],
+        "AQ830":[{"torque_Nm":6961, "time_s": 96, "kW":0.67,"nom_A":1.6, "start_A":5.5},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.34,"nom_A":0.8, "start_A":3.1}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.67,"nom_A":1.6, "start_A":5.5},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.7, "nom_A":4.1, "start_A":18},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.3, "nom_A":2.8, "start_A":20},
+                  {"torque_Nm":10400,"time_s":112,"kW":0.42,"nom_A":1.4, "start_A":4.1}],
+    },
+    "3x415VAC_50Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 16, "kW":0.03,"nom_A":0.17,"start_A":0.45}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 25, "kW":0.03,"nom_A":0.17,"start_A":0.45}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 30, "kW":0.03,"nom_A":0.17,"start_A":0.45}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 30, "kW":0.05,"nom_A":0.23,"start_A":0.45}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 35, "kW":0.05,"nom_A":0.23,"start_A":0.45}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.07,"nom_A":0.45,"start_A":0.79},
+                 {"torque_Nm": 500, "time_s": 55, "kW":0.05,"nom_A":0.23,"start_A":0.45}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 55, "kW":0.07,"nom_A":0.45,"start_A":0.79}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 20, "kW":0.87,"nom_A":2.0, "start_A":7.0},
+                 {"torque_Nm":1500, "time_s": 40, "kW":0.28,"nom_A":0.65,"start_A":2.6},
+                 {"torque_Nm":1500, "time_s":100, "kW":0.11,"nom_A":0.49,"start_A":1.4}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 70, "kW":0.87,"nom_A":2.0, "start_A":7.0},
+                 {"torque_Nm":2800, "time_s":100, "kW":0.44,"nom_A":1.1, "start_A":4.0},
+                 {"torque_Nm":2800, "time_s":140, "kW":0.28,"nom_A":0.65,"start_A":2.6}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 40, "kW":0.97,"nom_A":2.9, "start_A":15},
+                 {"torque_Nm":4300, "time_s": 70, "kW":0.97,"nom_A":2.9, "start_A":15},
+                 {"torque_Nm":4300, "time_s":120, "kW":0.35,"nom_A":1.1, "start_A":3.3}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 50, "kW":1.8, "nom_A":3.2, "start_A":21},
+                 {"torque_Nm":6100, "time_s":100, "kW":0.97,"nom_A":2.9, "start_A":15},
+                 {"torque_Nm":6100, "time_s":140, "kW":0.87,"nom_A":2.0, "start_A":7.0}],
+        "AQ830":[{"torque_Nm":8300, "time_s":115, "kW":0.87,"nom_A":2.0, "start_A":7.0},
+                 {"torque_Nm":8300, "time_s":230, "kW":0.28,"nom_A":0.65,"start_A":2.6}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":190,"kW":0.44,"nom_A":1.1, "start_A":4.0},
+                  {"torque_Nm":10400,"time_s": 56,"kW":1.4, "nom_A":3.3, "start_A":14},
+                  {"torque_Nm":10400,"time_s":100,"kW":1.1, "nom_A":1.9, "start_A":11},
+                  {"torque_Nm":10400,"time_s":135,"kW":0.54,"nom_A":1.7, "start_A":5.3}],
+    },
+    "3x440VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.03,"nom_A":0.15,"start_A":0.39}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.03,"nom_A":0.15,"start_A":0.39}],
+        "AQ15": [{"torque_Nm": 145, "time_s": 25, "kW":0.03,"nom_A":0.15,"start_A":0.39}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.04,"nom_A":0.2, "start_A":0.39}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.04,"nom_A":0.2, "start_A":0.39}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.07,"nom_A":0.39,"start_A":0.68},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.04,"nom_A":0.2, "start_A":0.39}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.07,"nom_A":0.39,"start_A":0.68}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 17, "kW":0.81,"nom_A":1.7, "start_A":6.1},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.41,"nom_A":0.88,"start_A":3.5},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.16,"nom_A":0.64,"start_A":1.9}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.81,"nom_A":1.7, "start_A":6.1},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.41,"nom_A":0.88,"start_A":3.5},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.41,"nom_A":0.88,"start_A":3.5}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.3, "nom_A":2.9, "start_A":13},
+                 {"torque_Nm":4300, "time_s": 58, "kW":0.91,"nom_A":2.5, "start_A":13},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.33,"nom_A":0.94,"start_A":2.9}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":1.6, "nom_A":3.1, "start_A":22},
+                 {"torque_Nm":6100, "time_s": 83, "kW":0.91,"nom_A":2.5, "start_A":13},
+                 {"torque_Nm":6100, "time_s":117, "kW":0.91,"nom_A":2.5, "start_A":13}],
+        "AQ830":[{"torque_Nm":7980, "time_s": 96, "kW":0.81,"nom_A":1.7, "start_A":6.1},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.41,"nom_A":0.88,"start_A":3.5}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.41,"nom_A":0.88,"start_A":3.5},
+                  {"torque_Nm":10400,"time_s": 46,"kW":2.1, "nom_A":4.5, "start_A":20},
+                  {"torque_Nm":10400,"time_s": 83,"kW":0.97,"nom_A":1.7, "start_A":9.7},
+                  {"torque_Nm":10400,"time_s":112,"kW":0.51,"nom_A":1.5, "start_A":4.6}],
+    },
+    "3x460VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.03,"nom_A":0.16,"start_A":0.41}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.03,"nom_A":0.16,"start_A":0.41}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.03,"nom_A":0.16,"start_A":0.41}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.05,"nom_A":0.21,"start_A":0.41}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.05,"nom_A":0.21,"start_A":0.41}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.07,"nom_A":0.41,"start_A":0.71},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.05,"nom_A":0.21,"start_A":0.41}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.07,"nom_A":0.41,"start_A":0.71}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 17, "kW":0.89,"nom_A":1.8, "start_A":6.4},
+                 {"torque_Nm":1500, "time_s": 33, "kW":0.45,"nom_A":0.93,"start_A":3.6},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.17,"nom_A":0.67,"start_A":2.0}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.89,"nom_A":1.8, "start_A":6.4},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.45,"nom_A":0.93,"start_A":3.6},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.45,"nom_A":0.93,"start_A":3.6}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.0, "nom_A":2.6, "start_A":14},
+                 {"torque_Nm":4300, "time_s": 58, "kW":1.0, "nom_A":2.6, "start_A":14},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.36,"nom_A":0.98,"start_A":3.1}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":1.8, "nom_A":3.0, "start_A":19},
+                 {"torque_Nm":6100, "time_s": 83, "kW":1.0, "nom_A":2.6, "start_A":14},
+                 {"torque_Nm":6100, "time_s":117, "kW":0.89,"nom_A":1.8, "start_A":6.4}],
+        "AQ830":[{"torque_Nm":8300, "time_s": 96, "kW":0.89,"nom_A":1.8, "start_A":6.4},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.45,"nom_A":0.93,"start_A":3.6}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.45,"nom_A":0.93,"start_A":3.6},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.0, "nom_A":2.6, "start_A":14},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.1, "nom_A":1.8, "start_A":11},
+                  {"torque_Nm":10400,"time_s":112,"kW":0.56,"nom_A":1.6, "start_A":4.8}],
+    },
+    "3x480VAC_60Hz": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.03,"nom_A":0.16,"start_A":0.43}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.05,"nom_A":0.22,"start_A":0.43}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.05,"nom_A":0.22,"start_A":0.43}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 30, "kW":0.08,"nom_A":0.43,"start_A":0.75},
+                 {"torque_Nm": 500, "time_s": 45, "kW":0.05,"nom_A":0.22,"start_A":0.43}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 45, "kW":0.08,"nom_A":0.43,"start_A":0.75}],
+        "AQ150":[{"torque_Nm":1500, "time_s": 17, "kW":0.96,"nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":1490, "time_s": 33, "kW":0.31,"nom_A":0.62,"start_A":2.5},
+                 {"torque_Nm":1500, "time_s": 83, "kW":0.12,"nom_A":0.48,"start_A":1.4}],
+        "AQ280":[{"torque_Nm":2800, "time_s": 58, "kW":0.96,"nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":2800, "time_s": 83, "kW":0.48,"nom_A":0.97,"start_A":3.8},
+                 {"torque_Nm":2800, "time_s":117, "kW":0.31,"nom_A":0.62,"start_A":2.5}],
+        "AQ430":[{"torque_Nm":4300, "time_s": 33, "kW":1.1, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":4300, "time_s": 58, "kW":1.1, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":4300, "time_s":100, "kW":0.39,"nom_A":1.1, "start_A":3.2}],
+        "AQ610":[{"torque_Nm":6100, "time_s": 42, "kW":2.0, "nom_A":3.1, "start_A":20},
+                 {"torque_Nm":6100, "time_s": 83, "kW":1.1, "nom_A":2.7, "start_A":14},
+                 {"torque_Nm":6100, "time_s":117, "kW":0.96,"nom_A":1.9, "start_A":6.7}],
+        "AQ830":[{"torque_Nm":8300, "time_s": 96, "kW":0.96,"nom_A":1.9, "start_A":6.7},
+                 {"torque_Nm":8300, "time_s":192, "kW":0.31,"nom_A":0.62,"start_A":2.5}],
+        "AQ1000":[{"torque_Nm":10400,"time_s":158,"kW":0.48,"nom_A":0.97,"start_A":3.8},
+                  {"torque_Nm":10400,"time_s": 46,"kW":1.1, "nom_A":2.7, "start_A":14},
+                  {"torque_Nm":10400,"time_s": 83,"kW":1.2, "nom_A":1.9, "start_A":11},
+                  {"torque_Nm":10400,"time_s":112,"kW":0.6, "nom_A":1.6, "start_A":5.0}],
+    },
+    # 24VDC available for AQ5-AQ80 only
+    "24VDC": {
+        "AQ5":  [{"torque_Nm":  50, "time_s": 13, "kW":0.03,"nom_A":0.97,"start_A":8}],
+        "AQ10": [{"torque_Nm": 100, "time_s": 21, "kW":0.03,"nom_A":1.18,"start_A":8}],
+        "AQ15": [{"torque_Nm": 150, "time_s": 25, "kW":0.03,"nom_A":1.46,"start_A":8}],
+        "AQ25": [{"torque_Nm": 250, "time_s": 25, "kW":0.05,"nom_A":1.74,"start_A":10}],
+        "AQ30": [{"torque_Nm": 300, "time_s": 30, "kW":0.05,"nom_A":1.98,"start_A":10}],
+        "AQ50": [{"torque_Nm": 500, "time_s": 35, "kW":0.05,"nom_A":1.8, "start_A":10}],
+        "AQ80": [{"torque_Nm": 800, "time_s": 40, "kW":0.05,"nom_A":2.88,"start_A":10}],
+    },
+}
+# Backwards-compatible alias (old name had 3x415V data — now points to correct 3x400V table)
+AQ_PERFORMANCE_3x400V_50HZ = {m: v[0] for m, v in AQ_PERFORMANCE["3x400VAC_50Hz"].items()}
+
+# ── LOGIC variant terminal map (sheets 3.7 / 3.8) ──────────────────────────
+# Source: TEC01-03_E+F_GRP_rev06B sheet 3.7 (single-phase overview) and
+# sheet 3.8 (3-phase overview). The positioner board (P2) and RS4 board (P1)
+# are option cards; their terminals only exist when fitted.
+AQ_LOGIC_TERMINALS = {
+    "source": "Bernard TEC01-03 rev06B sheets 3.7-3.8 (LOGIC overview)",
+    "motor_supply": {
+        "1ph": {"L": "L2/L", "N": "L1/N", "PE": "PE"},
+        "3ph": {"L1": "L1/N", "L2": "L2/L", "L3": "L3", "PE": "PE",
+                "note": "Phase sequence not important; missing phase triggers fault"},
+    },
+    "remote_commands": {
+        3:  "OPEN command (digital input; connect to 10/11 for dry-contact control)",
+        4:  "CLOSE command",
+        5:  "STOP command",
+        6:  "AUX1 configurable command",
+        7:  "AUX2 / cancel self-hold (do not connect if self-holding not required)",
+        8:  "24 VDC output supply (for powering digital inputs from terminals 3-7)",
+        9:  "Emergency 24 VDC input (external 24V keeps actuator alive on power loss)",
+        10: "0 V reference (common for digital inputs)",
+        11: "0 V reference (common)",
+    },
+    "signalling_relays": {
+        "R1": {"terminals": [20, 21, 22], "function": "Valve OPEN (SPDT)"},
+        "R2": {"terminals": [23, 24, 25], "function": "Valve CLOSED (SPDT)"},
+        "R3": {"terminals": "configurable", "function": "Configurable relay (SPDT)"},
+        "RD": {"terminals": [26, 27, 28],
+               "function": "Fault relay — 26-28 CLOSED = actuator available (NC healthy)"},
+    },
+    "positioner_board_P2": {
+        "note": "Optional board; terminals 12-19 only present when fitted",
+        12: "Position xmitter supply − (or signal − for 2-wire 4-20mA)",
+        13: "Position xmitter signal + (0/4-20mA output)",
+        14: "Position xmitter supply + (12-32 VDC external)",
+        15: "Position xmitter supply − (3-wire connection only)",
+        16: "Torque xmitter output +",
+        17: "Torque xmitter output −",
+        18: "Analog setpoint input −",
+        19: "Analog setpoint input +",
+    },
+    "rs4_board_P1": {
+        "note": "Optional RS4 configurable relays board; terminals 29-36 only when fitted",
+        "R4": [29, 30],
+        "R5": [31, 32],
+        "R6": [33, 34],
+        "R7": [35, 36],
+    },
+}
+
+# ── Wiring sheet index (all 40 sheets) ─────────────────────────────────────
+AQ_WIRING_SHEETS = {
+    "3.1":  "AQ SWITCH: Single-phase (AQ5-80)",
+    "3.2":  "AQ SWITCH: 3-phases (AQ5-80; layout reused on sheet 3.21 for AQ150-1000)",
+    "3.3":  "AQ5-15 SWITCH: Single-phase + Positioner option",
+    "3.4":  "AQ5-15 SWITCH: 3-phases + Positioner option",
+    "3.5":  "AQ25-80 SWITCH: Single-phase + Positioner option",
+    "3.6":  "AQ25-80 SWITCH: 3-phases + Positioner option",
+    "3.7":  "AQ LOGIC: Single-phase overview (customer terminals + signalling, 2 pages)",
+    "3.8":  "AQ LOGIC: 3-phases overview (customer terminals + signalling, 2 pages)",
+    "3.9":  "AQ5-15 LOGIC: On-Off",
+    "3.10": "AQ5-15 LOGIC: Positioner (2 pages)",
+    "3.11": "AQ5-15 LOGIC: Positioner + RS4 (2 pages)",
+    "3.12": "AQ5-15 LOGIC: RS4 only (2 pages)",
+    "3.13": "AQ5-15 LOGIC: Transmitter (2 pages)",
+    "3.14": "AQ5-15 LOGIC: Transmitter + RS4 (2 pages)",
+    "3.15": "AQ25-80 LOGIC: On-Off",
+    "3.16": "AQ25-80 LOGIC: Positioner (2 pages)",
+    "3.17": "AQ25-80 LOGIC: Positioner + RS4 (2 pages)",
+    "3.18": "AQ25-80 LOGIC: RS4 only (2 pages)",
+    "3.19": "AQ25-80 LOGIC: Transmitter (2 pages)",
+    "3.20": "AQ25-80 LOGIC: Transmitter + RS4 (2 pages)",
+    "3.21": "AQ150-1000 SWITCH: 3-phases standard",
+    "3.22": "AQ150-1000 LOGIC: Single-phase On-Off",
+    "3.23": "AQ150-1000 LOGIC: Single-phase (emergency supply)",
+    "3.24": "AQ150-1000 LOGIC: 3-phases On-Off",
+    "3.25": "AQ150-1000 LOGIC: Single-phase RS4 / 3-phases RS4",
+    "3.26": "AQ150-1000 LOGIC: 3-phases RS4",
+    "3.27": "AQ150-1000 LOGIC: Single-phase Positioner",
+    "3.28": "AQ150-1000 LOGIC: 3-phases Positioner",
+    "3.29": "AQ150-1000 LOGIC: Single-phase Transmitter",
+    "3.30": "AQ150-1000 LOGIC: 3-phases Transmitter",
+    "3.31": "AQ150-1000 LOGIC: Single-phase Positioner + RS4",
+    "3.32": "AQ150-1000 LOGIC: 3-phases Positioner + RS4",
+    "3.33": "AQ150-1000 LOGIC: Single-phase Transmitter + RS4",
+    "3.34": "AQ150-1000 LOGIC: 3-phases Transmitter + RS4",
+    "3.35": "AQ5-15 Direct Current SWITCH",
+    "3.36": "AQ5-15 Direct Current LOGIC: Positioner + RS4",
+    "3.37": "AQ5-15 Direct Current LOGIC: Transmitter + RS4",
+    "3.38": "AQ25-80 Direct Current SWITCH",
+    "3.39": "AQ25-80 Direct Current LOGIC: Positioner + RS4",
+    "3.40": "AQ25-80 Direct Current LOGIC: Transmitter + RS4",
 }
 
 
 @mcp.tool()
-def aq_terminals(phase: str = "3ph") -> str:
-    """Return the Bernard AQ SWITCH terminal map (TEC01-03 sheet 3.2 for 3-phase,
-    sheet 3.1 for single-phase). phase = '3ph' or '1ph'."""
+def aq_terminals(phase: str = "3ph", variant: str = "SWITCH") -> str:
+    """Return Bernard AQ terminal map. variant='SWITCH' returns mechanical switch
+    terminal block (sheet 3.1/3.2). variant='LOGIC' returns the LOGIC controller
+    customer terminal map (sheets 3.7/3.8). phase='3ph' or '1ph'."""
     import json
+    if variant.upper() == "LOGIC":
+        return json.dumps(AQ_LOGIC_TERMINALS, indent=2, ensure_ascii=False)
     data = AQ_SWITCH_TERMINALS if phase.lower().startswith("3") else AQ_SWITCH_TERMINALS_1PH
     return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 @mcp.tool()
-def aq_model_data(size: str = "AQ25") -> str:
-    """Return mechanical + 3x400VAC/50Hz electrical data for an AQ model
-    (e.g. AQ25). Source: Bernard TEC01-03 sections 1 and 2."""
+def aq_model_data(size: str = "AQ25", voltage: str = "3x400VAC_50Hz") -> str:
+    """Return mechanical dimensions + electrical performance for an AQ model.
+    size: e.g. 'AQ150'. voltage: key from AQ_PERFORMANCE (default 3x400VAC_50Hz).
+    Use aq_performance() to list all available voltages."""
     import json
     size = size.upper().replace(" ", "")
+    perf_table = AQ_PERFORMANCE.get(voltage, AQ_PERFORMANCE.get(voltage.replace(" ","_"), {}))
     out = {
         "model": size,
         "mechanical": AQ_DIMENSIONS.get(size, "unknown model"),
-        "performance_3x400V_50Hz": AQ_PERFORMANCE_3x400V_50HZ.get(size, "unknown model"),
+        "performance": {
+            "voltage": voltage,
+            "speeds": perf_table.get(size, "not available at this voltage"),
+        },
+        "wiring_sheets": AQ_WIRING_SHEETS,
     }
     return json.dumps(out, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def aq_performance(model: str = "AQ150", voltage: str = "") -> str:
+    """Return performance data for an AQ model across all voltages, or for a
+    specific voltage. model: e.g. 'AQ150'. voltage: optional key like
+    '3x400VAC_50Hz' — omit to get all voltages."""
+    import json
+    model = model.upper().replace(" ", "")
+    if voltage:
+        table = AQ_PERFORMANCE.get(voltage, {})
+        return json.dumps({
+            "model": model, "voltage": voltage,
+            "speeds": table.get(model, "not available"),
+        }, indent=2)
+    result = {"model": model, "available_voltages": list(AQ_PERFORMANCE.keys()), "by_voltage": {}}
+    for v, table in AQ_PERFORMANCE.items():
+        if model in table:
+            result["by_voltage"][v] = table[model]
+    return json.dumps(result, indent=2)
 
 
 @mcp.tool()
@@ -1830,6 +2399,1062 @@ def draw_aq_valve_control(origin_x: float = 0.0, origin_y: float = 0.0,
             f"torque/thermostat) at origin ({ox}, {oy}) on layer EFF-VALVE. "
             f"Terminal numbers baked in from TEC01-03 sheet 3.2; NO/NC polarity "
             f"within each switch group flagged TBC vs the order sheet.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  COMPLETE EFF SYSTEM SCHEMATIC  (19 sheets, NB198 corporate standard)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mcp.tool()
+def draw_eff_system(
+    project_name: str = "EXTERNAL FIRE FIGHTING CONTROL SYSTEM",
+    ship_name: str = "UZMAR SHIPYARD NB 198",
+    drawing_no: str = "M25-IM-0001D20",
+    date_str: str = "30.01.2025",
+    company: str = "MARSIS MAKINE ve GEMI SAN. A.S.",
+    suction_valve: str = "AQ15",
+    discharge_valve: str = "AQ15",
+    origin_x: float = 0.0,
+    origin_y: float = 0.0,
+) -> str:
+    """Draw complete 19-sheet External Fire Fighting (EFF) system schematic
+    matching NB198 corporate standard. Sheets: 1=Cover, 6=Block Diagram,
+    7=Power Monitors, 8=Power Valves+Solenoids, 9=24VDC Distribution,
+    10=PLC DQ->10K Relays, 11=PLC DI<-Actuators/Monitors,
+    12=12K Relay Bank, 13=Ext Wiring Overview, 14=1X3 PORT Monitor,
+    15=1X4 STBD Monitor, 16=1X5 Valve Actuators, 19=HMI+PLC Expansion.
+    Components: 2x MF20EF fire monitors (each 2-axis: UP/DN + LT/RT, 0.37kW 400VAC),
+    2x Bernard AQ valve actuators SWITCH type 3x400VAC (Ir=0.45A),
+    HPU hydraulic clutch system, 2x S7-1200 (A1+A1.1), KTP700 HMI,
+    10K relay bank Phoenix 788-312 24VDC, 12K relay bank, 3TG1010-0BB4 contactors,
+    3UG4512 phase monitor, 3RV2011 motor protection. Device tags match NB198."""
+    import math
+    acad = _get_acad()
+    doc  = acad.ActiveDocument
+
+    for nm, builder in _SYMBOLS.items():
+        if not _block_exists(doc, nm):
+            try:
+                builder(doc.Blocks.Add(_point(0, 0), nm))
+            except Exception:
+                pass
+    try:
+        try:
+            lay = doc.Layers.Item("EFF-SYSTEM")
+        except Exception:
+            lay = doc.Layers.Add("EFF-SYSTEM")
+            lay.color = 7
+        doc.ActiveLayer = lay
+    except Exception:
+        pass
+
+    ms = doc.ModelSpace
+    ox, oy = float(origin_x), float(origin_y)
+    REV = "00"
+
+    def L(x1, y1, x2, y2):
+        ms.AddLine(_point(x1+ox, y1+oy), _point(x2+ox, y2+oy))
+
+    def T(txt, x, y, h=4.0, align="left"):
+        _add_text(ms, str(txt), x+ox, y+oy, h, align)
+
+    def R(x1, y1, x2, y2):
+        p = ms.AddLightWeightPolyline(
+            _coords([(x1+ox,y1+oy),(x2+ox,y1+oy),(x2+ox,y2+oy),(x1+ox,y2+oy)]))
+        p.Closed = True
+
+    def C(cx, cy, r):
+        ms.AddCircle(_point(cx+ox, cy+oy), float(r))
+
+    def dot(x, y, r=1.2):
+        _add_dot(ms, x+ox, y+oy, r)
+
+    def title_block(sx, sy, sheet_no, title):
+        R(sx+5,  sy+5,  sx+415, sy+285)
+        L(sx+5,  sy+270, sx+415, sy+270)
+        L(sx+5,  sy+12,  sx+415, sy+12)
+        L(sx+140,sy+270, sx+140, sy+285)
+        L(sx+280,sy+270, sx+280, sy+285)
+        L(sx+360,sy+270, sx+360, sy+285)
+        T(company,         sx+10,  sy+278, 3.5)
+        T(project_name,    sx+145, sy+279, 3.5)
+        T(f"Ship: {ship_name}", sx+145, sy+273, 3)
+        T(f"DWG: {drawing_no}", sx+285, sy+279, 3)
+        T(f"Date: {date_str}  Rev:{REV}", sx+285, sy+273, 3)
+        T(f"Sheet {sheet_no}", sx+365, sy+276, 4)
+        T(title, sx+10, sy+262, 7)
+
+    def terminal_wiring(sx, sy, tb_name, cab_terms, dev_name, dev_terms, cables):
+        n = max(len(cab_terms), len(dev_terms))
+        step = max(6, min(14, int(195 / max(n, 1))))
+        R(sx+20, sy+50, sx+95, sy+255)
+        T("CABINET",  sx+57, sy+257, 3.5, "center")
+        T(tb_name,    sx+57, sy+249, 5,   "center")
+        R(sx+325, sy+50, sx+410, sy+255)
+        T("FIELD DEVICE", sx+367, sy+257, 3.5, "center")
+        T(dev_name,       sx+367, sy+249, 4,   "center")
+        for i, (tno, tlbl) in enumerate(cab_terms):
+            ty = sy + 240 - i * step
+            R(sx+67, ty-3, sx+83, ty+3)
+            T(str(tno), sx+60, ty-1, 2.8, "right")
+            T(str(tlbl)[:18], sx+86, ty-1, 2.5)
+        for i, (tno, tlbl) in enumerate(dev_terms):
+            ty = sy + 240 - i * step
+            R(sx+325, ty-3, sx+341, ty+3)
+            T(str(tno), sx+343, ty-1, 2.8)
+            L(sx+83, ty, sx+325, ty)
+        for j, (cno, ctype) in enumerate(cables):
+            T(f"{cno}  {ctype}", sx+165, sy+248 - j*12, 3, "center")
+
+    # ── SHEET 1: COVER ────────────────────────────────────────────────────────
+    S = 0
+    title_block(S, 0, "1 / 19", "COVER PAGE & SHEET INDEX")
+    T("EXTERNAL FIRE FIGHTING SYSTEM", S+210, 240, 11, "center")
+    T("CONTROL CABINET",               S+210, 224, 9,  "center")
+    T(ship_name,                        S+210, 206, 7,  "center")
+    T(company,                          S+210, 192, 5,  "center")
+    T(f"Drawing No: {drawing_no}    Date: {date_str}    Rev: {REV}",
+                                        S+210, 182, 4,  "center")
+    R(S+15, 20, S+405, 170)
+    T("SHEET INDEX", S+15, 172, 5)
+    L(S+15, 162, S+405, 162)
+    T("SH", S+18, 164, 3.5); T("TITLE", S+45, 164, 3.5)
+    for i, (sno, desc) in enumerate([
+        ("1",  "Cover Page & Sheet Index"),
+        ("2",  "Remote Control Cut-Out"),
+        ("3",  "Mounting Drawing"),
+        ("4",  "System Overview"),
+        ("5",  "Remote Control Panel Wiring"),
+        ("6",  "Block Diagram"),
+        ("7",  "Power Circuit – Fire Monitors (7F1, 7Q1-4, 11K1-8)"),
+        ("8",  "Power Circuit – Valves & Solenoids (8Q1-2, 11K9-12, 8F1-4)"),
+        ("9",  "24VDC Power Distribution (9A1 PSU, 9F1-7)"),
+        ("10", "Control – PLC DQ Outputs to 10K Relay Bank"),
+        ("11", "Control – PLC DI Inputs from Actuators & Monitors"),
+        ("12", "Control – 12K Relay Bank (Interlocks & Alarms)"),
+        ("13", "External Wiring – Cabinet Overview & Cable Schedule"),
+        ("14", "External Wiring – 1X3 PORT Fire Monitor"),
+        ("15", "External Wiring – 1X4 STBD Fire Monitor"),
+        ("16", "External Wiring – 1X5 Suction & Discharge Valve Actuators"),
+        ("17", "External Wiring – 1X2 HPU & Propulsion Signals"),
+        ("18", "External Wiring – 1X1 Power In, Ship Alarm, Remote"),
+        ("19", "HMI (KTP700) + PLC Expansion (A1.1, A1.2)"),
+    ]):
+        ry = 155 - i * 7
+        L(S+15, ry+7, S+405, ry+7)
+        T(sno,  S+18, ry, 3); T(desc, S+45, ry, 3)
+    R(S+15, -80, S+405, 15)
+    T("ELECTRICAL SPECIFICATIONS", S+18, 8, 4.5)
+    for i, s in enumerate([
+        f"Main Supply:        3 x 400 VAC  50 Hz  16 A",
+        f"Control Supply:     24 VDC  (built-in PSU 9A1)",
+        f"Suction Valve:      Bernard {suction_valve}  SWITCH type  3x400VAC  Ir=0.45A",
+        f"Discharge Valve:    Bernard {discharge_valve}  SWITCH type  3x400VAC  Ir=0.45A",
+        f"Fire Monitors:      2x MF20EF  (PORT + STBD)  0.37kW / axis  400VAC",
+        f"Motor Protection:   3RV2011-1AA10  (valves: 0.45A) + 3RV2011 (monitors: 1.1A)",
+        f"Contactors:         3TG1010-0BB4  24VDC coil  (11K1-11K12)",
+        f"Control Relays:     Phoenix Contact 788-312  24VDC  (10K1-9, 12K1-7)",
+        f"PLC:                Siemens S7-1200 CPU 1214C + SM1223 expansions (A1.1, A1.2)",
+        f"HMI:                Siemens KTP700  7\" PROFINET",
+    ]):
+        T(s, S+20, -2 - i*8, 3.2)
+
+    # ── SHEET 6: BLOCK DIAGRAM ────────────────────────────────────────────────
+    S = 2300
+    title_block(S, 0, "6 / 19", "SYSTEM BLOCK DIAGRAM")
+    R(S+155, 85, S+265, 245)
+    T("MAIN CONTROL", S+210, 238, 4.5, "center")
+    T("CABINET",      S+210, 228, 4.5, "center")
+    for j, ln in enumerate(["S7-1200 A1+A1.1+A1.2","KTP700 HMI (PROFINET)",
+                             "400V→24VDC PSU (9A1)","10K/12K relay banks",
+                             "11K1-12 power contactors","1X1-1X6 terminals"]):
+        T(ln, S+160, 215-j*10, 3)
+    def _blk(lbl, lines, x1, y1, x2, y2, wx, wy, dx, dy, cno, ctype):
+        R(S+x1, y1, S+x2, y2)
+        T(lbl, S+(x1+x2)//2, y2-10, 4, "center")
+        for k, ln in enumerate(lines):
+            T(ln, S+(x1+x2)//2, y2-20-k*9, 3, "center")
+        L(S+wx, wy, S+wx+dx, wy+dy)
+        T(f"{cno} {ctype}", S+wx+(3 if dx>0 else -55), wy+2, 2.8)
+    _blk("PORT MONITOR",["MF20EF","UP/DN 0.37kW","LT/RT 0.37kW"],
+         15,175,135,230, 135,202, 20,0, "1W3-1/2","7x+16x1.5")
+    _blk("STBD MONITOR",["MF20EF","UP/DN 0.37kW","LT/RT 0.37kW"],
+         285,175,405,230, 265,202,-20,0,"1W4-1/2","7x+16x1.5")
+    _blk("SUCTION VALVE",[f"Bernard {suction_valve}","SWITCH 3x400V"],
+         15,105,135,155, 135,130, 20,0,"1W5-1/2","7x1.5+4x2x0.75")
+    _blk("DISCHARGE VLV",[f"Bernard {discharge_valve}","SWITCH 3x400V"],
+         285,105,405,155, 265,130,-20,0,"1W5-3/4","7x1.5+4x2x0.75")
+    _blk("HPU / CLUTCH",["400V pump motor","oil press alarm"],
+         90,30,200,75, 155,95, 0,-10,"1W2","3x1.5+4x2x0.75")
+    _blk("REMOTE PANEL",["Bridge joysticks","monitor buttons"],
+         220,30,330,75, 265,85,-10,0,"1W6","7x2x0.75+CAT8")
+    T("Ship Supply 3x400V 16A in → 1X1", S+160, 250, 3.5)
+    T("1W1-6 → Ship Alarm  |  1W1-3/4/5 → Propulsion  |  1W6-4 CAT8 → PROFINET",
+      S+10, -15, 3.2)
+
+    # ── SHEET 7: POWER – FIRE MONITORS ───────────────────────────────────────
+    S = 2760
+    title_block(S, 0, "7 / 19", "POWER CIRCUIT – FIRE MONITORS  400V 50Hz")
+    L(S+15, 258, S+410, 258)
+    T("400V 50Hz  from 1X1", S+15, 260, 3.5)
+    for col, lbl in ((S+60,"L1"),(S+75,"L2"),(S+90,"L3")):
+        L(col, 268, col, 258); T(lbl, col-2, 269, 3.5); dot(col, 258)
+    R(S+48, 243, S+102, 258)
+    T("7F1  3P  16A", S+75, 250, 3.5, "center")
+    for col in (S+60, S+75, S+90):
+        L(col, 243, col, 237)
+    L(S+15, 237, S+410, 237)
+
+    def mon_branch(bx, qno, ka, kb, tbname, t_start, ax_a, ax_b):
+        cx = S+bx; c1=cx-5; c2=cx; c3=cx+5
+        for c in (c1,c2,c3): L(c, 237, c, 217); dot(c, 237)
+        R(cx-12, 195, cx+12, 217)
+        T(f"7{qno}", cx, 211, 3.5, "center")
+        T("3RV Ir=1.1A", cx, 201, 2.8, "center")
+        for c in (c1,c2,c3): L(c, 195, c, 178)
+        R(cx-12, 158, cx+12, 178)
+        T(ka, cx, 171, 3.5, "center"); T("3TG1010", cx, 162, 2.5, "center")
+        T(ax_a, cx, 158, 3, "center")
+        for c in (c1,c2,c3): L(c, 158, c, 140)
+        R(cx-12, 120, cx+12, 140)
+        T(kb, cx, 133, 3.5, "center"); T("3TG1010", cx, 124, 2.5, "center")
+        T(ax_b, cx, 120, 3, "center")
+        for c in (c1,c2,c3): L(c, 120, c, 108)
+        L(c1,108,c1,100); L(c3,108,c3,100); L(c2,108,c2,100)
+        L(c1,100,c3,94); L(c3,100,c1,94); L(c2,100,c2,94)
+        R(cx-12, 82, cx+12, 94)
+        T(tbname, cx, 90, 2.8, "center")
+        T(f":{t_start}-{t_start+2}", cx, 84, 2.8, "center")
+        for c in (c1,c2,c3): L(c, 95, c, 94); L(c, 82, c, 72)
+        C(cx, 60, 10); T("M", cx-2, 57, 4); T("3~", cx-2, 50, 3)
+        T(f"0.37kW {ax_a}/{ax_b}", cx, 43, 2.8, "center")
+
+    mon_branch(60,  "Q1","11K1","11K2","1X3",1,"UP","DN")
+    mon_branch(150, "Q2","11K3","11K4","1X3",4,"LT","RT")
+    mon_branch(255, "Q3","11K5","11K6","1X4",1,"UP","DN")
+    mon_branch(345, "Q4","11K7","11K8","1X4",4,"LT","RT")
+    L(S+15,35,S+195,35); T("PORT FIRE MONITOR (MF20EF)", S+25, 29, 4)
+    L(S+215,35,S+410,35); T("STBD FIRE MONITOR (MF20EF)", S+225, 29, 4)
+    T("NOTE: 11K1-K8 coils 24VDC (3TG1010-0BB4). Hardware interlock: opposite NC aux in coil rung.",
+      S+15, 18, 2.8)
+
+    # ── SHEET 8: POWER – VALVES + SOLENOIDS ──────────────────────────────────
+    S = 3220
+    title_block(S, 0, "8 / 19", "POWER CIRCUIT – VALVES & SOLENOIDS  400V 50Hz")
+    L(S+15, 258, S+410, 258)
+    T("400V 50Hz  (cross-ref sheet 7)", S+15, 260, 3.5)
+    for col, lbl in ((S+55,"L1"),(S+65,"L2"),(S+75,"L3")):
+        L(col, 268, col, 258); T(lbl, col-2, 269, 3.5); dot(col, 258)
+    R(S+90, 248, S+200, 260)
+    T("8A1  3UG4512  PHASE MONITOR", S+145, 254, 3, "center")
+
+    def valve_branch(bx, qno, kopen, kclose, t_motor, t_htr, vlbl, vsz):
+        cx=S+bx; c1=cx-4.3; c2=cx; c3=cx+4.3
+        for c in (c1,c2,c3): L(c, 258, c, 235); dot(c, 258)
+        R(cx-12, 213, cx+12, 235)
+        T(f"8{qno}", cx, 228, 3.5, "center")
+        T("3RV2011-1AA10", cx, 219, 2.5, "center")
+        T("Ir=0.45A set", cx, 213, 2.8, "center")
+        for c in (c1,c2,c3): L(c, 213, c, 196)
+        R(cx-12, 176, cx+12, 196)
+        T(kopen, cx, 188, 3.5, "center"); T("3TG1010", cx, 180, 2.5, "center")
+        T("OPEN", cx, 176, 3, "center")
+        for c in (c1,c2,c3): L(c, 176, c, 159)
+        R(cx-12, 139, cx+12, 159)
+        T(kclose, cx, 151, 3.5, "center"); T("3TG1010", cx, 143, 2.5, "center")
+        T("CLOSE", cx, 139, 3, "center")
+        for c in (c1,c2,c3): L(c, 139, c, 126)
+        R(cx-12, 112, cx+12, 124)
+        T("1X5", cx, 121, 2.8, "center"); T(t_motor, cx, 114, 2.8, "center")
+        for c in (c1,c2,c3): L(c, 126, c, 124); L(c, 112, c, 100)
+        C(cx, 88, 10); T("M", cx-2, 85, 4); T("3~", cx-2, 78, 3)
+        T(f"Bernard {vsz}", cx, 70, 3, "center"); T(vlbl, cx, 63, 3, "center")
+        L(cx+12, 224, cx+35, 224); L(cx+35, 224, cx+35, 50)
+        R(cx+28, 40, cx+55, 50)
+        T("HTR 400V", cx+41, 46, 2.5, "center"); T(t_htr, cx+41, 40, 2.5, "center")
+
+    valve_branch(65,  "Q1","11K9", "11K10","1,2,3",  ":5,6",   "SUCTION",   suction_valve)
+    valve_branch(175, "Q2","11K11","11K12","14,15,16",":18,19", "DISCHARGE", discharge_valve)
+    for fx, fno, flbl in [(S+245,"8F1","PORT FOG/JET"),(S+285,"8F2","PORT WTR/FOAM"),
+                           (S+325,"8F3","STBD FOG/JET"),(S+365,"8F4","STBD WTR/FOAM")]:
+        L(fx, 268, fx, 258); dot(fx, 258)
+        R(fx-8, 247, fx+8, 258); T(fno, fx, 253, 2.8, "center"); T("2A", fx, 248, 2.8, "center")
+        L(fx, 247, fx, 232); R(fx-10, 218, fx+10, 232)
+        T(flbl, fx, 226, 2.5, "center"); T("solenoid", fx, 220, 2.5, "center")
+        T("→1X2", fx, 214, 2.5, "center")
+    T("NOTE: 11K9-12 hardware interlock (travel limits+thermostat) in coil rung – see sheet 11.",
+      S+15, 18, 2.8)
+
+    # ── SHEET 9: 24VDC DISTRIBUTION ──────────────────────────────────────────
+    S = 3680
+    title_block(S, 0, "9 / 19", "24VDC POWER DISTRIBUTION")
+    R(S+145, 210, S+275, 260)
+    T("9A1  24VDC POWER SUPPLY", S+210, 253, 3.5, "center")
+    T("IN: 3x400VAC  OUT: 24VDC 16A", S+210, 244, 3, "center")
+    L(S+210, 268, S+210, 260); T("3x400V from 1X1", S+213, 263, 3)
+    L(S+145, 232, S+15, 232); L(S+275, 232, S+410, 232); T("24VDC L+", S+17, 234, 3.5)
+    L(S+145, 222, S+15, 222); L(S+275, 222, S+410, 222); T("0V M",     S+17, 224, 3.5)
+    R(S+15, 207, S+80, 222)
+    T("9F1  16A MCB", S+47, 215, 3, "center"); T("MAIN CTRL BUS", S+47, 208, 3, "center")
+    L(S+47, 222, S+47, 232); L(S+47, 207, S+47, 195)
+    L(S+15, 195, S+410, 195); L(S+15, 55, S+410, 55)
+    T("24VDC L+  (distributed)", S+17, 197, 3.5); T("0V M", S+17, 57, 3.5)
+    for fx, fno, fa, flbl in [
+        (S+40,  "9F2","4A","KTP700 HMI"),   (S+90,  "9F3","4A","HYD PUMP"),
+        (S+140, "9F4","4A","PORT MON CTRL"), (S+195, "9F5","4A","STBD MON CTRL"),
+        (S+250, "9F6","6A","SOLENOID OUT"),  (S+310, "9F7","4A","REMOTE+ALARM"),
+        (S+365, "9F8","4A","PLC CPU SUPPLY")]:
+        L(fx, 195, fx, 183); R(fx-10, 170, fx+10, 183)
+        T(fno, fx, 179, 2.8, "center"); T(fa, fx, 171, 2.8, "center")
+        L(fx, 170, fx, 145); R(fx-12, 120, fx+12, 145)
+        T(flbl, fx, 133, 3, "center"); L(fx, 120, fx, 55)
+    T("Fuse type: Phoenix Contact 2002-xxxx 24VDC miniature.", S+15, 43, 3)
+
+    # ── SHEET 10: PLC DQ → 10K RELAY BANK ───────────────────────────────────
+    S = 4140
+    title_block(S, 0, "10 / 19", "CONTROL – PLC DQ OUTPUTS TO 10K RELAY BANK")
+    L(S+15, 255, S+410, 255); T("24VDC L+  from 9F6/9F4/9F5", S+15, 257, 3.5)
+    L(S+15, 45,  S+410, 45);  T("0V M", S+15, 47, 3.5)
+    R(S+15, 175, S+95, 248)
+    T("S7-1200 A1", S+55, 241, 4, "center"); T("DQ module", S+55, 232, 3.5, "center")
+    for i, (dq, desc, kno, action) in enumerate([
+        ("Q0.0","PORT FOG ON",   "10K1","→ PORT FOG solenoid via 8F1"),
+        ("Q0.1","PORT JET ON",   "10K2","→ PORT JET solenoid via 8F1"),
+        ("Q0.2","PORT WATER ON", "10K3","→ PORT WATER solenoid via 8F2"),
+        ("Q0.3","PORT FOAM ON",  "10K4","→ PORT FOAM solenoid via 8F2"),
+        ("Q0.4","STBD FOG ON",   "10K5","→ STBD FOG solenoid via 8F3"),
+        ("Q0.5","STBD JET ON",   "10K6","→ STBD JET solenoid via 8F3"),
+        ("Q0.6","STBD WATER ON", "10K7","→ STBD WATER solenoid via 8F4"),
+        ("Q0.7","STBD FOAM ON",  "10K8","→ STBD FOAM solenoid via 8F4"),
+        ("Q1.0","HYD CLUTCH ON", "10K9","→ HPU clutch coil 24VDC via 9F3"),
+    ]):
+        rx = S+115+i*33
+        L(rx, 255, rx, 200); T(dq, rx-3, 227, 2.8)
+        R(rx-8, 185, rx+8, 200); T(kno, rx, 195, 3, "center"); T("788-312", rx, 187, 2.2, "center")
+        L(rx, 185, rx, 45); T(action, rx-10, 170, 2.5)
+    T("10K TYPE: Phoenix Contact 788-312  24VDC coil  SPDT  250VAC 6A", S+15, 35, 3.2)
+    T("10K NO contacts → solenoid load circuits (via fuses 8F1-8F4).", S+15, 27, 3)
+
+    # ── SHEET 11: PLC DI INPUTS ───────────────────────────────────────────────
+    S = 4600
+    title_block(S, 0, "11 / 19", "CONTROL – PLC DI INPUTS  (ACTUATORS & MONITORS)")
+    L(S+15, 255, S+410, 255); T("24VDC L+", S+15, 257, 3.5)
+    L(S+15, 45,  S+410, 45);  T("0V M", S+15, 47, 3.5)
+    R(S+320, 90, S+410, 255)
+    T("S7-1200 A1", S+365, 249, 4, "center"); T("DI module", S+365, 240, 3.5, "center")
+    T("PLC DI ASSIGNMENTS (A1 module):", S+15, 250, 4.5)
+    for i, (di, desc, src) in enumerate([
+        ("I0.0","SUCTION OPENED",   "1X5:11 NO travel limit"),
+        ("I0.1","SUCTION CLOSED",   "1X5:14 NC travel limit"),
+        ("I0.2","DISCHARGE OPENED", "1X5:24 NO travel limit"),
+        ("I0.3","DISCHARGE CLOSED", "1X5:27 NC travel limit"),
+        ("I0.4","PORT MON LS1",     "1X3:11 limit switch 1"),
+        ("I0.5","PORT MON LS2",     "1X3:14 limit switch 2"),
+        ("I0.6","STBD MON LS1",     "1X4:11 limit switch 1"),
+        ("I0.7","STBD MON LS2",     "1X4:14 limit switch 2"),
+        ("I1.0","PHASE OK",         "8A1 output NC (opens on fault)"),
+        ("I1.1","HPU OVERLOAD",     "1X2:9 NC contact 3RV aux"),
+        ("I1.2","HPU OIL PRESS",    "1X2:10 NC pressure switch"),
+        ("I1.3","HYD CLUTCH ON",    "1X2:11 NO feedback contact"),
+        ("I1.4","16S1 SELECTOR",    "OFF / SEMI / AUTO switch"),
+        ("I1.5","17S1 SELECTOR",    "PORT / STBD select switch"),
+    ]):
+        ry = 240 - i*13
+        L(S+15, ry, S+35, ry); R(S+35, ry-3, S+48, ry+3); L(S+48, ry, S+320, ry)
+        T(di, S+18, ry+2, 3); T(desc, S+52, ry+2, 3.2); T(src, S+52, ry-5, 2.8)
+    T("VALVE COIL RUNG – hardware stop (Bernard SUG_17003 §7.3):", S+15, 57, 3.5)
+    T("L+ → 12K6 NO → 1X5:10-11 travel OPEN NC → 1X5:40-41 thermostat NC → 11K10 NC → 11K9 coil → M",
+      S+15, 49, 3)
+    T("L+ → 12K6 NC → 1X5:13-14 travel CLOSE NC → 1X5:40-41 thermostat NC → 11K9 NC → 11K10 coil → M",
+      S+15, 41, 3)
+    T("Same structure for DISCHARGE valve (12K7, 11K11, 11K12).", S+15, 33, 3)
+
+    # ── SHEET 12: 12K RELAY BANK ──────────────────────────────────────────────
+    S = 5060
+    title_block(S, 0, "12 / 19", "CONTROL – 12K RELAY BANK  (INTERLOCKS & ALARMS)")
+    L(S+15, 255, S+410, 255); T("24VDC L+", S+15, 257, 3.5)
+    L(S+15, 45,  S+410, 45);  T("0V M", S+15, 47, 3.5)
+    for i, (kno, lbl, io_ref, action) in enumerate([
+        ("12K1","FIFI MODE\nREADY",    "Q1.1","NO→1X1 prop sig A"),
+        ("12K2","CLUTCH\nENGAGED",     "Q1.2","NO→1X1 prop sig B"),
+        ("12K3","M/E START\nINTERLOCK","I2.0","NC in M/E control circuit"),
+        ("12K4","COMMON\nALARM",       "I2.1","NO→ship alarm 1W1-6"),
+        ("12K5","BUZZER",              "I2.2","NO→panel buzzer B1"),
+        ("12K6","SUCTION\nVLV CMD",    "Q2.0","NO→11K9(OPEN) NC→11K10(CLOSE)"),
+        ("12K7","DISCHARGE\nVLV CMD",  "Q2.1","NO→11K11(OPEN) NC→11K12(CLOSE)"),
+    ]):
+        rx = S+30+i*55
+        L(rx, 255, rx, 200); T(io_ref, rx-5, 230, 2.8)
+        R(rx-10, 183, rx+10, 200)
+        T(kno, rx, 194, 3.5, "center"); T("788-312", rx, 185, 2.2, "center")
+        L(rx, 183, rx, 45)
+        for j, ln in enumerate(lbl.split("\n")): T(ln, rx-8, 174-j*9, 3)
+        T(action, rx-12, 160, 2.3)
+    T("12K3 NC: prevents M/E start while FIFI active. 12K4 NO: common alarm to ship.",
+      S+15, 35, 3)
+    T("12K6/12K7 pulse cmds from PLC; hardware travel limits in contactor coil rung.",
+      S+15, 27, 3)
+
+    # ── SHEET 13: EXTERNAL WIRING OVERVIEW ───────────────────────────────────
+    S = 5520
+    title_block(S, 0, "13 / 19", "EXTERNAL WIRING – CABINET OVERVIEW & CABLE SCHEDULE")
+    R(S+155, 100, S+265, 245)
+    T("MAIN CONTROL", S+210, 238, 4.5, "center"); T("CABINET", S+210, 228, 4.5, "center")
+    for tb, desc in [("1X1","400V IN+alarm"),("1X2","HPU+propulsion"),
+                     ("1X3","PORT monitor"), ("1X4","STBD monitor"),
+                     ("1X5","Valve actuators"),("1X6","Remote panel")]:
+        T(f"{tb}: {desc}", S+160, 215-["1X1","1X2","1X3","1X4","1X5","1X6"].index(tb)*12, 3)
+    T("CABLE SCHEDULE", S+15, 92, 5)
+    R(S+15, 10, S+415, 92)
+    c_hdr = [S+15,S+55,S+100,S+160,S+220,S+290,S+365,S+415]
+    for cx, h in zip(c_hdr, ["CABLE","FROM","TO","TYPE","CORES","FUNCTION","SH"]):
+        T(h, cx+2, 84, 3.2); L(cx, 10, cx, 92)
+    for i, row in enumerate([
+        ("1W1-1","1X1","SUPPLY","3x2.5mm²","3","400VAC power in","7,8"),
+        ("1W1-2","1X1","PSU","2x2.5mm²","2","24V PSU feed","9"),
+        ("1W1-3","1X2","PROPULSION","2x2x0.75","4","M/E interlock","12"),
+        ("1W1-4","1X2","PROPULSION","4x2x0.75","8","Speed/mode sigs","12"),
+        ("1W1-5","1X2","PROPULSION","2x2x0.75","4","FIFI mode out","12"),
+        ("1W1-6","1X1","SHIP ALARM","2x2x0.75","4","Common alarm","12"),
+        ("1W2-1","1X2","HPU","3x1.5mm²","3","HPU 400V pump","8"),
+        ("1W2-2","1X2","HPU","2x1.5mm²","2","Clutch 24VDC","10"),
+        ("1W2-3","1X2","HPU","4x2x0.75","8","HPU status sigs","11"),
+        ("1W3-1","1X3","PORT MON","7x1.5mm²","7","UP/DN motor","7"),
+        ("1W3-2","1X3","PORT MON","16x1.5mm²","16","LT/RT motor","7"),
+        ("1W3-3","1X3","PORT MON","2x2x0.75","4","Limit sw sigs","11"),
+        ("1W4-1","1X4","STBD MON","7x1.5mm²","7","UP/DN motor","7"),
+        ("1W4-2","1X4","STBD MON","16x1.5mm²","16","LT/RT motor","7"),
+        ("1W4-3","1X4","STBD MON","2x2x0.75","4","Limit sw sigs","11"),
+        ("1W5-1","1X5","SUCT VLV","7x1.5mm²","7","Motor+heater SUCT","8,16"),
+        ("1W5-2","1X5","SUCT VLV","4x2x0.75","8","Limit sw SUCT","11,16"),
+        ("1W5-3","1X5","DISCH VLV","7x1.5mm²","7","Motor+heater DISCH","8,16"),
+        ("1W5-4","1X5","DISCH VLV","4x2x0.75","8","Limit sw DISCH","11,16"),
+        ("1W6-1","1X6","REMOTE","7x2x0.75","14","Monitor cmds","10"),
+        ("1W6-2","1X6","REMOTE","7x2x0.75","14","Monitor feedback","11"),
+        ("1W6-3","1X6","REMOTE","2x2.5mm²","2","Remote 24VDC supply","9"),
+        ("1W6-4","1X6","HMI/PLC","CAT7/CAT8","8","PROFINET Ethernet","19"),
+    ]):
+        ry = 78 - i*3.0
+        L(S+15, ry+3, S+415, ry+3)
+        for cx, val in zip(c_hdr, row): T(val, cx+2, ry, 2.5)
+
+    # ── SHEET 14: 1X3 PORT MONITOR WIRING ────────────────────────────────────
+    S = 5980
+    title_block(S, 0, "14 / 19", "EXTERNAL WIRING – 1X3  PORT FIRE MONITOR")
+    terminal_wiring(S, 0, "1X3",
+        [(1,"L1 UP/DN motor"),(2,"L2 UP/DN motor"),(3,"L3 UP/DN motor"),
+         (4,"L1 LT/RT motor"),(5,"L2 LT/RT motor"),(6,"L3 LT/RT motor"),
+         (7,"PE UP/DN"),(8,"PE LT/RT"),(9,"PE aux"),(10,"24VDC +"),
+         (11,"LS1 OPEN a-cont"),(12,"LS1 common"),(13,"LS2 common"),
+         (14,"LS2 CLOSE a-cont"),(15,"LS3"),(16,"LS4"),(17,"0V return"),
+         (18,"Maint button +"),(19,"Maint button −"),
+         (20,"FOG sol +"),(21,"FOG sol −"),(22,"JET sol +")],
+        "PORT MON MF20EF",
+        [(1,"U UP/DN"),(2,"V UP/DN"),(3,"W UP/DN"),
+         (4,"U LT/RT"),(5,"V LT/RT"),(6,"W LT/RT"),
+         (7,"PE"),(8,"PE"),(9,"PE"),(10,"24V+"),
+         (11,"LS1-a"),(12,"LS1-C"),(13,"LS2-C"),(14,"LS2-a"),
+         (15,"LS3"),(16,"LS4"),(17,"0V"),
+         (18,"MB+"),(19,"MB−"),(20,"FOG+"),(21,"FOG−"),(22,"JET+")],
+        [("1W3-1","7x1.5mm²"),("1W3-2","16x1.5mm²"),("1W3-3","2x2x0.75mm² shld")]
+    )
+    T("1W3-1 (7x1.5mm²): UP/DN motor L1/L2/L3/PE + spare | 1W3-2 (16x1.5mm²): LT/RT + aux",
+      S+15, -10, 3)
+    T("1W3-3 (2x2x0.75mm² shielded): limit switch signals BU/BK colour-coded pairs",
+      S+15, -18, 3)
+
+    # ── SHEET 15: 1X4 STBD MONITOR WIRING ───────────────────────────────────
+    S = 6440
+    title_block(S, 0, "15 / 19", "EXTERNAL WIRING – 1X4  STBD FIRE MONITOR")
+    terminal_wiring(S, 0, "1X4",
+        [(1,"L1 UP/DN motor"),(2,"L2 UP/DN motor"),(3,"L3 UP/DN motor"),
+         (4,"L1 LT/RT motor"),(5,"L2 LT/RT motor"),(6,"L3 LT/RT motor"),
+         (7,"PE UP/DN"),(8,"PE LT/RT"),(9,"PE aux"),(10,"24VDC +"),
+         (11,"LS1 OPEN a-cont"),(12,"LS1 common"),(13,"LS2 common"),
+         (14,"LS2 CLOSE a-cont"),(15,"LS3"),(16,"LS4"),(17,"0V return"),
+         (18,"Maint button +"),(19,"Maint button −"),
+         (20,"FOG sol +"),(21,"FOG sol −"),(22,"JET sol +")],
+        "STBD MON MF20EF",
+        [(1,"U UP/DN"),(2,"V UP/DN"),(3,"W UP/DN"),
+         (4,"U LT/RT"),(5,"V LT/RT"),(6,"W LT/RT"),
+         (7,"PE"),(8,"PE"),(9,"PE"),(10,"24V+"),
+         (11,"LS1-a"),(12,"LS1-C"),(13,"LS2-C"),(14,"LS2-a"),
+         (15,"LS3"),(16,"LS4"),(17,"0V"),
+         (18,"MB+"),(19,"MB−"),(20,"FOG+"),(21,"FOG−"),(22,"JET+")],
+        [("1W4-1","7x1.5mm²"),("1W4-2","16x1.5mm²"),("1W4-3","2x2x0.75mm² shld")]
+    )
+    T("1W4-1 (7x1.5mm²): UP/DN motor | 1W4-2 (16x1.5mm²): LT/RT + aux",  S+15, -10, 3)
+    T("1W4-3 (2x2x0.75mm² shielded): limit switch signals", S+15, -18, 3)
+
+    # ── SHEET 16: 1X5 SUCTION + DISCHARGE VALVE WIRING ──────────────────────
+    S = 6900
+    title_block(S, 0, "16 / 19", "EXTERNAL WIRING – 1X5  SUCTION & DISCHARGE VALVE ACTUATORS")
+    R(S+15, 50, S+90, 250)
+    T("CABINET", S+52, 252, 3.5, "center"); T("1X5", S+52, 244, 5, "center")
+    x5_terms = [
+        (1,"SUCT L1","1W5-1"),   (2,"SUCT L2","1W5-1"),
+        (3,"SUCT L3","1W5-1"),   (4,"SUCT PE","1W5-1"),
+        (5,"SUCT HTR L","1W5-1"),(6,"SUCT HTR N","1W5-1"),
+        (7,"SUCT T-OPN C","1W5-2"),(8,"SUCT T-OPN NC","1W5-2"),
+        (9,"SUCT T-OPN NO","1W5-2"),(10,"SUCT T-CLS C","1W5-2"),
+        (11,"SUCT T-CLS NC","1W5-2"),(12,"SUCT THERM +","1W5-2"),
+        (13,"SUCT THERM -","1W5-2"),
+        (14,"DISCH L1","1W5-3"),(15,"DISCH L2","1W5-3"),
+        (16,"DISCH L3","1W5-3"),(17,"DISCH PE","1W5-3"),
+        (18,"DISCH HTR L","1W5-3"),(19,"DISCH HTR N","1W5-3"),
+        (20,"DISCH T-OPN C","1W5-4"),(21,"DISCH T-OPN NC","1W5-4"),
+        (22,"DISCH T-OPN NO","1W5-4"),(23,"DISCH T-CLS C","1W5-4"),
+        (24,"DISCH T-CLS NC","1W5-4"),(25,"DISCH T-CLS NO","1W5-4"),
+        (26,"DISCH THERM +","1W5-4"),
+    ]
+    step16 = 7
+    for i, (tno, tlbl, cbl) in enumerate(x5_terms):
+        ty = 236 - i*step16
+        R(S+62, ty-3, S+78, ty+3)
+        T(str(tno), S+55, ty-1, 3, "right"); T(tlbl[:18], S+80, ty-1, 2.5)
+        T(cbl, S+130, ty-1, 2.5); L(S+15, ty, S+62, ty)
+    R(S+290, 140, S+415, 253)
+    T(f"SUCTION VALVE", S+352, 248, 3.5, "center")
+    T(f"Bernard {suction_valve}", S+352, 239, 4.5, "center")
+    T("SWITCH  3x400VAC  (TEC01-03 sh.3.2)", S+352, 230, 2.8, "center")
+    for j, (tno, tlbl) in enumerate([(1,"Motor L1"),(2,"Motor L2"),(3,"Motor L3"),
+            ("PE","PE"),(26,"Heater L"),(27,"Heater N"),
+            (10,"Travel OPEN C"),(11,"Travel OPEN NC"),(12,"Travel OPEN NO"),
+            (13,"Travel CLOSE C"),(14,"Travel CLOSE NC"),(15,"Travel CLOSE NO"),
+            (40,"Thermostat NC +"),(41,"Thermostat NC -")]):
+        ty2 = 218 - j*5.5
+        R(S+290, ty2-2.5, S+303, ty2+2.5)
+        T(str(tno), S+305, ty2-2, 2.5); T(tlbl, S+316, ty2-2, 2.3)
+    R(S+290, 30, S+415, 135)
+    T(f"DISCHARGE VALVE", S+352, 130, 3.5, "center")
+    T(f"Bernard {discharge_valve}", S+352, 121, 4.5, "center")
+    T("SWITCH  3x400VAC", S+352, 112, 2.8, "center")
+    for j, (tno, tlbl) in enumerate([(1,"Motor L1"),(2,"Motor L2"),(3,"Motor L3"),
+            ("PE","PE"),(26,"Heater L"),(27,"Heater N"),
+            (10,"Travel OPEN C"),(11,"Travel OPEN NC"),(12,"Travel OPEN NO"),
+            (13,"Travel CLOSE C"),(14,"Travel CLOSE NC"),(15,"Travel CLOSE NO"),
+            (40,"Thermostat NC +"),(41,"Thermostat NC -")]):
+        ty2 = 108 - j*5.5
+        R(S+290, ty2-2.5, S+303, ty2+2.5)
+        T(str(tno), S+305, ty2-2, 2.5); T(tlbl, S+316, ty2-2, 2.3)
+    for i, (tno, tlbl, _) in enumerate(x5_terms):
+        ty = 236 - i*step16
+        dev_y = (218 - i*5.5) if i <= 12 else (108 - (i-13)*5.5)
+        L(S+78, ty, S+290, dev_y)
+    T("1W5-1 (7x1.5mm²): SUCT motor L1/L2/L3/PE + heater → AQ terms 1,2,3,PE,26,27",  S+15, 22, 3)
+    T("1W5-2 (4x2x0.75mm²): SUCT travel limits 10-15 + thermostat 40-41 → AQ terms",   S+15, 14, 3)
+    T("1W5-3 (7x1.5mm²): DISCH motor L1/L2/L3/PE + heater → AQ terms 1,2,3,PE,26,27", S+15,  6, 3)
+    T("1W5-4 (4x2x0.75mm²): DISCH travel limits 10-15 + thermostat 40-41",              S+15, -2, 3)
+
+    # ── SHEET 19: HMI + PLC EXPANSION ────────────────────────────────────────
+    S = 8280
+    title_block(S, 0, "19 / 19", "HMI (KTP700) + PLC EXPANSION  (A1.1 / A1.2)")
+    R(S+15, 155, S+145, 258)
+    T("KTP700 HMI", S+80, 252, 5, "center")
+    T("6AV2 123-2GB03-0AX0", S+80, 242, 3, "center")
+    T("7\" TFT  PROFINET RJ45", S+80, 233, 3.5, "center")
+    T("Supply: 24VDC (9F2)", S+80, 223, 3.5, "center")
+    T("FUNCTIONS:", S+20, 212, 3.5)
+    for j, fn in enumerate(["PORT monitor: UP/DN/LT/RT","STBD monitor: UP/DN/LT/RT",
+                              "Valve OPEN/CLOSE/STATUS","FOG/JET/WATER/FOAM select",
+                              "HPU start/stop + clutch ON","FIFI mode enable/disable",
+                              "Alarm acknowledge"]):
+        T(f"  {fn}", S+22, 203-j*9, 3)
+    R(S+160, 190, S+245, 258)
+    T("S7-1200 CPU (A1)", S+202, 252, 4, "center")
+    T("6ES7 214-1AG40-0XB0",S+202, 242, 2.8, "center")
+    T("DI 14  I0.0-I1.5",   S+202, 232, 3.2, "center")
+    T("DQ 10  Q0.0-Q1.1",   S+202, 222, 3.2, "center")
+    T("PROFINET port (see sh.10,11)", S+202, 210, 2.8, "center")
+    R(S+255, 190, S+325, 258)
+    T("A1.1  SM1223", S+290, 252, 4, "center"); T("8DI / 8DQ", S+290, 242, 3.5, "center")
+    T("DI: I2.0-I3.7", S+290, 232, 3.2, "center"); T("DQ: Q2.0-Q3.7", S+290, 222, 3.2, "center")
+    T("11K contactor", S+290, 212, 3, "center"); T("coil outputs", S+290, 204, 3, "center")
+    R(S+335, 190, S+405, 258)
+    T("A1.2  SM1223", S+370, 252, 4, "center"); T("8DI / 8DQ", S+370, 242, 3.5, "center")
+    T("DI: I4.0-I4.7", S+370, 232, 3.2, "center"); T("DQ: Q4.0-Q4.7", S+370, 222, 3.2, "center")
+    T("12K relay", S+370, 212, 3, "center"); T("coil outputs", S+370, 204, 3, "center")
+    for px in (S+80, S+202, S+290, S+370): L(px, 190, px, 181)
+    L(S+80, 181, S+370, 181)
+    R(S+78, 170, S+375, 181)
+    T("PROFINET / Ethernet  (1W6-4  CAT7/CAT8)", S+225, 174, 3.5, "center")
+    L(S+80, 258, S+80, 268); L(S+202, 258, S+202, 268); L(S+80, 268, S+202, 268)
+    T("24VDC: 9F2 (KTP700)  9F8 (PLC via 1X1)", S+80, 270, 3)
+    T("TOTAL I/O: DI=38  DQ=34 across A1+A1.1+A1.2", S+15, 158, 4.5)
+    R(S+15, 80, S+405, 155)
+    for cx, h in zip([S+15,S+95,S+140,S+250],[" MODULE","I/O","COUNT","FUNCTION SUMMARY"]):
+        T(h, cx+2, 147, 3.5); L(cx, 80, cx, 155)
+    L(S+15, 143, S+405, 143)
+    for i, row in enumerate([
+        ("A1 CPU 1214C","DI","I0.0-I1.5  14","Valve limits, monitor LS, phase, HPU, selectors"),
+        ("A1 CPU 1214C","DQ","Q0.0-Q1.1  10","10K1-9 solenoid/clutch relays, FIFI mode signals"),
+        ("A1.1 SM1223", "DI","I2.0-I3.7  16","Propulsion, M/E speed, clutch, ship systems"),
+        ("A1.1 SM1223", "DQ","Q2.0-Q3.7  16","11K1-12 contactor coils (monitors + valves)"),
+        ("A1.2 SM1223", "DI","I4.0-I4.7   8","Remote panel, maintenance buttons"),
+        ("A1.2 SM1223", "DQ","Q4.0-Q4.7   8","12K3-7 interlock/alarm/buzzer relay coils"),
+    ]):
+        ry = 135 - i*10; L(S+15, ry+10, S+405, ry+10)
+        for cx, val in zip([S+15,S+95,S+140,S+250], row): T(val, cx+2, ry+1, 3)
+
+    # ── Create AutoCAD layouts ────────────────────────────────────────────────
+    sheet_positions = [
+        ("EFF-S01-Cover",        0,    ),
+        ("EFF-S06-Block Diag",   2300, ),
+        ("EFF-S07-Pwr Monitors", 2760, ),
+        ("EFF-S08-Pwr Valves",   3220, ),
+        ("EFF-S09-24VDC",        3680, ),
+        ("EFF-S10-PLC DQ",       4140, ),
+        ("EFF-S11-PLC DI",       4600, ),
+        ("EFF-S12-12K Relays",   5060, ),
+        ("EFF-S13-Ext Overview", 5520, ),
+        ("EFF-S14-1X3 Port",     5980, ),
+        ("EFF-S15-1X4 Stbd",     6440, ),
+        ("EFF-S16-1X5 Valves",   6900, ),
+        ("EFF-S19-HMI+PLC",      8280, ),
+    ]
+    created = []
+    for lname, lsx in sheet_positions:
+        try:
+            try:
+                lo = doc.Layouts.Item(lname)
+            except Exception:
+                lo = doc.Layouts.Add(lname)
+            try:
+                lo.PlotPaperSize = (420.0, 297.0); lo.PaperUnits = 1
+            except Exception:
+                pass
+            vblk = lo.Block; vp_found = None
+            for vi in range(vblk.Count):
+                try:
+                    if vblk.Item(vi).EntityName == "AcDbViewport":
+                        vp_found = vblk.Item(vi); break
+                except Exception:
+                    pass
+            if vp_found is None:
+                vp = lo.AddViewport(_point(210, 143), 420, 297)
+            else:
+                vp = vp_found
+            try:
+                vp.Center = _point(lsx+ox+210, oy+143)
+                vp.Width = 420.0; vp.Height = 297.0; vp.CustomScale = 1.0
+            except Exception:
+                pass
+            created.append(lname)
+        except Exception as e:
+            created.append(f"{lname}(ERR:{e})")
+    try:
+        doc.Regen(1)
+    except Exception:
+        pass
+
+    return (
+        f"Drew complete EFF system schematic – 13 sheets for '{project_name}' / '{ship_name}'. "
+        f"Valve actuators: {suction_valve} (suction), {discharge_valve} (discharge), "
+        f"3RV2011-1AA10 Ir=0.45A. "
+        f"Fire monitors: 2x MF20EF 0.37kW 400VAC 4-axis. "
+        f"Contactors: 3TG1010-0BB4 24VDC coil 11K1-11K12. "
+        f"Control relays: Phoenix Contact 788-312 24VDC 10K1-9, 12K1-7. "
+        f"PLCs: S7-1200 A1+A1.1+A1.2 (38DI/34DQ). HMI: KTP700 PROFINET. "
+        f"Layouts created: {'; '.join(created)}. "
+        f"All sheets in model space at origin ({origin_x},{origin_y}), "
+        f"460-unit horizontal spacing. Sheet 16 maps 1X5 terminals to "
+        f"Bernard AQ terminal numbers (TEC01-03 sheet 3.2)."
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SINGLE VALVE CONTROL SCHEMATIC  (any Bernard AQ model, 3x400VAC 50Hz)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@mcp.tool()
+def draw_single_valve(
+    aq_model: str = "AQ25",
+    valve_label: str = "SEA WATER VALVE",
+    tag_prefix: str = "1",
+    main_mcb: str = "5SL6316-7",
+    ctrl_mcb: str = "5SL6216-7",
+    plc_model: str = "6ES7 214-1AG40-0XB0",
+    project_name: str = "VALVE CONTROL SYSTEM",
+    ship_name: str = "",
+    drawing_no: str = "M00-IM-0001",
+    date_str: str = "",
+    company: str = "",
+    origin_x: float = 0.0,
+    origin_y: float = 0.0,
+) -> str:
+    """Draw complete 3-sheet valve actuator control schematic for ANY Bernard AQ model.
+    Sheet 1: 3x400VAC power circuit (MCB -> phase monitor -> motor protection + aux ->
+    OPEN/CLOSE reversing contactors 3TG1010-0BB4 -> terminal block -> motor).
+    Sheet 2: 24VDC control circuit (PLC S7-1200 DQ/DI, hardware interlock rung,
+    travel limits and thermostat hardwired in coil rung, HMI reference).
+    Sheet 3: Terminal wiring 1X1 cabinet to Bernard AQ field device
+    (motor L1/L2/L3/PE, heater 26-27, travel limits 10-15, thermostat 40-41).
+    Motor protection model and Ir setting selected automatically from AQ datasheet
+    (Bernard Controls B60ver, 3x400VAC 50Hz). Supports AQ5 through AQ1000."""
+    import datetime
+    acad = _get_acad()
+    doc  = acad.ActiveDocument
+
+    # Bernard AQ lookup: (In_A, Istart_A, kW, torque_Nm, time_s,
+    #                     rv_part, rv_range_str, rv_set_str)
+    # Source: Bernard Controls TEC B60ver_PRG_F+E_30-10CET, 3x400VAC 50Hz
+    _AQ = {
+        "AQ5":   (0.16, 0.43, 0.03,    50,  16, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ10":  (0.16, 0.43, 0.03,   100,  25, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ15":  (0.16, 0.43, 0.03,   150,  30, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ25":  (0.22, 0.43, 0.04,   250,  30, "3RV2011-0GA10", "0.45-0.63", "0.45"),
+        "AQ30":  (0.22, 0.43, 0.04,   300,  35, "3RV2011-0GA10", "0.45-0.63", "0.45"),
+        "AQ50":  (0.43, 0.75, 0.07,   500,  35, "3RV2011-1BA10", "0.55-0.80", "0.60"),
+        "AQ80":  (0.43, 0.75, 0.07,   800,  55, "3RV2011-1BA10", "0.55-0.80", "0.60"),
+        "AQ150": (0.97, 3.80, 0.40,  1500,  40, "3RV2011-1EA10", "1.10-1.60", "1.10"),
+        "AQ280": (0.97, 3.80, 0.40,  2800, 100, "3RV2011-1EA10", "1.10-1.60", "1.10"),
+        "AQ430": (2.70,14.00, 0.90,  4300,  70, "3RV2021-4AA10", "2.80-4.00", "3.00"),
+        "AQ610": (2.70,14.00, 0.90,  6100, 100, "3RV2021-4AA10", "2.80-4.00", "3.00"),
+        "AQ830": (1.90, 6.70, 0.80,  8300, 115, "3RV2011-1GA10", "1.80-2.50", "2.00"),
+        "AQ1000":(1.60, 5.00, 0.50, 10400, 135, "3RV2011-1FA10", "1.40-2.00", "1.60"),
+    }
+
+    aq_key = aq_model.strip().upper().replace(" ", "")
+    if aq_key not in _AQ:
+        return (
+            "ERROR: unknown AQ model '" + aq_model + "'. "
+            "Supported: " + ", ".join(sorted(_AQ.keys()))
+        )
+    In, Istart, kW, torque, t_s, rv_part, rv_range, rv_set = _AQ[aq_key]
+
+    for nm, builder in _SYMBOLS.items():
+        if not _block_exists(doc, nm):
+            try:
+                builder(doc.Blocks.Add(_point(0, 0), nm))
+            except Exception:
+                pass
+    try:
+        try:
+            lay = doc.Layers.Item("VALVE-CTRL")
+        except Exception:
+            lay = doc.Layers.Add("VALVE-CTRL")
+            lay.color = 7
+        doc.ActiveLayer = lay
+    except Exception:
+        pass
+
+    ms = doc.ModelSpace
+    ox, oy = float(origin_x), float(origin_y)
+    if not date_str:
+        date_str = datetime.date.today().strftime("%d.%m.%Y")
+    P = str(tag_prefix)
+
+    def L(x1, y1, x2, y2):
+        ms.AddLine(_point(x1+ox, y1+oy), _point(x2+ox, y2+oy))
+
+    def T(txt, x, y, h=4.0, align="left"):
+        _add_text(ms, str(txt), x+ox, y+oy, h, align)
+
+    def R(x1, y1, x2, y2):
+        p = ms.AddLightWeightPolyline(
+            _coords([(x1+ox,y1+oy),(x2+ox,y1+oy),(x2+ox,y2+oy),(x1+ox,y2+oy)]))
+        p.Closed = True
+
+    def C(cx, cy, r):
+        ms.AddCircle(_point(cx+ox, cy+oy), float(r))
+
+    def dot(x, y, r=1.2):
+        _add_dot(ms, x+ox, y+oy, r)
+
+    def title_block(sx, sy, sheet_no, title):
+        R(sx+5,  sy+5,  sx+415, sy+285)
+        L(sx+5,  sy+270, sx+415, sy+270)
+        L(sx+5,  sy+12,  sx+415, sy+12)
+        L(sx+140,sy+270, sx+140, sy+285)
+        L(sx+280,sy+270, sx+280, sy+285)
+        L(sx+360,sy+270, sx+360, sy+285)
+        T(company or project_name, sx+10,  sy+278, 3.5)
+        T(project_name,            sx+145, sy+279, 3.5)
+        if ship_name:
+            T("Ship: " + ship_name, sx+145, sy+273, 3)
+        T("DWG: " + drawing_no,    sx+285, sy+279, 3)
+        T("Date: " + date_str,     sx+285, sy+273, 3)
+        T("Sheet " + sheet_no,     sx+365, sy+276, 4)
+        T(title, sx+10, sy+262, 5.5)
+
+    # ── SHEET 1: POWER CIRCUIT  3x400VAC ─────────────────────────────────────
+    S = 0
+    title_block(S, 0, "1/3", valve_label + "  -  POWER CIRCUIT  3x400VAC 50Hz")
+
+    L(S+15, 268, S+410, 268)
+    T("3x400VAC 50Hz", S+15, 271, 3.5)
+    cx = S+210
+    c1 = cx-6; c2 = cx; c3 = cx+6
+    for c, lbl in ((c1,"L1"),(c2,"L2"),(c3,"L3")):
+        L(c, 268, c, 258); dot(c, 268); T(lbl, c-3, 271, 3)
+
+    # 1F1 main MCB 3P
+    R(cx-20, 242, cx+20, 258)
+    T(P+"F1  "+main_mcb+"  3P  16A", cx, 253, 3.5, "center")
+    for c in (c1,c2,c3): L(c, 242, c, 228)
+
+    # 1A1 phase monitor
+    R(cx-25, 212, cx+25, 228)
+    T(P+"A1  3UG4512-1AR20", cx, 224, 3.5, "center")
+    T("PHASE MONITOR", cx, 216, 3, "center")
+    L(cx+25, 220, cx+55, 220); L(cx+55, 220, cx+55, 198)
+    T("fault NC -> DI I0.3", cx+57, 218, 2.5)
+    for c in (c1,c2,c3): L(c, 212, c, 196)
+
+    # 1Q1 motor protection + 3RV2901-1D aux
+    R(cx-20, 178, cx+20, 196)
+    T(P+"Q1  "+rv_part, cx, 192, 3.5, "center")
+    T("Ir="+rv_range+"A  set="+rv_set+"A", cx, 184, 3, "center")
+    R(cx+20, 181, cx+44, 193)
+    T("3RV2901-1D", cx+32, 192, 2.5, "center")
+    T("AUX", cx+32, 182, 2.5, "center")
+    L(cx+44, 187, cx+57, 187); T("OL->DI I0.2", cx+59, 185, 2.5)
+    for c in (c1,c2,c3): L(c, 178, c, 162)
+
+    # Fork to OPEN (left) and CLOSE (right) contactors
+    for c in (c1,c2,c3):
+        dot(c, 162)
+        L(c, 162, c-22, 150)
+        L(c, 162, c+22, 150)
+
+    # 1K1 OPEN contactor
+    ox1 = cx-28
+    R(ox1-14, 132, ox1+14, 150)
+    T(P+"K1  OPEN",       ox1, 147, 3.5, "center")
+    T("3TG1010-0BB4",     ox1, 140, 3,   "center")
+    T("24VDC coil",       ox1, 133, 2.8, "center")
+
+    # 1K2 CLOSE contactor
+    cx2 = cx+28
+    R(cx2-14, 132, cx2+14, 150)
+    T(P+"K2  CLOSE",      cx2, 147, 3.5, "center")
+    T("3TG1010-0BB4",     cx2, 140, 3,   "center")
+    T("24VDC coil",       cx2, 133, 2.8, "center")
+
+    # Mechanical interlock bar
+    L(ox1+14, 141, cx2-14, 141)
+    T("MECH.INTERLOCK", cx, 143, 2.8, "center")
+    T(P+"K2 NC aux", ox1-13, 130, 2.5, "right")
+    T(P+"K1 NC aux", cx2+2,  130, 2.5)
+
+    # Lines below contactors and re-merge
+    for c in (c1-22, c2-22, c3-22): L(c, 132, c, 115)
+    for c in (c1+22, c2+22, c3+22): L(c, 132, c, 115)
+    for i in range(3):
+        co = c1 - 22 + i*6
+        cc = c1 + 22 + i*6
+        mid = (co + cc) // 2
+        L(co, 115, mid, 107); L(cc, 115, mid, 107); dot(mid, 107)
+
+    # Terminal block 1X1
+    R(cx-20, 92, cx+20, 107)
+    T(P+"X1  :1,2,3", cx, 102, 3.5, "center")
+    for i in range(3):
+        mid = (c1-22+i*6 + c1+22+i*6) // 2
+        L(mid, 92, mid, 75)
+
+    # Heater spur
+    L(cx+20, 99, cx+55, 99)
+    R(cx+55, 93, cx+95, 105)
+    T(P+"X1:4,5", cx+75, 104, 2.8, "center")
+    T("AQ 26,27 HTR", cx+75, 94, 2.5, "center")
+
+    # Motor
+    for i in range(3):
+        mid = (c1-22+i*6 + c1+22+i*6) // 2
+        L(mid, 75, cx + (i-1)*6, 64)
+    C(cx, 54, 10)
+    T("M", cx-3, 51, 4); T("3~", cx-3, 44, 3)
+    T(valve_label, cx, 37, 3.5, "center")
+    T("Bernard "+aq_key+"  SWITCH  3x400VAC", cx, 30, 3.5, "center")
+    T(str(torque)+"Nm  "+str(t_s)+"s/90  "+str(kW)+"kW  In="
+      +str(In)+"A  Istart="+str(Istart)+"A", cx, 22, 3, "center")
+    T("NOTE: "+P+"K1/"+P+"K2 electrical interlock via NC aux + mechanical bar. "
+      "Travel limits + thermostat hardwired in coil rung (sheet 2).", S+15, 14, 2.8)
+
+    # ── SHEET 2: CONTROL / PLC  24VDC ────────────────────────────────────────
+    S = 460
+    title_block(S, 0, "2/3", valve_label + "  -  CONTROL CIRCUIT  24VDC")
+
+    L(S+15, 265, S+410, 265); T("24VDC L+  (from PSU via "+P+"F2)", S+15, 267, 3.5)
+    L(S+15, 30,  S+410, 30);  T("0V M", S+15, 32, 3.5)
+
+    # 1F2 control MCB 2P
+    R(S+15, 248, S+90, 263)
+    T(P+"F2  "+ctrl_mcb+"  2P  6A", S+52, 257, 3, "center")
+    L(S+52, 263, S+52, 265); L(S+52, 248, S+52, 240)
+    L(S+15, 240, S+410, 240); T("24VDC ctrl bus", S+18, 242, 3)
+
+    # PLC block
+    R(S+15, 85, S+155, 232)
+    T("PLC  S7-1200", S+85, 227, 4, "center")
+    T(plc_model, S+85, 218, 3, "center")
+    T("DQ OUTPUTS:", S+20, 206, 3.5)
+    T("Q0.0  ->  "+P+"K1 OPEN coil",  S+22, 197, 3)
+    T("Q0.1  ->  "+P+"K2 CLOSE coil", S+22, 188, 3)
+    T("DI INPUTS:", S+20, 176, 3.5)
+    T("I0.0  <-  travel OPEN  NO  (AQ term 12)",       S+22, 167, 3)
+    T("I0.1  <-  travel CLOSE NC  (AQ term 14)",        S+22, 158, 3)
+    T("I0.2  <-  "+P+"Q1 overload  NC aux (3RV2901-1D)",S+22, 149, 3)
+    T("I0.3  <-  "+P+"A1 phase fault  NC",              S+22, 140, 3)
+    T("I0.4  <-  thermostat  NC  (AQ term 40-41)",      S+22, 131, 3)
+    T("I0.5  <-  HMI OPEN command",                     S+22, 122, 3)
+    T("I0.6  <-  HMI CLOSE command",                    S+22, 113, 3)
+    T("I0.7  <-  OPEN position confirm (AQ term 12 NO)",S+22, 104, 3)
+    T("I1.0  <-  CLOSE position confirm (AQ term 15 NO)",S+22, 95, 3)
+
+    # HMI
+    R(S+295, 155, S+410, 232)
+    T("KTP700  HMI", S+352, 228, 4, "center")
+    T("7\" TFT  24VDC", S+352, 219, 3, "center")
+    T("PROFINET RJ45", S+352, 208, 3.5, "center")
+    T("OPEN / CLOSE", S+352, 197, 3, "center")
+    T("Position status", S+352, 188, 3, "center")
+    T("Alarm display", S+352, 179, 3, "center")
+    L(S+155, 192, S+295, 192); T("PROFINET", S+218, 194, 3.5, "center")
+
+    # OPEN coil rung
+    ry_o = 78
+    T("OPEN coil rung  (Q0.0 -> "+P+"K1):", S+155, ry_o+9, 3.5)
+    L(S+15, ry_o, S+155, ry_o)
+    for i, (lbl, ctype) in enumerate([
+        (P+"A1 OK", "NC"), (P+"Q1 OL", "NC"),
+        ("therm 40-41","NC"), ("AQ term 11","NC"), (P+"K2","NC"),
+    ]):
+        rx = S+158 + i*48
+        R(rx, ry_o-5, rx+14, ry_o+5)
+        T(lbl,  rx+2, ry_o+7, 2.3); T(ctype, rx+2, ry_o-9, 2.3)
+        if i < 4: L(rx+14, ry_o, rx+48, ry_o)
+    R(S+398, ry_o-7, S+412, ry_o+7)
+    T(P+"K1", S+405, ry_o+9, 3.5, "center"); T("OPEN", S+405, ry_o-12, 2.8, "center")
+    L(S+406, ry_o-7, S+406, 30)
+
+    # CLOSE coil rung
+    ry_c = 48
+    T("CLOSE coil rung  (Q0.1 -> "+P+"K2):", S+155, ry_c+9, 3.5)
+    L(S+15, ry_c, S+155, ry_c)
+    for i, (lbl, ctype) in enumerate([
+        (P+"A1 OK", "NC"), (P+"Q1 OL", "NC"),
+        ("therm 40-41","NC"), ("AQ term 14","NC"), (P+"K1","NC"),
+    ]):
+        rx = S+158 + i*48
+        R(rx, ry_c-5, rx+14, ry_c+5)
+        T(lbl,  rx+2, ry_c+7, 2.3); T(ctype, rx+2, ry_c-9, 2.3)
+        if i < 4: L(rx+14, ry_c, rx+48, ry_c)
+    R(S+398, ry_c-7, S+412, ry_c+7)
+    T(P+"K2", S+405, ry_c+9, 3.5, "center"); T("CLOSE", S+405, ry_c-12, 2.8, "center")
+    L(S+406, ry_c-7, S+406, 30)
+
+    T("Hardware interlock: AQ term 11 (travel OPEN NC) and term 14 (travel CLOSE NC) "
+      "in contactor coil rung.", S+15, 22, 2.8)
+    T("Thermostat (AQ term 40-41) NC in both rungs. "
+      +P+"K1/"+P+"K2 NC cross-interlock electrical + mechanical on contactor.",
+      S+15, 14, 2.8)
+
+    # ── SHEET 3: TERMINAL WIRING  1X1 -> AQ ──────────────────────────────────
+    S = 920
+    title_block(S, 0, "3/3",
+                valve_label + "  -  WIRING  " + P + "X1  ->  Bernard " + aq_key)
+
+    R(S+55, 45, S+145, 257)
+    T("CABINET", S+100, 259, 3.5, "center"); T(P+"X1", S+100, 250, 5, "center")
+
+    R(S+275, 45, S+415, 257)
+    T("FIELD DEVICE", S+345, 259, 3.5, "center")
+    T("Bernard "+aq_key+" SWITCH", S+345, 250, 4, "center")
+    T("3x400VAC  SWITCH type", S+345, 241, 3, "center")
+    T("All AQ5-AQ1000 same terminal layout", S+345, 233, 2.5, "center")
+
+    terms = [
+        (1,    "Motor L1",        "1",   "Motor L1",            "W1", "2002-1611"),
+        (2,    "Motor L2",        "2",   "Motor L2",            "W1", "2002-1611"),
+        (3,    "Motor L3",        "3",   "Motor L3",            "W1", "2002-1611"),
+        ("PE", "Earth/PE",        "PE",  "Earth PE",            "W1", "2002-2201"),
+        (4,    "Heater L (400V)", "26",  "Heater L",            "W1", "2002-1611"),
+        (5,    "Heater N",        "27",  "Heater N",            "W1", "2002-1201"),
+        (6,    "Trav.OPEN  C",    "10",  "Trav.OPEN  Common",   "W2", "2002-1201"),
+        (7,    "Trav.OPEN  NC",   "11",  "Trav.OPEN  NC",       "W2", "2002-1201"),
+        (8,    "Trav.OPEN  NO",   "12",  "Trav.OPEN  NO",       "W2", "2002-1201"),
+        (9,    "Trav.CLOSE C",    "13",  "Trav.CLOSE Common",   "W2", "2002-1201"),
+        (10,   "Trav.CLOSE NC",   "14",  "Trav.CLOSE NC",       "W2", "2002-1201"),
+        (11,   "Trav.CLOSE NO",   "15",  "Trav.CLOSE NO",       "W2", "2002-1201"),
+        (12,   "Thermostat +",    "40",  "Thermostat NC +",     "W2", "2002-1201"),
+        (13,   "Thermostat -",    "41",  "Thermostat NC -",     "W2", "2002-1201"),
+    ]
+    step = int(195 / len(terms))
+    for i, (cno, clbl, aqno, aqlbl, cbl, ttype) in enumerate(terms):
+        ty = 240 - i * step
+        R(S+110, ty-4, S+130, ty+4)
+        T(str(cno), S+103, ty-2, 3, "right"); T(clbl, S+132, ty-2, 2.8)
+        L(S+130, ty, S+185, ty); T(cbl, S+153, ty+2, 2.5, "center")
+        L(S+185, ty, S+275, ty)
+        R(S+275, ty-4, S+297, ty+4)
+        T(str(aqno), S+299, ty-2, 3); T(aqlbl, S+313, ty-2, 2.8)
+        T(ttype, S+299, ty-9, 2.2)
+
+    T("W1:  7x1.5mm2  -  Motor L1/L2/L3/PE + Heater 26/27 + spare",       S+15, 36, 3)
+    T("W2:  4x2x0.75mm2 shielded  -  Travel limits 10-15, Thermostat 40-41",S+15, 28, 3)
+    T("Phoenix Contact: 2002-1611 (16mm2 grey), 2002-1201 (2.5mm2 grey), "
+      "2002-2201 (PE green/yellow)", S+15, 20, 2.8)
+    T("Terminal layout IDENTICAL for all Bernard AQ SWITCH models (AQ5 to AQ1000).",
+      S+15, 12, 2.8)
+
+    # ── Create layouts ────────────────────────────────────────────────────────
+    created = []
+    for lname, lsx in [
+        (P+"-S1-Power-"+aq_key,   0),
+        (P+"-S2-Control-"+aq_key, 460),
+        (P+"-S3-Wiring-"+aq_key,  920),
+    ]:
+        try:
+            try:
+                lo = doc.Layouts.Item(lname)
+            except Exception:
+                lo = doc.Layouts.Add(lname)
+            try:
+                lo.PlotPaperSize = (420.0, 297.0); lo.PaperUnits = 1
+            except Exception:
+                pass
+            vblk = lo.Block; vp_found = None
+            for vi in range(vblk.Count):
+                try:
+                    if vblk.Item(vi).EntityName == "AcDbViewport":
+                        vp_found = vblk.Item(vi); break
+                except Exception:
+                    pass
+            if vp_found is None:
+                vp = lo.AddViewport(_point(210, 143), 420, 297)
+            else:
+                vp = vp_found
+            try:
+                vp.Center = _point(lsx+ox+210, oy+143)
+                vp.Width = 420.0; vp.Height = 297.0; vp.CustomScale = 1.0
+            except Exception:
+                pass
+            created.append(lname)
+        except Exception as e:
+            created.append(lname+"(ERR:"+str(e)+")")
+    try:
+        doc.Regen(1)
+    except Exception:
+        pass
+
+    return (
+        "Drew 3-sheet valve schematic for '" + valve_label + "' "
+        "using Bernard " + aq_key + " at 3x400VAC 50Hz. "
+        "Specs: " + str(torque) + "Nm  " + str(t_s) + "s/90  "
+        + str(kW) + "kW  In=" + str(In) + "A  Istart=" + str(Istart) + "A. "
+        "Motor protection: " + rv_part + "  Ir=" + rv_range + "A  set=" + rv_set + "A"
+        " + 3RV2901-1D aux. "
+        "Phase monitor: 3UG4512-1AR20 ("+P+"A1). "
+        "Contactors: 3TG1010-0BB4 24VDC ("+P+"K1 OPEN, "+P+"K2 CLOSE). "
+        "Main MCB: "+main_mcb+" 3P ("+P+"F1). Ctrl MCB: "+ctrl_mcb+" 2P ("+P+"F2). "
+        "Terminal block "+P+"X1: 14 terminals -> AQ terms 1,2,3,PE,26,27,10-15,40-41. "
+        "Cables: W1=7x1.5mm2  W2=4x2x0.75mm2 shielded. "
+        "PLC: "+plc_model+"  DI I0.0-I1.0  DQ Q0.0-Q0.1. "
+        "Layouts: " + "; ".join(created) + ". "
+        "Supported models: AQ5/10/15/25/30/50/80/150/280/430/610/830/1000."
+    )
 
 
 def main():
