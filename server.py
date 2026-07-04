@@ -3205,10 +3205,11 @@ def draw_single_valve(
     X_K1C = 217.2;  X_K2C = 218.4
     Y_COIL = 100.0;  Y_NK = 102.8
 
-    # Terminal / wiring section
-    X_TB   = 230.0   # cabinet terminal column
-    X_WIRE = 237.0   # cable run midpoint
-    X_AQ   = 248.0   # AQ terminal column
+    # Terminal / wiring section — örnek style (no OK per row)
+    X_X1  = 228.0   # 1X1 cabinet terminal strip label X
+    X_W1  = 247.0   # W1 power cable column X
+    X_W2  = 250.5   # W2 signal cable column X
+    X_AQ  = 253.0   # AQ actuator label X
 
     Y_BOT = 99.0;  Y_TOP = 113.5
 
@@ -3220,6 +3221,7 @@ def draw_single_valve(
     for xb, lbl in ((X_L1, "R"), (X_L2, "S"), (X_L3, "T")):
         L(xb, Y_SUPPLY, xb, Y_MCB + 0.8)
         T(lbl, xb - 0.12, Y_SUPPLY + 0.15, 0.22)
+        dot(xb, Y_SUPPLY)
     T("400V 50Hz", X_L1 - 0.2, Y_SUPPLY + 0.5, 0.22)
     # Horizontal supply bus
     L(X_L1, Y_SUPPLY, X_L3 + 0.5, Y_SUPPLY)
@@ -3243,6 +3245,7 @@ def draw_single_valve(
     L(PX2, Y_MCB, PX2 + 0.3, Y_MCB)   # NC output wire
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_MCB - 0.8, xb, Y_MP + 0.8)
+        dot(xb, Y_MCB - 0.8)
 
     # Q1 Motor protection
     motor_prot(X_MP, Y_MP)
@@ -3254,6 +3257,7 @@ def draw_single_valve(
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_MP + 0.8, xb, Y_MP - 0.8)
         L(xb, Y_MP - 0.8, xb, Y_K + 0.3)
+        dot(xb, Y_MP - 0.8)
 
     # K1 OPEN contactor
     contactor(X_K1, Y_K)
@@ -3270,9 +3274,10 @@ def draw_single_valve(
     L(X_K1 + 0.7, Y_K, X_K2, Y_K)
     T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
 
-    # Wires to terminal block
+    # Wires to terminal block — dot at contactor output
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_K - 0.3, xb, Y_KLESIG + 0.3)
+        dot(xb, Y_K - 0.3)
 
     # KLESIG terminal blocks (1X1)
     term_blk(X_KLESIG,       Y_KLESIG)
@@ -3304,7 +3309,9 @@ def draw_single_valve(
     L(X_BUS,       Y_TOP - 1.0, X_BUS,       Y_BOT + 0.3)
     L(X_BUS + 0.3, Y_TOP - 1.0, X_BUS + 0.3, Y_BOT + 0.3)
     T("L+", X_BUS - 0.35, Y_TOP - 0.7, 0.22)
+    T("+",  X_BUS - 0.10, Y_TOP - 0.52, 0.18)
     T("M",  X_BUS + 0.55, Y_TOP - 0.7, 0.22)
+    T("-",  X_BUS + 0.35, Y_TOP - 0.52, 0.18)
     T("24VDC", X_BUS - 0.35, Y_TOP - 0.40, 0.22)
 
     # F2 control MCB label
@@ -3404,64 +3411,110 @@ def draw_single_valve(
     L(X_K2C, Y_R2, X_BUS + 0.3, Y_R2); dot(X_BUS + 0.3, Y_R2)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # TERMINAL / WIRING SECTION  (X ≈ 230–255)
+    # TERMINAL / WIRING SECTION  (X ≈ 228–255)  — örnek style
+    # No OK block per row; use text columns + small circles + cable_lbl blocks
     # ═══════════════════════════════════════════════════════════════════════
 
-    T("OPEN CLOSE", X_TB + 0.8, Y_TOP - 0.60, 0.22)
-    T("FROM TOUCH SCREEN", X_TB + 0.8, Y_TOP - 0.88, 0.18)
-    T(P + "X1", X_TB - 0.5, Y_TOP - 1.15, 0.22)
-    T(valve_label.upper(), X_AQ + 0.3, Y_TOP - 1.15, 0.22)
+    T("OPEN CLOSE",       X_X1 + 0.5, Y_TOP - 0.50, 0.22)
+    T("FROM TOUCH SCREEN", X_X1 + 0.5, Y_TOP - 0.78, 0.18)
 
-    term_rows = [
-        # (cab_lbl, cab_no, cable, aq_no, sw_desc)
-        ("Motor L1",     "1",  "W1", "1",  "3PH 400VAC"),
-        ("Motor L2",     "2",  "W1", "2",  "3PH 400VAC"),
-        ("Motor L3",     "3",  "W1", "3",  "3PH 400VAC"),
-        ("Motor PE",     "PE", "W1", "PE", "PE"),
-        ("Heater L",     "26", "W1", "26", "400VAC HEATER"),
-        ("Heater N",     "27", "W1", "27", "400VAC HEATER"),
-        ("Trav.OPEN C",  "10", "W2", "10", "travel limit"),
-        ("Trav.OPEN NC", "11", "W2", "11", "nc"),
-        ("Trav.OPEN NO", "12", "W2", "12", "opened"),
-        ("Trav.CLS C",   "13", "W2", "13", "travel limit"),
-        ("Trav.CLS NC",  "14", "W2", "14", "nc"),
-        ("Trav.CLS NO",  "15", "W2", "15", "closed"),
-        ("Therm +",      "40", "W2", "40", "switch"),
-        ("Therm -",      "41", "W2", "41", "switch"),
+    # 1X1 — cabinet terminal strip header + +/- OK markers (2 only, per örnek)
+    T(P + "X1", X_X1 - 0.5, Y_TOP - 1.10, 0.22)
+    terminal(X_X1 + 0.4, Y_TOP - 1.10)
+    T("+", X_X1 + 0.05, Y_TOP - 1.05, 0.20)
+    terminal(X_X1 + 0.4, Y_TOP - 1.45)
+    T("-", X_X1 + 0.05, Y_TOP - 1.40, 0.20)
+
+    # Vertical separator line between cabinet and field sections
+    L(X_X1 + 2.0, Y_TOP - 0.5, X_X1 + 2.0, Y_BOT + 0.5)
+
+    # Cabinet terminal labels (1X1) — text only, small circles at connection points
+    cab_rows = [
+        ("1",  "L1",      "Motor"),
+        ("2",  "L2",      "Motor"),
+        ("3",  "L3",      "Motor"),
+        ("PE", "PE",      "Motor"),
+        ("26", "HTR L",   "Heater"),
+        ("27", "HTR N",   "Heater"),
+        ("10", "C",       "travel limit"),
+        ("11", "nc",      "trav OPEN"),
+        ("12", "opened",  "trav OPEN NO"),
+        ("13", "C",       "travel limit"),
+        ("14", "nc",      "trav CLOSE"),
+        ("15", "closed",  "trav CLOSE NO"),
+        ("40", "therm +", "thermostat"),
+        ("41", "therm -", "thermostat"),
     ]
+    Y_ROW_START = Y_TOP - 1.8
+    ROW_STEP = 0.55
+    for i, (no, sig, desc) in enumerate(cab_rows):
+        ty = Y_ROW_START - i * ROW_STEP
+        C(X_X1 + 0.05, ty + 0.05, 0.05)
+        T(no,   X_X1 - 0.40, ty,       0.20)
+        T(sig,  X_X1 + 0.20, ty,       0.18)
+        T(desc, X_X1 + 0.80, ty,       0.15)
+        # Horizontal line from cabinet side toward field
+        L(X_X1 + 2.1, ty + 0.05, X_W1 - 0.8, ty + 0.05)
 
-    for i, (cab_lbl, cab_no, cbl, aq_no, sw_desc) in enumerate(term_rows):
-        ty = Y_TOP - 1.5 - i * 0.58
+    # ── W1 power cable column (motor L1/L2/L3/PE + heater 26/27) ──────────
+    cable_lbl(X_W1 - 0.5, 107.5)
+    T("W1",         X_W1 - 0.15, 108.0, 0.22)
+    T("7x1.5mm2",   X_W1 - 0.30, 107.7, 0.16)
 
-        # Cabinet terminal
-        terminal(X_TB, ty)
-        T(cab_no,  X_TB - 0.35, ty + 0.05, 0.20)
-        T(cab_lbl, X_TB + 0.15, ty + 0.05, 0.18)
+    # Vertical cable conductor column — top row
+    w1_top = [("26","HTR L"),("27","HTR N"),("1","L1"),("2","L2"),("3","L3"),("PE","PE")]
+    for j, (tn, lbl) in enumerate(w1_top):
+        cx = X_W1 - 0.30 + j * 0.30
+        C(cx, 110.75, 0.05)
+        T(tn,  cx - 0.08, 110.85, 0.16)
+    # Bottom row labels
+    for j, (tn, lbl) in enumerate(w1_top):
+        cx = X_W1 - 0.30 + j * 0.30
+        T(lbl, cx - 0.18, 110.40, 0.13)
 
-        # Cable run line
-        L(X_TB + 0.05, ty, X_WIRE, ty)
-        T(cbl, (X_TB + X_WIRE) / 2, ty + 0.06, 0.16)
+    # ── W2 signal cable column (travel limits + thermostat) ───────────────
+    cable_lbl(X_W2 - 0.5, 107.5)
+    T("W2",             X_W2 - 0.15, 108.0, 0.22)
+    T("4x2x0.75mm2",    X_W2 - 0.40, 107.7, 0.16)
 
-        # AQ field terminal
-        terminal(X_AQ, ty)
-        T(aq_no,   X_AQ - 0.35, ty + 0.05, 0.20)
-        T(sw_desc, X_AQ + 0.15, ty + 0.05, 0.16)
+    w2_top = [("10","C"),("11","nc"),("12","opnd"),("13","C"),
+              ("14","nc"),("15","clsd"),("40","+"),("41","-")]
+    for j, (tn, lbl) in enumerate(w2_top):
+        cx = X_W2 - 0.30 + j * 0.30
+        C(cx, 110.75, 0.05)
+        T(tn,  cx - 0.08, 110.85, 0.16)
+    for j, (tn, lbl) in enumerate(w2_top):
+        cx = X_W2 - 0.30 + j * 0.30
+        T(lbl, cx - 0.14, 110.40, 0.13)
 
-    # Cable type labels
-    cable_lbl(X_WIRE, Y_TOP - 7.2)
-    T("W1: 7x1.5mm2  Motor+PE+Heater+spare", X_WIRE + 0.25, Y_TOP - 7.2, 0.18)
-    cable_lbl(X_WIRE, Y_TOP - 7.7)
-    T("W2: 4x2x0.75mm2 shielded  Limits+Therm", X_WIRE + 0.25, Y_TOP - 7.7, 0.18)
+    # AQ actuator label + terminal column
+    T(valve_label.upper(), X_AQ - 0.5, Y_TOP - 1.10, 0.22)
+    T("Bernard " + aq_key, X_AQ - 0.5, Y_TOP - 1.38, 0.18)
+    T("SWITCH  3x400VAC",  X_AQ - 0.5, Y_TOP - 1.60, 0.16)
 
-    # 3PH supply label (field side)
-    T("3PH",    X_AQ - 0.35, Y_BOT + 1.6, 0.20)
-    T("400VAC", X_AQ - 0.35, Y_BOT + 1.3, 0.20)
-    T("50Hz",   X_AQ - 0.35, Y_BOT + 1.0, 0.18)
+    # AQ terminal numbers as a vertical column (field side, text only)
+    aq_terms = [
+        ("1","L1"),("2","L2"),("3","L3"),("PE","PE"),
+        ("26","HTR L"),("27","HTR N"),
+        ("10","C"),("11","nc"),("12","OPENED"),
+        ("13","C"),("14","nc"),("15","CLOSED"),
+        ("40","therm +"),("41","therm -"),
+    ]
+    for i, (tn, lbl) in enumerate(aq_terms):
+        ty = Y_ROW_START - i * ROW_STEP
+        C(X_AQ - 0.05, ty + 0.05, 0.05)
+        T(tn,  X_AQ - 0.50, ty, 0.18)
+        T(lbl, X_AQ + 0.05, ty, 0.16)
 
-    # Phoenix terminal types
-    T("2002-1611 (16mm2 grey)", X_TB + 0.5, Y_BOT + 1.0, 0.16)
-    T("2002-1201 (2.5mm2 grey)", X_TB + 0.5, Y_BOT + 0.7, 0.16)
-    T("2002-2201 (PE GN/YE)",    X_TB + 0.5, Y_BOT + 0.4, 0.16)
+    # 3PH supply label
+    T("3PH",    X_AQ - 0.5, Y_BOT + 1.6, 0.20)
+    T("400VAC", X_AQ - 0.5, Y_BOT + 1.3, 0.20)
+    T("50Hz",   X_AQ - 0.5, Y_BOT + 1.0, 0.18)
+
+    # Phoenix terminal type labels
+    T("2002-1611 (16mm2 grey)", X_X1 + 0.3, Y_BOT + 1.0, 0.16)
+    T("2002-1201 (2.5mm2 grey)", X_X1 + 0.3, Y_BOT + 0.7, 0.16)
+    T("2002-2201 (PE GN/YE)",    X_X1 + 0.3, Y_BOT + 0.4, 0.16)
 
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
@@ -3486,7 +3539,7 @@ def draw_single_valve(
         time.sleep(0.4)
         doc.SendCommand("MSPACE\n")
         time.sleep(0.3)
-        doc.SendCommand(f"ZOOM\nW\n193.0,{Y_BOT - 1.0}\n258.0,{Y_TOP + 1.5}\n")
+        doc.SendCommand(f"ZOOM\nW\n193.0,{Y_BOT - 1.0}\n262.0,{Y_TOP + 1.5}\n")
         time.sleep(0.3)
         doc.SendCommand("PSPACE\n")
         time.sleep(0.2)
