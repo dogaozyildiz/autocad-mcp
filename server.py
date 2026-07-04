@@ -3218,8 +3218,11 @@ def draw_single_valve(
     # ═══════════════════════════════════════════════════════════════════════
 
     # Supply buses R/S/T
+    # OK at entry of each phase — wire comes from main distribution panel
     for xb, lbl in ((X_L1, "R"), (X_L2, "S"), (X_L3, "T")):
-        L(xb, Y_SUPPLY, xb, Y_MCB + 0.8)
+        terminal(xb, Y_SUPPLY + 0.3)          # OK: wire entry from main panel
+        T("/", xb + 0.15, Y_SUPPLY + 0.32, 0.14)  # cross-ref placeholder
+        L(xb, Y_SUPPLY + 0.3, xb, Y_MCB + 0.8)
         T(lbl, xb - 0.12, Y_SUPPLY + 0.15, 0.22)
         dot(xb, Y_SUPPLY)
     T("400V 50Hz", X_L1 - 0.2, Y_SUPPLY + 0.5, 0.22)
@@ -3306,12 +3309,17 @@ def draw_single_valve(
     # ═══════════════════════════════════════════════════════════════════════
 
     # 24VDC dual buses (L+ and M)
-    L(X_BUS,       Y_TOP - 1.0, X_BUS,       Y_BOT + 0.3)
-    L(X_BUS + 0.3, Y_TOP - 1.0, X_BUS + 0.3, Y_BOT + 0.3)
-    T("L+", X_BUS - 0.35, Y_TOP - 0.7, 0.22)
-    T("+",  X_BUS - 0.10, Y_TOP - 0.52, 0.18)
-    T("M",  X_BUS + 0.55, Y_TOP - 0.7, 0.22)
-    T("-",  X_BUS + 0.35, Y_TOP - 0.52, 0.18)
+    # OK at entry of each bus — 24VDC comes from PSU (another drawing/panel)
+    terminal(X_BUS,       Y_TOP - 0.85)        # OK: L+ entry from PSU
+    T("+",  X_BUS - 0.10, Y_TOP - 0.80, 0.18)
+    T("/",  X_BUS + 0.15, Y_TOP - 0.82, 0.14)  # cross-ref placeholder
+    terminal(X_BUS + 0.3, Y_TOP - 0.85)        # OK: M entry from PSU
+    T("-",  X_BUS + 0.35, Y_TOP - 0.80, 0.18)
+    T("/",  X_BUS + 0.55, Y_TOP - 0.82, 0.14)
+    L(X_BUS,       Y_TOP - 0.85, X_BUS,       Y_BOT + 0.3)
+    L(X_BUS + 0.3, Y_TOP - 0.85, X_BUS + 0.3, Y_BOT + 0.3)
+    T("L+", X_BUS - 0.35, Y_TOP - 0.65, 0.22)
+    T("M",  X_BUS + 0.55, Y_TOP - 0.65, 0.22)
     T("24VDC", X_BUS - 0.35, Y_TOP - 0.40, 0.22)
 
     # F2 control MCB label
@@ -3418,12 +3426,8 @@ def draw_single_valve(
     T("OPEN CLOSE",       X_X1 + 0.5, Y_TOP - 0.50, 0.22)
     T("FROM TOUCH SCREEN", X_X1 + 0.5, Y_TOP - 0.78, 0.18)
 
-    # 1X1 — cabinet terminal strip header + +/- OK markers (2 only, per örnek)
+    # 1X1 — cabinet terminal strip header
     T(P + "X1", X_X1 - 0.5, Y_TOP - 1.10, 0.22)
-    terminal(X_X1 + 0.4, Y_TOP - 1.10)
-    T("+", X_X1 + 0.05, Y_TOP - 1.05, 0.20)
-    terminal(X_X1 + 0.4, Y_TOP - 1.45)
-    T("-", X_X1 + 0.05, Y_TOP - 1.40, 0.20)
 
     # Vertical separator line between cabinet and field sections
     L(X_X1 + 2.0, Y_TOP - 0.5, X_X1 + 2.0, Y_BOT + 0.5)
@@ -3455,6 +3459,12 @@ def draw_single_valve(
         T(desc, X_X1 + 0.80, ty,       0.15)
         # Horizontal line from cabinet side toward field
         L(X_X1 + 2.1, ty + 0.05, X_W1 - 0.8, ty + 0.05)
+
+    # OK at each cable exit — W1 and W2 wires leave this drawing to the field
+    terminal(X_W1 - 0.3, 108.3)               # OK: W1 exits to AQ field wiring
+    T("/", X_W1 - 0.05, 108.32, 0.14)
+    terminal(X_W2 - 0.3, 108.3)               # OK: W2 exits to AQ field wiring
+    T("/", X_W2 - 0.05, 108.32, 0.14)
 
     # ── W1 power cable column (motor L1/L2/L3/PE + heater 26/27) ──────────
     cable_lbl(X_W1 - 0.5, 107.5)
