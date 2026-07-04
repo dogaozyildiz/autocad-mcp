@@ -3132,23 +3132,130 @@ def draw_single_valve(
         safe = valve_label.replace(" ", "_").replace("/", "-")[:20]
         output_path = os.path.join(out_dir, f"Valve_{P}_{aq_key}_{safe}.dwg")
 
-    shutil.copy(TEMPLATE, output_path)
-
     try:
         acad = win32com.client.GetActiveObject("ZwCAD.Application")
     except Exception as e:
         return "ERROR: ZWCAD not running – " + str(e)
 
-    doc = acad.Documents.Open(output_path)
-    time.sleep(0.6)
+    # ── Copy template to ASCII-safe temp path ────────────────────────────
+    # Avoids Turkish-char encoding issues in ZWCAD command line
+    import tempfile as _tmplib
+    _tmp_tmpl = os.path.join(_tmplib.gettempdir(), "zwcad_valve_template.dwg")
+    shutil.copy(TEMPLATE, _tmp_tmpl)
+    time.sleep(0.1)
+
+    # ── Open / locate the output document ────────────────────────────────
+    _needed_set = {"BENEK","OK","NA","NK","KON3P","KLESIG",
+                   "3P FUSE","CB_TM","BOBIN","role aciklama","wire"}
+
+    def _blk_names(d):
+        names = set()
+        for _bi in range(d.Blocks.Count):
+            try: names.add(d.Blocks.Item(_bi).Name)
+            except Exception: pass
+        return names
+
+    # Priority 1: output_path already open — reuse it
+    doc = None
+    for _i in range(acad.Documents.Count):
+        _d = acad.Documents.Item(_i)
+        try:
+            if os.path.normcase(_d.FullName) == os.path.normcase(output_path):
+                doc = _d
+                break
+        except Exception:
+            pass
+
+    # Priority 2: another open valve drawing that already has the blocks
+    if doc is None:
+        for _i in range(acad.Documents.Count):
+            _d = acad.Documents.Item(_i)
+            _dn = _d.Name.lower()
+            if "rnek" in _dn or "nb198" in _dn:
+                continue  # keep örnek and system drawing untouched
+            if _needed_set & _blk_names(_d):
+                doc = _d
+                break
+
+    # Priority 3: try to open a fresh copy of the template
+    if doc is None:
+        shutil.copy(_tmp_tmpl, output_path)
+        time.sleep(0.2)
+        try:
+            doc = acad.Documents.Open(output_path)
+            time.sleep(0.8)
+        except Exception:
+            # ZWCAD at document limit — close a non-essential doc first
+            for _i in range(acad.Documents.Count - 1, -1, -1):
+                _d = acad.Documents.Item(_i)
+                _dn = _d.Name.lower()
+                if "rnek" not in _dn and "nb198" not in _dn:
+                    try:
+                        _d.Close(False)
+                        time.sleep(0.4)
+                    except Exception:
+                        pass
+                    break
+            try:
+                doc = acad.Documents.Open(output_path)
+                time.sleep(0.8)
+            except Exception:
+                return "ERROR: Cannot open output document in ZWCAD (doc limit)."
+
     ms = doc.ModelSpace
 
-    # Erase all model-space entities (block definitions in doc.Blocks are kept)
+    # Erase all existing model-space entities (block definitions are preserved)
     for i in range(ms.Count - 1, -1, -1):
         try:
             ms.Item(i).Delete()
         except Exception:
             pass
+
+    # ── Ensure corporate block definitions exist ───────────────────────────
+    missing_blocks = [b for b in sorted(_needed_set)
+                      if b not in _blk_names(doc)]
+
+    if missing_blocks:
+        # Strategy A: find örnek in open docs, copy block defs via COM
+        tmpl_doc = None
+        for _i in range(acad.Documents.Count):
+            _d = acad.Documents.Item(_i)
+            if "rnek" in _d.Name.lower() or "valf" in _d.Name.lower():
+                tmpl_doc = _d
+                break
+        if tmpl_doc is not None:
+            src_blk_objs = []
+            _mb_set = set(missing_blocks)
+            for _bi in range(tmpl_doc.Blocks.Count):
+                try:
+                    _blk = tmpl_doc.Blocks.Item(_bi)
+                    if _blk.Name in _mb_set and not _blk.Name.startswith("*"):
+                        src_blk_objs.append(_blk)
+                except Exception:
+                    pass
+            if src_blk_objs:
+                try:
+                    _objs_var = win32com.client.VARIANT(
+                        pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, src_blk_objs)
+                    tmpl_doc.CopyObjects(_objs_var, doc.Blocks.ObjectID)
+                    time.sleep(0.3)
+                    missing_blocks = []  # mark done
+                except Exception:
+                    pass  # fall to Strategy B
+
+        if missing_blocks:
+            # Strategy B: -INSERT blockname=ascii_temp_path via SendCommand
+            doc.Activate()
+            time.sleep(0.2)
+            for _bname in missing_blocks:
+                try:
+                    doc.SendCommand(f'-INSERT\n"{_bname}"={_tmp_tmpl}\n')
+                    time.sleep(0.3)
+                    doc.SendCommand("\x1b\n")
+                    time.sleep(0.15)
+                except Exception:
+                    pass
+            time.sleep(0.3)
 
     # ── Drawing helpers ──────────────────────────────────────────────────────
     def _pt(x, y):
@@ -3184,28 +3291,44 @@ def draw_single_valve(
     def contactor(x, y):   BLK("KON3P", x, y)           # 3-pole contactor
 
     # ── COORDINATE CONSTANTS  (örnek scale: 60:1 on A1) ────────────────────
-    # Power section  –  match örnek's exact X positions
+    # Power section — match örnek's exact X positions
     X_L1 = 195.5;  X_L2 = 195.9;  X_L3 = 196.3
     Y_SUPPLY = 112.7
 
-    X_MCB = 195.7;  Y_MCB = 111.1   # "3P FUSE" block position
-    X_MP  = 198.8;  Y_MP  = 111.1   # "CB_TM"   block position
+    X_MCB = 195.7;  Y_MCB = 111.1   # "3P FUSE" block
+    X_MP  = 198.8;  Y_MP  = 111.1   # "CB_TM" block (same level as MCB)
+
+    # Phase relay — positioned to the RIGHT of motor protection (matching örnek)
+    X_RELAY = 203.0;  Y_RELAY = 111.1
+    X_RELAY_L = X_RELAY - 0.5;  X_RELAY_R = X_RELAY + 0.9
+    Y_RELAY_T = Y_RELAY + 0.45; Y_RELAY_B = Y_RELAY - 0.45
 
     X_K1  = 198.8;  X_K2  = 200.7;  Y_K = 107.3   # contactor blocks
-    X_KLESIG = 201.6;  Y_KLESIG = 107.2
-    X_MOT = 198.8;  Y_MOT = 103.1   # motor circle centre, r=0.55
+    Y_KLESIG = 104.8                                  # motor KLESIG strip Y
+    X_KLESIG_L = X_L1;  X_KLESIG_R = X_L3 + 1.2    # KLESIG span
+    X_MOT = 198.8;  Y_MOT = 102.5   # motor circle centre, r=0.55
 
-    # Control section
-    X_BUS   = 209.2   # 24VDC left vertical bus
+    # Heater MCB branch (right of contactors)
+    X_HTR = 202.8;  Y_HTR_MCB = 107.3
+
+    # Control section — 24VDC buses are HORIZONTAL (top and bottom)
+    X_BUS_L = 209.0   # left edge of 24VDC horizontal buses
+    X_BUS_R = 220.5   # right edge of 24VDC horizontal buses
+    Y_TOP_BUS = 112.3  # 24VDC+ (L+) horizontal bus Y position
+    Y_BOT_BUS = 99.3   # 0V (M) horizontal bus Y position
+
+    # PLC box
     X_PLC_L = 210.0;  X_PLC_R = 216.0
     Y_PLC_T = 110.5;  Y_PLC_B = 103.0
-    X_RUNG  = 209.5   # coil rungs start here
 
-    # Coil positions matching örnek exactly
-    X_K1C = 217.2;  X_K2C = 218.4
-    Y_COIL = 100.0;  Y_NK = 102.8
+    # Coil columns — vertical rungs (matching örnek's vertical layout)
+    X_K1C = 217.2;  X_K2C = 218.4   # K1 OPEN / K2 CLOSE coil column X positions
+    Y_RUNG_TOP = 105.5  # K1/K2 rung top — PLC DQ output connection level
+    Y_NK   = 103.4  # electrical interlock NK contact Y
+    Y_NA   = 102.0  # travel limit NC contact Y (stops at end-of-travel)
+    Y_COIL = 100.2  # BOBIN block centre Y
 
-    # Terminal / wiring section — örnek style (no OK per row)
+    # Terminal / wiring section
     X_X1  = 228.0   # 1X1 cabinet terminal strip label X
     X_W1  = 247.0   # W1 power cable column X
     X_W2  = 250.5   # W2 signal cable column X
@@ -3237,15 +3360,22 @@ def draw_single_valve(
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_MCB + 0.8, xb, Y_MCB - 0.8)
 
-    # Phase monitor A1 (small box between MCB and motor prot)
-    PX1 = X_MCB + 0.5;  PX2 = X_MP - 0.1
-    PY1 = Y_MCB - 0.45; PY2 = Y_MCB + 0.45
-    L(PX1, PY2, PX2, PY2); L(PX2, PY2, PX2, PY1)
-    L(PX2, PY1, PX1, PY1); L(PX1, PY1, PX1, PY2)
-    T(P + "A1", PX1 + 0.05, PY2 + 0.10, 0.20)
-    T("3UG4512-1AR20", PX1 + 0.05, PY1 - 0.22, 0.16)
-    T("PHASE CONTROL", PX1 + 0.05, PY1 - 0.40, 0.16)
-    L(PX2, Y_MCB, PX2 + 0.3, Y_MCB)   # NC output wire
+    # Phase relay A1 — box to the RIGHT of motor protection (matching örnek layout)
+    L(X_RELAY_L, Y_RELAY_T, X_RELAY_R, Y_RELAY_T)
+    L(X_RELAY_R, Y_RELAY_T, X_RELAY_R, Y_RELAY_B)
+    L(X_RELAY_R, Y_RELAY_B, X_RELAY_L, Y_RELAY_B)
+    L(X_RELAY_L, Y_RELAY_B, X_RELAY_L, Y_RELAY_T)
+    T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
+    T("3UG4512-1AR20", X_RELAY_L + 0.05, Y_RELAY_B - 0.22, 0.16)
+    T("PHASE CONTROL", X_RELAY_L + 0.05, Y_RELAY_B - 0.42, 0.16)
+    # L1/L2/L3 input labels on top of phase relay
+    for xi, lab in zip((X_RELAY_L + 0.1, X_RELAY_L + 0.5, X_RELAY_L + 0.9),
+                       ("L1", "L2", "L3")):
+        T(lab, xi, Y_RELAY_T + 0.38, 0.15)
+        L(xi + 0.05, Y_RELAY_T + 0.35, xi + 0.05, Y_RELAY_T)
+    # NC output wire from relay (goes to 1X1 terminal for control circuit)
+    L(X_RELAY_R, Y_RELAY, X_RELAY_R + 0.4, Y_RELAY)
+    # Bus connections from MCB output to phase lines (before motor prot and relay)
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_MCB - 0.8, xb, Y_MP + 0.8)
         dot(xb, Y_MCB - 0.8)
@@ -3277,146 +3407,147 @@ def draw_single_valve(
     L(X_K1 + 0.7, Y_K, X_K2, Y_K)
     T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
 
-    # Wires to terminal block — dot at contactor output
+    # Wires from contactors to motor KLESIG terminal strip
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_K - 0.3, xb, Y_KLESIG + 0.3)
         dot(xb, Y_K - 0.3)
 
-    # KLESIG terminal blocks (1X1)
-    term_blk(X_KLESIG,       Y_KLESIG)
-    term_blk(X_KLESIG + 0.4, Y_KLESIG)
-    T(P + "X1", X_KLESIG - 0.8, Y_KLESIG + 0.30, 0.22)
-    T(":1,2,3", X_KLESIG - 0.8, Y_KLESIG + 0.08, 0.18)
+    # Motor KLESIG terminal strip (1X5) — three terminals for L1/L2/L3
+    term_blk(X_L1 + 0.1, Y_KLESIG)
+    term_blk(X_L2 + 0.1, Y_KLESIG)
+    term_blk(X_L3 + 0.1, Y_KLESIG)
+    T(P + "X5", X_L1 - 0.5, Y_KLESIG + 0.32, 0.22)
+    T("1  2  3", X_L1 - 0.05, Y_KLESIG - 0.28, 0.16)
 
     # Motor symbol + connections
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_KLESIG - 0.3, xb, Y_MOT + 0.6)
     C(X_MOT, Y_MOT, 0.55)
-    T("M", X_MOT - 0.12, Y_MOT - 0.12, 0.30)
-    T(f"Bernard {aq_key}  SWITCH  3x400VAC", X_MOT + 0.7, Y_MOT + 0.35, 0.20)
-    T(f"{torque}Nm  {t_s}s/90  {kW}kW", X_MOT + 0.7, Y_MOT + 0.05, 0.18)
-    T(f"In={In}A  Istart={Istart}A", X_MOT + 0.7, Y_MOT - 0.25, 0.18)
-    T("term 1,2,3 Motor / PE", X_MOT + 0.7, Y_MOT - 0.55, 0.16)
+    T("M", X_MOT - 0.12, Y_MOT - 0.10, 0.30)
+    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
+    # Valve name label under motor (matching örnek style)
+    T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
+    T("OPEN  CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
 
-    # Heater spur off 1X1
-    L(X_KLESIG + 0.85, Y_KLESIG, X_KLESIG + 1.5, Y_KLESIG)
-    T("26", X_KLESIG + 1.55, Y_KLESIG + 0.18, 0.20)
-    T("27", X_KLESIG + 1.55, Y_KLESIG - 0.18, 0.20)
-    T("HEATER 400VAC", X_KLESIG + 1.80, Y_KLESIG, 0.18)
+    # Heater branch — branches off from supply AFTER the main MCB (before motor prot)
+    # Two KLESIG terminals for HTR L and HTR N
+    L(X_L2, Y_K + 0.3, X_HTR, Y_K + 0.3)        # horizontal tap from L2 bus
+    L(X_HTR, Y_K + 0.3, X_HTR, Y_HTR_MCB + 0.3) # down to heater MCB top
+    dot(X_L2, Y_K + 0.3)
+    T(P + "F3", X_HTR + 0.15, Y_HTR_MCB + 0.5, 0.18)  # heater L MCB
+    L(X_HTR, Y_HTR_MCB + 0.3, X_HTR, Y_HTR_MCB - 0.3) # through MCB
+    L(X_HTR, Y_HTR_MCB - 0.3, X_HTR, Y_KLESIG + 0.3)  # down to heater KLESIG
+    term_blk(X_HTR + 0.1, Y_KLESIG)
+    term_blk(X_HTR + 0.5, Y_KLESIG)
+    T("26", X_HTR + 0.05, Y_KLESIG - 0.28, 0.16)
+    T("27", X_HTR + 0.45, Y_KLESIG - 0.28, 0.16)
+    T("HEATER", X_HTR + 0.15, Y_KLESIG - 0.55, 0.16)
+    T("400VAC", X_HTR + 0.15, Y_KLESIG - 0.75, 0.16)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # CONTROL SECTION  (X ≈ 209–225)
+    # CONTROL SECTION  (X ≈ 209–220)
+    # 24VDC buses are HORIZONTAL (top and bottom), matching örnek layout
+    # Each coil rung is a VERTICAL COLUMN between the two buses
     # ═══════════════════════════════════════════════════════════════════════
 
-    # 24VDC dual buses (L+ and M)
-    # OK at entry of each bus — 24VDC comes from PSU (another drawing/panel)
-    terminal(X_BUS,       Y_TOP - 0.85)        # OK: L+ entry from PSU
-    T("+",  X_BUS - 0.10, Y_TOP - 0.80, 0.18)
-    T("/",  X_BUS + 0.15, Y_TOP - 0.82, 0.14)  # cross-ref placeholder
-    terminal(X_BUS + 0.3, Y_TOP - 0.85)        # OK: M entry from PSU
-    T("-",  X_BUS + 0.35, Y_TOP - 0.80, 0.18)
-    T("/",  X_BUS + 0.55, Y_TOP - 0.82, 0.14)
-    L(X_BUS,       Y_TOP - 0.85, X_BUS,       Y_BOT + 0.3)
-    L(X_BUS + 0.3, Y_TOP - 0.85, X_BUS + 0.3, Y_BOT + 0.3)
-    T("L+", X_BUS - 0.35, Y_TOP - 0.65, 0.22)
-    T("M",  X_BUS + 0.55, Y_TOP - 0.65, 0.22)
-    T("24VDC", X_BUS - 0.35, Y_TOP - 0.40, 0.22)
+    # 24VDC horizontal buses
+    # TOP bus — L+ (24VDC positive)
+    terminal(X_BUS_L, Y_TOP_BUS)          # OK: enters from PSU/another drawing
+    T("+",    X_BUS_L - 0.15, Y_TOP_BUS + 0.05, 0.18)
+    T("/",    X_BUS_L + 0.15, Y_TOP_BUS + 0.03, 0.13)
+    L(X_BUS_L, Y_TOP_BUS, X_BUS_R, Y_TOP_BUS)   # L+ horizontal bus
+    T("L+",   X_BUS_L - 0.18, Y_TOP_BUS - 0.22, 0.18)
+    T("M",    X_BUS_L + 0.32, Y_TOP_BUS - 0.22, 0.18)
+    T("24VDC", X_BUS_L + 0.68, Y_TOP_BUS + 0.30, 0.22)
 
-    # F2 control MCB label
-    T(P + "F2", X_BUS - 0.35, Y_MCB + 0.55, 0.22)
-    T(ctrl_mcb + "  2P", X_BUS - 0.35, Y_MCB + 0.30, 0.18)
+    # BOTTOM bus — M (0V / neutral)
+    terminal(X_BUS_L, Y_BOT_BUS)          # OK: returns to PSU
+    T("-",    X_BUS_L - 0.15, Y_BOT_BUS + 0.05, 0.18)
+    T("/",    X_BUS_L + 0.15, Y_BOT_BUS + 0.03, 0.13)
+    L(X_BUS_L, Y_BOT_BUS, X_BUS_R, Y_BOT_BUS)   # M horizontal bus
 
-    # PLC block (rectangle)
+    # F2 — 24VDC supply MCB label (just text, no block — matches örnek)
+    T(P + "F2", X_BUS_L - 0.10, Y_TOP_BUS - 0.62, 0.20)
+    T(ctrl_mcb + "  2P", X_BUS_L - 0.10, Y_TOP_BUS - 0.85, 0.16)
+
+    # PLC block (rectangle with I/O labels)
     L(X_PLC_L, Y_PLC_T, X_PLC_R, Y_PLC_T)
     L(X_PLC_R, Y_PLC_T, X_PLC_R, Y_PLC_B)
     L(X_PLC_R, Y_PLC_B, X_PLC_L, Y_PLC_B)
     L(X_PLC_L, Y_PLC_B, X_PLC_L, Y_PLC_T)
-    T("PLC  S7-1200", X_PLC_L + 0.2, Y_PLC_T - 0.40, 0.25)
-    T(plc_model, X_PLC_L + 0.2, Y_PLC_T - 0.70, 0.18)
-    T("ETHERNET CONNECTION", X_PLC_L + 0.2, Y_PLC_T - 1.00, 0.18)
-    T("RJ45", X_PLC_L + 0.2, Y_PLC_T - 1.28, 0.18)
+    T("PLC  S7-1200",      X_PLC_L + 0.15, Y_PLC_T - 0.35, 0.22)
+    T(plc_model,           X_PLC_L + 0.15, Y_PLC_T - 0.58, 0.16)
+    T("ETHERNET CONNECTION", X_PLC_L + 0.15, Y_PLC_T - 0.80, 0.16)
+    T("RJ45",              X_PLC_L + 0.15, Y_PLC_T - 1.00, 0.16)
 
-    # DI (INPUT) labels
-    T("INPUT", X_PLC_L + 0.15, Y_PLC_T - 1.55, 0.20)
+    T("INPUT",  X_PLC_L + 0.15, Y_PLC_T - 1.22, 0.18)
     di_rows = [
-        ("0.0", "travel OPEN  NO  (term 12)"),
+        ("0.0", "travel OPEN NO (term 12)"),
         ("0.1", "travel CLOSE NC (term 14)"),
-        ("0.2", "Q1 OL  NC aux"),
-        ("0.3", "A1 phase fault  NC"),
+        ("0.2", "Q1 OL NC aux"),
+        ("0.3", "A1 phase fault NC"),
         ("0.4", "therm NC (40-41)"),
         ("0.5", "HMI OPEN"),
         ("0.6", "HMI CLOSE"),
     ]
     for i, (addr, desc) in enumerate(di_rows):
-        ry = Y_PLC_T - 1.85 - i * 0.28
-        T(addr, X_PLC_L + 0.18, ry, 0.18)
-        T(desc, X_PLC_L + 0.58, ry, 0.15)
+        ry = Y_PLC_T - 1.45 - i * 0.25
+        T(addr, X_PLC_L + 0.15, ry, 0.16)
+        T(desc, X_PLC_L + 0.52, ry, 0.12)
 
-    # DO (OUTPUT) labels
-    T("OUTPUT", X_PLC_R - 0.85, Y_PLC_T - 1.55, 0.20)
+    T("OUTPUT", X_PLC_R - 0.85, Y_PLC_T - 1.22, 0.18)
     for i, (addr, lbl) in enumerate([("0.0", P + "K1 OPEN"), ("0.1", P + "K2 CLOSE")]):
-        ry = Y_PLC_T - 1.85 - i * 0.28
-        T(addr, X_PLC_R - 0.72, ry, 0.18)
-        T(lbl,  X_PLC_R - 0.10, ry, 0.15)
+        ry = Y_PLC_T - 1.45 - i * 0.25
+        T(addr, X_PLC_R - 0.72, ry, 0.16)
+        T(lbl,  X_PLC_R - 0.08, ry, 0.12)
 
-    # ── K1 OPEN coil rung ────────────────────────────────────────────────
-    Y_R1 = Y_NK + 0.5
-    T(f"OPEN  ({P}K1):", X_RUNG - 0.15, Y_R1 + 0.32, 0.18)
-    L(X_RUNG, Y_R1, X_RUNG + 0.15, Y_R1)
+    # ── PLC DQ output bus connecting to K1/K2 rung tops ──────────────────
+    # In the örnek, PLC DQ outputs feed the coil rungs at this Y level.
+    # Horizontal bus from PLC right edge to K2 rung; junctions for K1 and K2.
+    L(X_PLC_R, Y_RUNG_TOP, X_K2C + 0.3, Y_RUNG_TOP)  # DQ output bus
+    dot(X_K1C, Y_RUNG_TOP)                              # K1 junction
+    dot(X_K2C, Y_RUNG_TOP)                              # K2 junction
+    T("Q0.0", X_K1C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K1
+    T("Q0.1", X_K2C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K2
 
-    # Only real protection contacts remain: no electrical interlock (mech. bar on
-    # the 3TG1010 pair handles it) and no travel-limit hardwiring (SWITCH-type AQ
-    # stops itself internally). Each contact carries its cabinet terminal number.
-    NC_XS = [X_RUNG + 0.15 + j * 0.85 for j in range(3)]
-    rung_k1 = [
-        (P + "A1",  "phase fault NC", "1X1:8"),
-        (P + "Q1",  "OL NC aux",      "1X1:9"),
-        ("40-41",   "therm NC",       "1X1:10"),
-    ]
-    for xi, (lbl, sub, term) in zip(NC_XS, rung_k1):
-        nc_contact(xi, Y_R1)
-        T(lbl,  xi - 0.08, Y_R1 + 0.30, 0.15)
-        T(sub,  xi - 0.14, Y_R1 + 0.14, 0.11)
-        T(term, xi - 0.02, Y_R1 - 0.24, 0.12)
-        L(xi + 0.35, Y_R1, xi + 0.85, Y_R1)
+    # ── K1 OPEN coil rung — vertical column at X_K1C ─────────────────────
+    # Flow: PLC DQ0 → NK(K2nc) → nc_contact(OPEN LIMIT, term 11) → BOBIN K1 → 0V bus
+    L(X_K1C, Y_RUNG_TOP, X_K1C, Y_NK + 0.22)          # wire from DQ connection to NK
+    relay_nc(X_K1C, Y_NK)                              # NK = K2 NC (electrical interlock)
+    T(P + "K2", X_K1C - 0.32, Y_NK + 0.25, 0.13)     # label: K2nc interlock
+    L(X_K1C, Y_NK - 0.22, X_K1C, Y_NA + 0.22)        # wire from NK to travel limit
+    nc_contact(X_K1C, Y_NA)                            # OPEN travel limit NC (terminal 11)
+    T("10", X_K1C - 0.36, Y_NA + 0.22, 0.12)          # terminal 10 (common)
+    T("11", X_K1C + 0.10, Y_NA + 0.22, 0.12)          # terminal 11 (NC limit)
+    T("travel limit",  X_K1C - 0.45, Y_NA - 0.22, 0.10)
+    T(valve_label.upper(), X_K1C - 0.45, Y_NA - 0.36, 0.09)
+    L(X_K1C, Y_NA - 0.22, X_K1C, Y_COIL + 0.32)      # wire from contact to coil
+    coil(X_K1C, Y_COIL)                                # BOBIN K1
+    T(P + "K1", X_K1C - 0.28, Y_COIL - 0.27, 0.18)
+    T("OPEN",   X_K1C - 0.24, Y_COIL - 0.48, 0.15)
+    T("3TG1010-0BB4", X_K1C - 0.32, Y_COIL - 0.68, 0.12)
+    desc_box(X_K1C, Y_COIL - 0.90)                    # cross-reference box
+    L(X_K1C, Y_COIL - 0.32, X_K1C, Y_BOT_BUS)        # wire from coil A2 to 0V bus
+    dot(X_K1C, Y_BOT_BUS)                              # BENEK at 0V bus
 
-    # K1 coil column (mechanical interlock only — no electrical NC cross-contact)
-    L(NC_XS[-1] + 0.85, Y_R1, X_K1C, Y_R1)
-    L(X_K1C, Y_R1, X_K1C, Y_COIL + 0.3)
-    coil(X_K1C, Y_COIL)
-    T(P + "K1", X_K1C - 0.30, Y_COIL - 0.50, 0.20)
-    T("OPEN",   X_K1C - 0.30, Y_COIL - 0.72, 0.18)
-    desc_box(X_K1C, Y_COIL - 1.25)
-    L(X_K1C, Y_COIL - 0.3, X_K1C, Y_BOT + 0.3)
-    # connect rung right-end back to M bus
-    L(X_K1C, Y_R1, X_BUS + 0.3, Y_R1); dot(X_BUS + 0.3, Y_R1)
-
-    # ── K2 CLOSE coil rung ───────────────────────────────────────────────
-    Y_R2 = Y_R1 - 1.20
-    T(f"CLOSE ({P}K2):", X_RUNG - 0.15, Y_R2 + 0.32, 0.18)
-    L(X_RUNG, Y_R2, X_RUNG + 0.15, Y_R2)
-
-    rung_k2 = [
-        (P + "A1",  "phase fault NC", "1X1:8"),
-        (P + "Q1",  "OL NC aux",      "1X1:9"),
-        ("40-41",   "therm NC",       "1X1:10"),
-    ]
-    for xi, (lbl, sub, term) in zip(NC_XS, rung_k2):
-        nc_contact(xi, Y_R2)
-        T(lbl,  xi - 0.08, Y_R2 + 0.30, 0.15)
-        T(sub,  xi - 0.14, Y_R2 + 0.14, 0.11)
-        T(term, xi - 0.02, Y_R2 - 0.24, 0.12)
-        L(xi + 0.35, Y_R2, xi + 0.85, Y_R2)
-
-    # K2 coil column (mechanical interlock only — no electrical NC cross-contact)
-    L(NC_XS[-1] + 0.85, Y_R2, X_K2C, Y_R2)
-    L(X_K2C, Y_R2, X_K2C, Y_COIL + 0.3)
-    coil(X_K2C, Y_COIL)
-    T(P + "K2", X_K2C - 0.30, Y_COIL - 0.50, 0.20)
-    T("CLOSE",  X_K2C - 0.30, Y_COIL - 0.72, 0.18)
-    desc_box(X_K2C, Y_COIL - 1.25)
-    L(X_K2C, Y_COIL - 0.3, X_K2C, Y_BOT + 0.3)
-    L(X_K2C, Y_R2, X_BUS + 0.3, Y_R2); dot(X_BUS + 0.3, Y_R2)
+    # ── K2 CLOSE coil rung — vertical column at X_K2C ────────────────────
+    L(X_K2C, Y_RUNG_TOP, X_K2C, Y_NK + 0.22)
+    relay_nc(X_K2C, Y_NK)                              # NK = K1 NC (electrical interlock)
+    T(P + "K1", X_K2C - 0.32, Y_NK + 0.25, 0.13)
+    L(X_K2C, Y_NK - 0.22, X_K2C, Y_NA + 0.22)
+    nc_contact(X_K2C, Y_NA)                            # CLOSE travel limit NC (terminal 14)
+    T("13", X_K2C - 0.36, Y_NA + 0.22, 0.12)          # terminal 13 (common)
+    T("14", X_K2C + 0.10, Y_NA + 0.22, 0.12)          # terminal 14 (NC limit)
+    T("travel limit",  X_K2C - 0.45, Y_NA - 0.22, 0.10)
+    T(valve_label.upper(), X_K2C - 0.45, Y_NA - 0.36, 0.09)
+    L(X_K2C, Y_NA - 0.22, X_K2C, Y_COIL + 0.32)
+    coil(X_K2C, Y_COIL)                                # BOBIN K2
+    T(P + "K2",  X_K2C - 0.28, Y_COIL - 0.27, 0.18)
+    T("CLOSE",   X_K2C - 0.28, Y_COIL - 0.48, 0.15)
+    T("3TG1010-0BB4", X_K2C - 0.32, Y_COIL - 0.68, 0.12)
+    desc_box(X_K2C, Y_COIL - 0.90)
+    L(X_K2C, Y_COIL - 0.32, X_K2C, Y_BOT_BUS)
+    dot(X_K2C, Y_BOT_BUS)
 
     # ═══════════════════════════════════════════════════════════════════════
     # TERMINAL / WIRING SECTION  (X ≈ 228–255)  — örnek style
@@ -3556,10 +3687,14 @@ def draw_single_valve(
     except Exception:
         pass
 
+    # Save: use SaveAs to output_path (works even if doc was created as untitled)
     try:
-        doc.Save()
+        doc.SaveAs(output_path)
     except Exception:
-        pass
+        try:
+            doc.Save()
+        except Exception:
+            pass
 
     return (
         f"OK: '{valve_label}' [{aq_key}] saved to {output_path}\n"
