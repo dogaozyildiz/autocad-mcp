@@ -3023,20 +3023,18 @@ def draw_eff_system(
                 lo.PlotPaperSize = (420.0, 297.0); lo.PaperUnits = 1
             except Exception:
                 pass
-            vblk = lo.Block; vp_found = None
-            for vi in range(vblk.Count):
-                try:
-                    if vblk.Item(vi).EntityName == "AcDbViewport":
-                        vp_found = vblk.Item(vi); break
-                except Exception:
-                    pass
-            if vp_found is None:
-                vp = lo.AddViewport(_point(210, 143), 420, 297)
-            else:
-                vp = vp_found
             try:
-                vp.Center = _point(lsx+ox+210, oy+143)
-                vp.Width = 420.0; vp.Height = 297.0; vp.CustomScale = 1.0
+                import time
+                doc.ActiveLayout = lo
+                time.sleep(0.25)
+                doc.SendCommand("MSPACE\n")
+                time.sleep(0.25)
+                x1 = lsx + ox - 5;  y1 = oy - 5
+                x2 = lsx + ox + 425; y2 = oy + 290
+                doc.SendCommand(f"ZOOM\nW\n{x1},{y1}\n{x2},{y2}\n")
+                time.sleep(0.25)
+                doc.SendCommand("PSPACE\n")
+                time.sleep(0.15)
             except Exception:
                 pass
             created.append(lname)
@@ -3063,7 +3061,7 @@ def draw_eff_system(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-#  SINGLE VALVE CONTROL SCHEMATIC  (any Bernard AQ model, 3x400VAC 50Hz)
+#  SINGLE VALVE CONTROL SCHEMATIC  –  örnek style, A1 template-based
 # ═══════════════════════════════════════════════════════════════════════════════
 
 @mcp.tool()
@@ -3079,381 +3077,438 @@ def draw_single_valve(
     drawing_no: str = "M00-IM-0001",
     date_str: str = "",
     company: str = "",
-    origin_x: float = 0.0,
-    origin_y: float = 0.0,
+    output_path: str = "",
 ) -> str:
-    """Draw complete 3-sheet valve actuator control schematic for ANY Bernard AQ model.
-    Sheet 1: 3x400VAC power circuit (MCB -> phase monitor -> motor protection + aux ->
-    OPEN/CLOSE reversing contactors 3TG1010-0BB4 -> terminal block -> motor).
-    Sheet 2: 24VDC control circuit (PLC S7-1200 DQ/DI, hardware interlock rung,
-    travel limits and thermostat hardwired in coil rung, HMI reference).
-    Sheet 3: Terminal wiring 1X1 cabinet to Bernard AQ field device
-    (motor L1/L2/L3/PE, heater 26-27, travel limits 10-15, thermostat 40-41).
-    Motor protection model and Ir setting selected automatically from AQ datasheet
-    (Bernard Controls B60ver, 3x400VAC 50Hz). Supports AQ5 through AQ1000."""
-    import datetime
-    acad = _get_acad()
-    doc  = acad.ActiveDocument
+    """Draw single valve control schematic in NB198/ornek style on ISO A1 sheet.
+    Uses ornek valf cizimi.dwg as template for CAD blocks (BENEK, BOBIN, KON3P,
+    CB_TM, 3P FUSE, NA, NK, KLESIG, OK, wire, role aciklama).
+    One compact A1 sheet: power section (MCB->phase monitor->motor prot->contactors),
+    control section (PLC S7-1200 DI/DO, coil rungs with NC interlocks),
+    terminal/wiring section (1X1->AQ field, cable labels).
+    Motor protection auto-selected from Bernard AQ datasheet (3x400VAC 50Hz).
+    Supports AQ5 through AQ1000."""
+    import os, shutil, time, datetime
+    import win32com.client
+    import pythoncom
 
-    # Bernard AQ lookup: (In_A, Istart_A, kW, torque_Nm, time_s,
-    #                     rv_part, rv_range_str, rv_set_str)
-    # Source: Bernard Controls TEC B60ver_PRG_F+E_30-10CET, 3x400VAC 50Hz
+    # Bernard AQ lookup: (In_A, Istart_A, kW, torque_Nm, time_s, rv_part, rv_range, rv_set)
+    # Source: Bernard Controls TEC B60ver_PRG_F+E, 3x400VAC 50Hz
     _AQ = {
-        "AQ5":   (0.16, 0.43, 0.03,    50,  16, "3RV2011-0FA10", "0.35-0.50", "0.40"),
-        "AQ10":  (0.16, 0.43, 0.03,   100,  25, "3RV2011-0FA10", "0.35-0.50", "0.40"),
-        "AQ15":  (0.16, 0.43, 0.03,   150,  30, "3RV2011-0FA10", "0.35-0.50", "0.40"),
-        "AQ25":  (0.22, 0.43, 0.04,   250,  30, "3RV2011-0GA10", "0.45-0.63", "0.45"),
-        "AQ30":  (0.22, 0.43, 0.04,   300,  35, "3RV2011-0GA10", "0.45-0.63", "0.45"),
-        "AQ50":  (0.43, 0.75, 0.07,   500,  35, "3RV2011-1BA10", "0.55-0.80", "0.60"),
-        "AQ80":  (0.43, 0.75, 0.07,   800,  55, "3RV2011-1BA10", "0.55-0.80", "0.60"),
-        "AQ150": (0.97, 3.80, 0.40,  1500,  40, "3RV2011-1EA10", "1.10-1.60", "1.10"),
-        "AQ280": (0.97, 3.80, 0.40,  2800, 100, "3RV2011-1EA10", "1.10-1.60", "1.10"),
-        "AQ430": (2.70,14.00, 0.90,  4300,  70, "3RV2021-4AA10", "2.80-4.00", "3.00"),
-        "AQ610": (2.70,14.00, 0.90,  6100, 100, "3RV2021-4AA10", "2.80-4.00", "3.00"),
-        "AQ830": (1.90, 6.70, 0.80,  8300, 115, "3RV2011-1GA10", "1.80-2.50", "2.00"),
-        "AQ1000":(1.60, 5.00, 0.50, 10400, 135, "3RV2011-1FA10", "1.40-2.00", "1.60"),
+        "AQ5":    (0.16, 0.43, 0.03,    50,  16, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ10":   (0.16, 0.43, 0.03,   100,  25, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ15":   (0.16, 0.43, 0.03,   150,  30, "3RV2011-0FA10", "0.35-0.50", "0.40"),
+        "AQ25":   (0.22, 0.43, 0.04,   250,  30, "3RV2011-0GA10", "0.45-0.63", "0.45"),
+        "AQ30":   (0.22, 0.43, 0.04,   300,  35, "3RV2011-0GA10", "0.45-0.63", "0.45"),
+        "AQ50":   (0.43, 0.75, 0.07,   500,  35, "3RV2011-1BA10", "0.55-0.80", "0.60"),
+        "AQ80":   (0.43, 0.75, 0.07,   800,  55, "3RV2011-1BA10", "0.55-0.80", "0.60"),
+        "AQ150":  (0.97, 3.80, 0.40,  1500,  40, "3RV2011-1EA10", "1.10-1.60", "1.10"),
+        "AQ280":  (0.97, 3.80, 0.40,  2800, 100, "3RV2011-1EA10", "1.10-1.60", "1.10"),
+        "AQ430":  (2.70,14.00, 0.90,  4300,  70, "3RV2021-4AA10", "2.80-4.00", "3.00"),
+        "AQ610":  (2.70,14.00, 0.90,  6100, 100, "3RV2021-4AA10", "2.80-4.00", "3.00"),
+        "AQ830":  (1.90, 6.70, 0.80,  8300, 115, "3RV2011-1GA10", "1.80-2.50", "2.00"),
+        "AQ1000": (1.60, 5.00, 0.50, 10400, 135, "3RV2011-1FA10", "1.40-2.00", "1.60"),
     }
 
     aq_key = aq_model.strip().upper().replace(" ", "")
     if aq_key not in _AQ:
-        return (
-            "ERROR: unknown AQ model '" + aq_model + "'. "
-            "Supported: " + ", ".join(sorted(_AQ.keys()))
-        )
+        return ("ERROR: unknown AQ model '" + aq_model + "'. "
+                "Supported: " + ", ".join(sorted(_AQ.keys())))
     In, Istart, kW, torque, t_s, rv_part, rv_range, rv_set = _AQ[aq_key]
 
-    for nm, builder in _SYMBOLS.items():
-        if not _block_exists(doc, nm):
-            try:
-                builder(doc.Blocks.Add(_point(0, 0), nm))
-            except Exception:
-                pass
-    try:
-        try:
-            lay = doc.Layers.Item("VALVE-CTRL")
-        except Exception:
-            lay = doc.Layers.Add("VALVE-CTRL")
-            lay.color = 7
-        doc.ActiveLayer = lay
-    except Exception:
-        pass
-
-    ms = doc.ModelSpace
-    ox, oy = float(origin_x), float(origin_y)
     if not date_str:
         date_str = datetime.date.today().strftime("%d.%m.%Y")
     P = str(tag_prefix)
 
+    # ── Template setup ───────────────────────────────────────────────────────
+    # The template file already has all corporate blocks (BENEK, BOBIN, etc.)
+    import glob as _glob
+    matches = _glob.glob(r"c:\Users\dogao\Downloads\*rnek*valf*.dwg")
+    TEMPLATE = matches[0] if matches else r"c:\Users\dogao\Downloads\ornek valf cizimi.dwg"
+    if not os.path.exists(TEMPLATE):
+        return "ERROR: Template not found. Put 'ornek valf cizimi.dwg' in Downloads folder."
+
+    if not output_path:
+        out_dir = os.path.dirname(TEMPLATE)
+        safe = valve_label.replace(" ", "_").replace("/", "-")[:20]
+        output_path = os.path.join(out_dir, f"Valve_{P}_{aq_key}_{safe}.dwg")
+
+    shutil.copy(TEMPLATE, output_path)
+
+    try:
+        acad = win32com.client.GetActiveObject("ZwCAD.Application")
+    except Exception as e:
+        return "ERROR: ZWCAD not running – " + str(e)
+
+    doc = acad.Documents.Open(output_path)
+    time.sleep(0.6)
+    ms = doc.ModelSpace
+
+    # Erase all model-space entities (block definitions in doc.Blocks are kept)
+    for i in range(ms.Count - 1, -1, -1):
+        try:
+            ms.Item(i).Delete()
+        except Exception:
+            pass
+
+    # ── Drawing helpers ──────────────────────────────────────────────────────
+    def _pt(x, y):
+        return win32com.client.VARIANT(
+            pythoncom.VT_ARRAY | pythoncom.VT_R8, [float(x), float(y), 0.0])
+
     def L(x1, y1, x2, y2):
-        ms.AddLine(_point(x1+ox, y1+oy), _point(x2+ox, y2+oy))
-
-    def T(txt, x, y, h=4.0, align="left"):
-        _add_text(ms, str(txt), x+ox, y+oy, h, align)
-
-    def R(x1, y1, x2, y2):
-        p = ms.AddLightWeightPolyline(
-            _coords([(x1+ox,y1+oy),(x2+ox,y1+oy),(x2+ox,y2+oy),(x1+ox,y2+oy)]))
-        p.Closed = True
+        ms.AddLine(_pt(x1, y1), _pt(x2, y2))
 
     def C(cx, cy, r):
-        ms.AddCircle(_point(cx+ox, cy+oy), float(r))
+        ms.AddCircle(_pt(cx, cy), float(r))
 
-    def dot(x, y, r=1.2):
-        _add_dot(ms, x+ox, y+oy, r)
+    def T(s, x, y, h=0.25):
+        ms.AddText(str(s), _pt(x, y), float(h))
 
-    def title_block(sx, sy, sheet_no, title):
-        R(sx+5,  sy+5,  sx+415, sy+285)
-        L(sx+5,  sy+270, sx+415, sy+270)
-        L(sx+5,  sy+12,  sx+415, sy+12)
-        L(sx+140,sy+270, sx+140, sy+285)
-        L(sx+280,sy+270, sx+280, sy+285)
-        L(sx+360,sy+270, sx+360, sy+285)
-        T(company or project_name, sx+10,  sy+278, 3.5)
-        T(project_name,            sx+145, sy+279, 3.5)
-        if ship_name:
-            T("Ship: " + ship_name, sx+145, sy+273, 3)
-        T("DWG: " + drawing_no,    sx+285, sy+279, 3)
-        T("Date: " + date_str,     sx+285, sy+273, 3)
-        T("Sheet " + sheet_no,     sx+365, sy+276, 4)
-        T(title, sx+10, sy+262, 5.5)
-
-    # ── SHEET 1: POWER CIRCUIT  3x400VAC ─────────────────────────────────────
-    S = 0
-    title_block(S, 0, "1/3", valve_label + "  -  POWER CIRCUIT  3x400VAC 50Hz")
-
-    L(S+15, 268, S+410, 268)
-    T("3x400VAC 50Hz", S+15, 271, 3.5)
-    cx = S+210
-    c1 = cx-6; c2 = cx; c3 = cx+6
-    for c, lbl in ((c1,"L1"),(c2,"L2"),(c3,"L3")):
-        L(c, 268, c, 258); dot(c, 268); T(lbl, c-3, 271, 3)
-
-    # 1F1 main MCB 3P
-    R(cx-20, 242, cx+20, 258)
-    T(P+"F1  "+main_mcb+"  3P  16A", cx, 253, 3.5, "center")
-    for c in (c1,c2,c3): L(c, 242, c, 228)
-
-    # 1A1 phase monitor
-    R(cx-25, 212, cx+25, 228)
-    T(P+"A1  3UG4512-1AR20", cx, 224, 3.5, "center")
-    T("PHASE MONITOR", cx, 216, 3, "center")
-    L(cx+25, 220, cx+55, 220); L(cx+55, 220, cx+55, 198)
-    T("fault NC -> DI I0.3", cx+57, 218, 2.5)
-    for c in (c1,c2,c3): L(c, 212, c, 196)
-
-    # 1Q1 motor protection + 3RV2901-1D aux
-    R(cx-20, 178, cx+20, 196)
-    T(P+"Q1  "+rv_part, cx, 192, 3.5, "center")
-    T("Ir="+rv_range+"A  set="+rv_set+"A", cx, 184, 3, "center")
-    R(cx+20, 181, cx+44, 193)
-    T("3RV2901-1D", cx+32, 192, 2.5, "center")
-    T("AUX", cx+32, 182, 2.5, "center")
-    L(cx+44, 187, cx+57, 187); T("OL->DI I0.2", cx+59, 185, 2.5)
-    for c in (c1,c2,c3): L(c, 178, c, 162)
-
-    # Fork to OPEN (left) and CLOSE (right) contactors
-    for c in (c1,c2,c3):
-        dot(c, 162)
-        L(c, 162, c-22, 150)
-        L(c, 162, c+22, 150)
-
-    # 1K1 OPEN contactor
-    ox1 = cx-28
-    R(ox1-14, 132, ox1+14, 150)
-    T(P+"K1  OPEN",       ox1, 147, 3.5, "center")
-    T("3TG1010-0BB4",     ox1, 140, 3,   "center")
-    T("24VDC coil",       ox1, 133, 2.8, "center")
-
-    # 1K2 CLOSE contactor
-    cx2 = cx+28
-    R(cx2-14, 132, cx2+14, 150)
-    T(P+"K2  CLOSE",      cx2, 147, 3.5, "center")
-    T("3TG1010-0BB4",     cx2, 140, 3,   "center")
-    T("24VDC coil",       cx2, 133, 2.8, "center")
-
-    # Mechanical interlock bar
-    L(ox1+14, 141, cx2-14, 141)
-    T("MECH.INTERLOCK", cx, 143, 2.8, "center")
-    T(P+"K2 NC aux", ox1-13, 130, 2.5, "right")
-    T(P+"K1 NC aux", cx2+2,  130, 2.5)
-
-    # Lines below contactors and re-merge
-    for c in (c1-22, c2-22, c3-22): L(c, 132, c, 115)
-    for c in (c1+22, c2+22, c3+22): L(c, 132, c, 115)
-    for i in range(3):
-        co = c1 - 22 + i*6
-        cc = c1 + 22 + i*6
-        mid = (co + cc) // 2
-        L(co, 115, mid, 107); L(cc, 115, mid, 107); dot(mid, 107)
-
-    # Terminal block 1X1
-    R(cx-20, 92, cx+20, 107)
-    T(P+"X1  :1,2,3", cx, 102, 3.5, "center")
-    for i in range(3):
-        mid = (c1-22+i*6 + c1+22+i*6) // 2
-        L(mid, 92, mid, 75)
-
-    # Heater spur
-    L(cx+20, 99, cx+55, 99)
-    R(cx+55, 93, cx+95, 105)
-    T(P+"X1:4,5", cx+75, 104, 2.8, "center")
-    T("AQ 26,27 HTR", cx+75, 94, 2.5, "center")
-
-    # Motor
-    for i in range(3):
-        mid = (c1-22+i*6 + c1+22+i*6) // 2
-        L(mid, 75, cx + (i-1)*6, 64)
-    C(cx, 54, 10)
-    T("M", cx-3, 51, 4); T("3~", cx-3, 44, 3)
-    T(valve_label, cx, 37, 3.5, "center")
-    T("Bernard "+aq_key+"  SWITCH  3x400VAC", cx, 30, 3.5, "center")
-    T(str(torque)+"Nm  "+str(t_s)+"s/90  "+str(kW)+"kW  In="
-      +str(In)+"A  Istart="+str(Istart)+"A", cx, 22, 3, "center")
-    T("NOTE: "+P+"K1/"+P+"K2 electrical interlock via NC aux + mechanical bar. "
-      "Travel limits + thermostat hardwired in coil rung (sheet 2).", S+15, 14, 2.8)
-
-    # ── SHEET 2: CONTROL / PLC  24VDC ────────────────────────────────────────
-    S = 460
-    title_block(S, 0, "2/3", valve_label + "  -  CONTROL CIRCUIT  24VDC")
-
-    L(S+15, 265, S+410, 265); T("24VDC L+  (from PSU via "+P+"F2)", S+15, 267, 3.5)
-    L(S+15, 30,  S+410, 30);  T("0V M", S+15, 32, 3.5)
-
-    # 1F2 control MCB 2P
-    R(S+15, 248, S+90, 263)
-    T(P+"F2  "+ctrl_mcb+"  2P  6A", S+52, 257, 3, "center")
-    L(S+52, 263, S+52, 265); L(S+52, 248, S+52, 240)
-    L(S+15, 240, S+410, 240); T("24VDC ctrl bus", S+18, 242, 3)
-
-    # PLC block
-    R(S+15, 85, S+155, 232)
-    T("PLC  S7-1200", S+85, 227, 4, "center")
-    T(plc_model, S+85, 218, 3, "center")
-    T("DQ OUTPUTS:", S+20, 206, 3.5)
-    T("Q0.0  ->  "+P+"K1 OPEN coil",  S+22, 197, 3)
-    T("Q0.1  ->  "+P+"K2 CLOSE coil", S+22, 188, 3)
-    T("DI INPUTS:", S+20, 176, 3.5)
-    T("I0.0  <-  travel OPEN  NO  (AQ term 12)",       S+22, 167, 3)
-    T("I0.1  <-  travel CLOSE NC  (AQ term 14)",        S+22, 158, 3)
-    T("I0.2  <-  "+P+"Q1 overload  NC aux (3RV2901-1D)",S+22, 149, 3)
-    T("I0.3  <-  "+P+"A1 phase fault  NC",              S+22, 140, 3)
-    T("I0.4  <-  thermostat  NC  (AQ term 40-41)",      S+22, 131, 3)
-    T("I0.5  <-  HMI OPEN command",                     S+22, 122, 3)
-    T("I0.6  <-  HMI CLOSE command",                    S+22, 113, 3)
-    T("I0.7  <-  OPEN position confirm (AQ term 12 NO)",S+22, 104, 3)
-    T("I1.0  <-  CLOSE position confirm (AQ term 15 NO)",S+22, 95, 3)
-
-    # HMI
-    R(S+295, 155, S+410, 232)
-    T("KTP700  HMI", S+352, 228, 4, "center")
-    T("7\" TFT  24VDC", S+352, 219, 3, "center")
-    T("PROFINET RJ45", S+352, 208, 3.5, "center")
-    T("OPEN / CLOSE", S+352, 197, 3, "center")
-    T("Position status", S+352, 188, 3, "center")
-    T("Alarm display", S+352, 179, 3, "center")
-    L(S+155, 192, S+295, 192); T("PROFINET", S+218, 194, 3.5, "center")
-
-    # OPEN coil rung
-    ry_o = 78
-    T("OPEN coil rung  (Q0.0 -> "+P+"K1):", S+155, ry_o+9, 3.5)
-    L(S+15, ry_o, S+155, ry_o)
-    for i, (lbl, ctype) in enumerate([
-        (P+"A1 OK", "NC"), (P+"Q1 OL", "NC"),
-        ("therm 40-41","NC"), ("AQ term 11","NC"), (P+"K2","NC"),
-    ]):
-        rx = S+158 + i*48
-        R(rx, ry_o-5, rx+14, ry_o+5)
-        T(lbl,  rx+2, ry_o+7, 2.3); T(ctype, rx+2, ry_o-9, 2.3)
-        if i < 4: L(rx+14, ry_o, rx+48, ry_o)
-    R(S+398, ry_o-7, S+412, ry_o+7)
-    T(P+"K1", S+405, ry_o+9, 3.5, "center"); T("OPEN", S+405, ry_o-12, 2.8, "center")
-    L(S+406, ry_o-7, S+406, 30)
-
-    # CLOSE coil rung
-    ry_c = 48
-    T("CLOSE coil rung  (Q0.1 -> "+P+"K2):", S+155, ry_c+9, 3.5)
-    L(S+15, ry_c, S+155, ry_c)
-    for i, (lbl, ctype) in enumerate([
-        (P+"A1 OK", "NC"), (P+"Q1 OL", "NC"),
-        ("therm 40-41","NC"), ("AQ term 14","NC"), (P+"K1","NC"),
-    ]):
-        rx = S+158 + i*48
-        R(rx, ry_c-5, rx+14, ry_c+5)
-        T(lbl,  rx+2, ry_c+7, 2.3); T(ctype, rx+2, ry_c-9, 2.3)
-        if i < 4: L(rx+14, ry_c, rx+48, ry_c)
-    R(S+398, ry_c-7, S+412, ry_c+7)
-    T(P+"K2", S+405, ry_c+9, 3.5, "center"); T("CLOSE", S+405, ry_c-12, 2.8, "center")
-    L(S+406, ry_c-7, S+406, 30)
-
-    T("Hardware interlock: AQ term 11 (travel OPEN NC) and term 14 (travel CLOSE NC) "
-      "in contactor coil rung.", S+15, 22, 2.8)
-    T("Thermostat (AQ term 40-41) NC in both rungs. "
-      +P+"K1/"+P+"K2 NC cross-interlock electrical + mechanical on contactor.",
-      S+15, 14, 2.8)
-
-    # ── SHEET 3: TERMINAL WIRING  1X1 -> AQ ──────────────────────────────────
-    S = 920
-    title_block(S, 0, "3/3",
-                valve_label + "  -  WIRING  " + P + "X1  ->  Bernard " + aq_key)
-
-    R(S+55, 45, S+145, 257)
-    T("CABINET", S+100, 259, 3.5, "center"); T(P+"X1", S+100, 250, 5, "center")
-
-    R(S+275, 45, S+415, 257)
-    T("FIELD DEVICE", S+345, 259, 3.5, "center")
-    T("Bernard "+aq_key+" SWITCH", S+345, 250, 4, "center")
-    T("3x400VAC  SWITCH type", S+345, 241, 3, "center")
-    T("All AQ5-AQ1000 same terminal layout", S+345, 233, 2.5, "center")
-
-    terms = [
-        (1,    "Motor L1",        "1",   "Motor L1",            "W1", "2002-1611"),
-        (2,    "Motor L2",        "2",   "Motor L2",            "W1", "2002-1611"),
-        (3,    "Motor L3",        "3",   "Motor L3",            "W1", "2002-1611"),
-        ("PE", "Earth/PE",        "PE",  "Earth PE",            "W1", "2002-2201"),
-        (4,    "Heater L (400V)", "26",  "Heater L",            "W1", "2002-1611"),
-        (5,    "Heater N",        "27",  "Heater N",            "W1", "2002-1201"),
-        (6,    "Trav.OPEN  C",    "10",  "Trav.OPEN  Common",   "W2", "2002-1201"),
-        (7,    "Trav.OPEN  NC",   "11",  "Trav.OPEN  NC",       "W2", "2002-1201"),
-        (8,    "Trav.OPEN  NO",   "12",  "Trav.OPEN  NO",       "W2", "2002-1201"),
-        (9,    "Trav.CLOSE C",    "13",  "Trav.CLOSE Common",   "W2", "2002-1201"),
-        (10,   "Trav.CLOSE NC",   "14",  "Trav.CLOSE NC",       "W2", "2002-1201"),
-        (11,   "Trav.CLOSE NO",   "15",  "Trav.CLOSE NO",       "W2", "2002-1201"),
-        (12,   "Thermostat +",    "40",  "Thermostat NC +",     "W2", "2002-1201"),
-        (13,   "Thermostat -",    "41",  "Thermostat NC -",     "W2", "2002-1201"),
-    ]
-    step = int(195 / len(terms))
-    for i, (cno, clbl, aqno, aqlbl, cbl, ttype) in enumerate(terms):
-        ty = 240 - i * step
-        R(S+110, ty-4, S+130, ty+4)
-        T(str(cno), S+103, ty-2, 3, "right"); T(clbl, S+132, ty-2, 2.8)
-        L(S+130, ty, S+185, ty); T(cbl, S+153, ty+2, 2.5, "center")
-        L(S+185, ty, S+275, ty)
-        R(S+275, ty-4, S+297, ty+4)
-        T(str(aqno), S+299, ty-2, 3); T(aqlbl, S+313, ty-2, 2.8)
-        T(ttype, S+299, ty-9, 2.2)
-
-    T("W1:  7x1.5mm2  -  Motor L1/L2/L3/PE + Heater 26/27 + spare",       S+15, 36, 3)
-    T("W2:  4x2x0.75mm2 shielded  -  Travel limits 10-15, Thermostat 40-41",S+15, 28, 3)
-    T("Phoenix Contact: 2002-1611 (16mm2 grey), 2002-1201 (2.5mm2 grey), "
-      "2002-2201 (PE green/yellow)", S+15, 20, 2.8)
-    T("Terminal layout IDENTICAL for all Bernard AQ SWITCH models (AQ5 to AQ1000).",
-      S+15, 12, 2.8)
-
-    # ── Create layouts ────────────────────────────────────────────────────────
-    created = []
-    for lname, lsx in [
-        (P+"-S1-Power-"+aq_key,   0),
-        (P+"-S2-Control-"+aq_key, 460),
-        (P+"-S3-Wiring-"+aq_key,  920),
-    ]:
+    def BLK(name, x, y, sx=1.0, sy=1.0, rot=0.0):
         try:
-            try:
-                lo = doc.Layouts.Item(lname)
-            except Exception:
-                lo = doc.Layouts.Add(lname)
-            try:
-                lo.PlotPaperSize = (420.0, 297.0); lo.PaperUnits = 1
-            except Exception:
-                pass
-            vblk = lo.Block; vp_found = None
-            for vi in range(vblk.Count):
-                try:
-                    if vblk.Item(vi).EntityName == "AcDbViewport":
-                        vp_found = vblk.Item(vi); break
-                except Exception:
-                    pass
-            if vp_found is None:
-                vp = lo.AddViewport(_point(210, 143), 420, 297)
-            else:
-                vp = vp_found
-            try:
-                vp.Center = _point(lsx+ox+210, oy+143)
-                vp.Width = 420.0; vp.Height = 297.0; vp.CustomScale = 1.0
-            except Exception:
-                pass
-            created.append(lname)
-        except Exception as e:
-            created.append(lname+"(ERR:"+str(e)+")")
+            return ms.InsertBlock(_pt(x, y), str(name), float(sx), float(sy), 1.0, float(rot))
+        except Exception:
+            return None
+
+    # Shorthand block helpers using örnek block names
+    def dot(x, y):         BLK("BENEK", x, y)            # junction dot
+    def nc_contact(x, y):  BLK("NA", x, y)               # NC contact symbol
+    def relay_nc(x, y):    BLK("NK", x, y)               # relay NC contact
+    def coil(x, y):        BLK("BOBIN", x, y)            # coil
+    def desc_box(x, y):    BLK("role aciklama", x, y)    # relay description box
+    def terminal(x, y):    BLK("OK", x, y)               # connection terminal
+    def term_blk(x, y):    BLK("KLESIG", x, y)           # terminal block symbol
+    def cable_lbl(x, y):   BLK("wire", x, y)             # cable label
+    def mcb_3p(x, y):      BLK("3P FUSE", x, y)         # 3-pole MCB
+    def motor_prot(x, y):  BLK("CB_TM", x, y)           # motor protection CB
+    def contactor(x, y):   BLK("KON3P", x, y)           # 3-pole contactor
+
+    # ── COORDINATE CONSTANTS  (örnek scale: 60:1 on A1) ────────────────────
+    # Power section  –  match örnek's exact X positions
+    X_L1 = 195.5;  X_L2 = 195.9;  X_L3 = 196.3
+    Y_SUPPLY = 112.7
+
+    X_MCB = 195.7;  Y_MCB = 111.1   # "3P FUSE" block position
+    X_MP  = 198.8;  Y_MP  = 111.1   # "CB_TM"   block position
+
+    X_K1  = 198.8;  X_K2  = 200.7;  Y_K = 107.3   # contactor blocks
+    X_KLESIG = 201.6;  Y_KLESIG = 107.2
+    X_MOT = 198.8;  Y_MOT = 103.1   # motor circle centre, r=0.55
+
+    # Control section
+    X_BUS   = 209.2   # 24VDC left vertical bus
+    X_PLC_L = 210.0;  X_PLC_R = 216.0
+    Y_PLC_T = 110.5;  Y_PLC_B = 103.0
+    X_RUNG  = 209.5   # coil rungs start here
+
+    # Coil positions matching örnek exactly
+    X_K1C = 217.2;  X_K2C = 218.4
+    Y_COIL = 100.0;  Y_NK = 102.8
+
+    # Terminal / wiring section
+    X_TB   = 230.0   # cabinet terminal column
+    X_WIRE = 237.0   # cable run midpoint
+    X_AQ   = 248.0   # AQ terminal column
+
+    Y_BOT = 99.0;  Y_TOP = 113.5
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # POWER SECTION  (X ≈ 195–208)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # Supply buses R/S/T
+    for xb, lbl in ((X_L1, "R"), (X_L2, "S"), (X_L3, "T")):
+        L(xb, Y_SUPPLY, xb, Y_MCB + 0.8)
+        T(lbl, xb - 0.12, Y_SUPPLY + 0.15, 0.22)
+    T("400V 50Hz", X_L1 - 0.2, Y_SUPPLY + 0.5, 0.22)
+    # Horizontal supply bus
+    L(X_L1, Y_SUPPLY, X_L3 + 0.5, Y_SUPPLY)
+
+    # F1 Main MCB
+    mcb_3p(X_MCB, Y_MCB)
+    T(P + "F1", X_MCB - 0.8, Y_MCB + 0.55, 0.22)
+    T(main_mcb, X_MCB - 0.8, Y_MCB + 0.30, 0.18)
+    T("16 A", X_MCB - 0.8, Y_MCB + 0.08, 0.20)
+    for xb in (X_L1, X_L2, X_L3):
+        L(xb, Y_MCB + 0.8, xb, Y_MCB - 0.8)
+
+    # Phase monitor A1 (small box between MCB and motor prot)
+    PX1 = X_MCB + 0.5;  PX2 = X_MP - 0.1
+    PY1 = Y_MCB - 0.45; PY2 = Y_MCB + 0.45
+    L(PX1, PY2, PX2, PY2); L(PX2, PY2, PX2, PY1)
+    L(PX2, PY1, PX1, PY1); L(PX1, PY1, PX1, PY2)
+    T(P + "A1", PX1 + 0.05, PY2 + 0.10, 0.20)
+    T("3UG4512-1AR20", PX1 + 0.05, PY1 - 0.22, 0.16)
+    T("PHASE CONTROL", PX1 + 0.05, PY1 - 0.40, 0.16)
+    L(PX2, Y_MCB, PX2 + 0.3, Y_MCB)   # NC output wire
+    for xb in (X_L1, X_L2, X_L3):
+        L(xb, Y_MCB - 0.8, xb, Y_MP + 0.8)
+
+    # Q1 Motor protection
+    motor_prot(X_MP, Y_MP)
+    T(P + "Q1", X_MP + 0.8, Y_MP + 0.55, 0.22)
+    T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
+    T(f"Ir={rv_range}A", X_MP + 0.8, Y_MP + 0.08, 0.20)
+    T(f"set={rv_set}A", X_MP + 0.8, Y_MP - 0.15, 0.20)
+    T("3RV2901-1D", X_MP + 0.8, Y_MP - 0.38, 0.16)
+    for xb in (X_L1, X_L2, X_L3):
+        L(xb, Y_MP + 0.8, xb, Y_MP - 0.8)
+        L(xb, Y_MP - 0.8, xb, Y_K + 0.3)
+
+    # K1 OPEN contactor
+    contactor(X_K1, Y_K)
+    T(P + "K1", X_K1 - 0.8, Y_K + 0.30, 0.22)
+    T("OPEN", X_K1 - 0.8, Y_K + 0.10, 0.20)
+
+    # K2 CLOSE contactor
+    contactor(X_K2, Y_K)
+    T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
+    T("CLOSE", X_K2 + 0.5, Y_K + 0.10, 0.20)
+    T("3TG1010-0BB4", X_K1 - 0.3, Y_K - 0.55, 0.17)
+
+    # Mechanical interlock bar (3TG1010 built-in — no electrical interlock)
+    L(X_K1 + 0.7, Y_K, X_K2, Y_K)
+    T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
+
+    # Wires to terminal block
+    for xb in (X_L1, X_L2, X_L3):
+        L(xb, Y_K - 0.3, xb, Y_KLESIG + 0.3)
+
+    # KLESIG terminal blocks (1X1)
+    term_blk(X_KLESIG,       Y_KLESIG)
+    term_blk(X_KLESIG + 0.4, Y_KLESIG)
+    T(P + "X1", X_KLESIG - 0.8, Y_KLESIG + 0.30, 0.22)
+    T(":1,2,3", X_KLESIG - 0.8, Y_KLESIG + 0.08, 0.18)
+
+    # Motor symbol + connections
+    for xb in (X_L1, X_L2, X_L3):
+        L(xb, Y_KLESIG - 0.3, xb, Y_MOT + 0.6)
+    C(X_MOT, Y_MOT, 0.55)
+    T("M", X_MOT - 0.12, Y_MOT - 0.12, 0.30)
+    T(f"Bernard {aq_key}  SWITCH  3x400VAC", X_MOT + 0.7, Y_MOT + 0.35, 0.20)
+    T(f"{torque}Nm  {t_s}s/90  {kW}kW", X_MOT + 0.7, Y_MOT + 0.05, 0.18)
+    T(f"In={In}A  Istart={Istart}A", X_MOT + 0.7, Y_MOT - 0.25, 0.18)
+    T("term 1,2,3 Motor / PE", X_MOT + 0.7, Y_MOT - 0.55, 0.16)
+
+    # Heater spur off 1X1
+    L(X_KLESIG + 0.85, Y_KLESIG, X_KLESIG + 1.5, Y_KLESIG)
+    T("26", X_KLESIG + 1.55, Y_KLESIG + 0.18, 0.20)
+    T("27", X_KLESIG + 1.55, Y_KLESIG - 0.18, 0.20)
+    T("HEATER 400VAC", X_KLESIG + 1.80, Y_KLESIG, 0.18)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # CONTROL SECTION  (X ≈ 209–225)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # 24VDC dual buses (L+ and M)
+    L(X_BUS,       Y_TOP - 1.0, X_BUS,       Y_BOT + 0.3)
+    L(X_BUS + 0.3, Y_TOP - 1.0, X_BUS + 0.3, Y_BOT + 0.3)
+    T("L+", X_BUS - 0.35, Y_TOP - 0.7, 0.22)
+    T("M",  X_BUS + 0.55, Y_TOP - 0.7, 0.22)
+    T("24VDC", X_BUS - 0.35, Y_TOP - 0.40, 0.22)
+
+    # F2 control MCB label
+    T(P + "F2", X_BUS - 0.35, Y_MCB + 0.55, 0.22)
+    T(ctrl_mcb + "  2P", X_BUS - 0.35, Y_MCB + 0.30, 0.18)
+
+    # PLC block (rectangle)
+    L(X_PLC_L, Y_PLC_T, X_PLC_R, Y_PLC_T)
+    L(X_PLC_R, Y_PLC_T, X_PLC_R, Y_PLC_B)
+    L(X_PLC_R, Y_PLC_B, X_PLC_L, Y_PLC_B)
+    L(X_PLC_L, Y_PLC_B, X_PLC_L, Y_PLC_T)
+    T("PLC  S7-1200", X_PLC_L + 0.2, Y_PLC_T - 0.40, 0.25)
+    T(plc_model, X_PLC_L + 0.2, Y_PLC_T - 0.70, 0.18)
+    T("ETHERNET CONNECTION", X_PLC_L + 0.2, Y_PLC_T - 1.00, 0.18)
+    T("RJ45", X_PLC_L + 0.2, Y_PLC_T - 1.28, 0.18)
+
+    # DI (INPUT) labels
+    T("INPUT", X_PLC_L + 0.15, Y_PLC_T - 1.55, 0.20)
+    di_rows = [
+        ("0.0", "travel OPEN  NO  (term 12)"),
+        ("0.1", "travel CLOSE NC (term 14)"),
+        ("0.2", "Q1 OL  NC aux"),
+        ("0.3", "A1 phase fault  NC"),
+        ("0.4", "therm NC (40-41)"),
+        ("0.5", "HMI OPEN"),
+        ("0.6", "HMI CLOSE"),
+    ]
+    for i, (addr, desc) in enumerate(di_rows):
+        ry = Y_PLC_T - 1.85 - i * 0.28
+        T(addr, X_PLC_L + 0.18, ry, 0.18)
+        T(desc, X_PLC_L + 0.58, ry, 0.15)
+
+    # DO (OUTPUT) labels
+    T("OUTPUT", X_PLC_R - 0.85, Y_PLC_T - 1.55, 0.20)
+    for i, (addr, lbl) in enumerate([("0.0", P + "K1 OPEN"), ("0.1", P + "K2 CLOSE")]):
+        ry = Y_PLC_T - 1.85 - i * 0.28
+        T(addr, X_PLC_R - 0.72, ry, 0.18)
+        T(lbl,  X_PLC_R - 0.10, ry, 0.15)
+
+    # ── K1 OPEN coil rung ────────────────────────────────────────────────
+    Y_R1 = Y_NK + 0.5
+    T(f"OPEN  ({P}K1):", X_RUNG - 0.15, Y_R1 + 0.32, 0.18)
+    L(X_RUNG, Y_R1, X_RUNG + 0.15, Y_R1)
+
+    # Only real protection contacts remain: no electrical interlock (mech. bar on
+    # the 3TG1010 pair handles it) and no travel-limit hardwiring (SWITCH-type AQ
+    # stops itself internally). Each contact carries its cabinet terminal number.
+    NC_XS = [X_RUNG + 0.15 + j * 0.85 for j in range(3)]
+    rung_k1 = [
+        (P + "A1",  "phase fault NC", "1X1:8"),
+        (P + "Q1",  "OL NC aux",      "1X1:9"),
+        ("40-41",   "therm NC",       "1X1:10"),
+    ]
+    for xi, (lbl, sub, term) in zip(NC_XS, rung_k1):
+        nc_contact(xi, Y_R1)
+        T(lbl,  xi - 0.08, Y_R1 + 0.30, 0.15)
+        T(sub,  xi - 0.14, Y_R1 + 0.14, 0.11)
+        T(term, xi - 0.02, Y_R1 - 0.24, 0.12)
+        L(xi + 0.35, Y_R1, xi + 0.85, Y_R1)
+
+    # K1 coil column (mechanical interlock only — no electrical NC cross-contact)
+    L(NC_XS[-1] + 0.85, Y_R1, X_K1C, Y_R1)
+    L(X_K1C, Y_R1, X_K1C, Y_COIL + 0.3)
+    coil(X_K1C, Y_COIL)
+    T(P + "K1", X_K1C - 0.30, Y_COIL - 0.50, 0.20)
+    T("OPEN",   X_K1C - 0.30, Y_COIL - 0.72, 0.18)
+    desc_box(X_K1C, Y_COIL - 1.25)
+    L(X_K1C, Y_COIL - 0.3, X_K1C, Y_BOT + 0.3)
+    # connect rung right-end back to M bus
+    L(X_K1C, Y_R1, X_BUS + 0.3, Y_R1); dot(X_BUS + 0.3, Y_R1)
+
+    # ── K2 CLOSE coil rung ───────────────────────────────────────────────
+    Y_R2 = Y_R1 - 1.20
+    T(f"CLOSE ({P}K2):", X_RUNG - 0.15, Y_R2 + 0.32, 0.18)
+    L(X_RUNG, Y_R2, X_RUNG + 0.15, Y_R2)
+
+    rung_k2 = [
+        (P + "A1",  "phase fault NC", "1X1:8"),
+        (P + "Q1",  "OL NC aux",      "1X1:9"),
+        ("40-41",   "therm NC",       "1X1:10"),
+    ]
+    for xi, (lbl, sub, term) in zip(NC_XS, rung_k2):
+        nc_contact(xi, Y_R2)
+        T(lbl,  xi - 0.08, Y_R2 + 0.30, 0.15)
+        T(sub,  xi - 0.14, Y_R2 + 0.14, 0.11)
+        T(term, xi - 0.02, Y_R2 - 0.24, 0.12)
+        L(xi + 0.35, Y_R2, xi + 0.85, Y_R2)
+
+    # K2 coil column (mechanical interlock only — no electrical NC cross-contact)
+    L(NC_XS[-1] + 0.85, Y_R2, X_K2C, Y_R2)
+    L(X_K2C, Y_R2, X_K2C, Y_COIL + 0.3)
+    coil(X_K2C, Y_COIL)
+    T(P + "K2", X_K2C - 0.30, Y_COIL - 0.50, 0.20)
+    T("CLOSE",  X_K2C - 0.30, Y_COIL - 0.72, 0.18)
+    desc_box(X_K2C, Y_COIL - 1.25)
+    L(X_K2C, Y_COIL - 0.3, X_K2C, Y_BOT + 0.3)
+    L(X_K2C, Y_R2, X_BUS + 0.3, Y_R2); dot(X_BUS + 0.3, Y_R2)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # TERMINAL / WIRING SECTION  (X ≈ 230–255)
+    # ═══════════════════════════════════════════════════════════════════════
+
+    T("OPEN CLOSE", X_TB + 0.8, Y_TOP - 0.60, 0.22)
+    T("FROM TOUCH SCREEN", X_TB + 0.8, Y_TOP - 0.88, 0.18)
+    T(P + "X1", X_TB - 0.5, Y_TOP - 1.15, 0.22)
+    T(valve_label.upper(), X_AQ + 0.3, Y_TOP - 1.15, 0.22)
+
+    term_rows = [
+        # (cab_lbl, cab_no, cable, aq_no, sw_desc)
+        ("Motor L1",     "1",  "W1", "1",  "3PH 400VAC"),
+        ("Motor L2",     "2",  "W1", "2",  "3PH 400VAC"),
+        ("Motor L3",     "3",  "W1", "3",  "3PH 400VAC"),
+        ("Motor PE",     "PE", "W1", "PE", "PE"),
+        ("Heater L",     "26", "W1", "26", "400VAC HEATER"),
+        ("Heater N",     "27", "W1", "27", "400VAC HEATER"),
+        ("Trav.OPEN C",  "10", "W2", "10", "travel limit"),
+        ("Trav.OPEN NC", "11", "W2", "11", "nc"),
+        ("Trav.OPEN NO", "12", "W2", "12", "opened"),
+        ("Trav.CLS C",   "13", "W2", "13", "travel limit"),
+        ("Trav.CLS NC",  "14", "W2", "14", "nc"),
+        ("Trav.CLS NO",  "15", "W2", "15", "closed"),
+        ("Therm +",      "40", "W2", "40", "switch"),
+        ("Therm -",      "41", "W2", "41", "switch"),
+    ]
+
+    for i, (cab_lbl, cab_no, cbl, aq_no, sw_desc) in enumerate(term_rows):
+        ty = Y_TOP - 1.5 - i * 0.58
+
+        # Cabinet terminal
+        terminal(X_TB, ty)
+        T(cab_no,  X_TB - 0.35, ty + 0.05, 0.20)
+        T(cab_lbl, X_TB + 0.15, ty + 0.05, 0.18)
+
+        # Cable run line
+        L(X_TB + 0.05, ty, X_WIRE, ty)
+        T(cbl, (X_TB + X_WIRE) / 2, ty + 0.06, 0.16)
+
+        # AQ field terminal
+        terminal(X_AQ, ty)
+        T(aq_no,   X_AQ - 0.35, ty + 0.05, 0.20)
+        T(sw_desc, X_AQ + 0.15, ty + 0.05, 0.16)
+
+    # Cable type labels
+    cable_lbl(X_WIRE, Y_TOP - 7.2)
+    T("W1: 7x1.5mm2  Motor+PE+Heater+spare", X_WIRE + 0.25, Y_TOP - 7.2, 0.18)
+    cable_lbl(X_WIRE, Y_TOP - 7.7)
+    T("W2: 4x2x0.75mm2 shielded  Limits+Therm", X_WIRE + 0.25, Y_TOP - 7.7, 0.18)
+
+    # 3PH supply label (field side)
+    T("3PH",    X_AQ - 0.35, Y_BOT + 1.6, 0.20)
+    T("400VAC", X_AQ - 0.35, Y_BOT + 1.3, 0.20)
+    T("50Hz",   X_AQ - 0.35, Y_BOT + 1.0, 0.18)
+
+    # Phoenix terminal types
+    T("2002-1611 (16mm2 grey)", X_TB + 0.5, Y_BOT + 1.0, 0.16)
+    T("2002-1201 (2.5mm2 grey)", X_TB + 0.5, Y_BOT + 0.7, 0.16)
+    T("2002-2201 (PE GN/YE)",    X_TB + 0.5, Y_BOT + 0.4, 0.16)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # HEADER
+    # ═══════════════════════════════════════════════════════════════════════
+    T(f"{valve_label.upper()}  CONTROL CABINET", 208.0, Y_TOP + 0.35, 0.35)
+    T(project_name + ("  |  " + ship_name if ship_name else ""), 195.0, Y_TOP - 0.30, 0.22)
+    T(f"DWG: {drawing_no}  |  Date: {date_str}", 230.0, Y_TOP - 0.30, 0.20)
+    if company:
+        T(company, 195.0, Y_TOP + 0.35, 0.22)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # LAYOUT VIEWPORT  –  use "ISO A1 Title Block" from template (already set)
+    # ═══════════════════════════════════════════════════════════════════════
     try:
         doc.Regen(1)
     except Exception:
         pass
 
+    try:
+        lo = doc.Layouts.Item("ISO A1 Title Block")
+        doc.ActiveLayout = lo
+        time.sleep(0.4)
+        doc.SendCommand("MSPACE\n")
+        time.sleep(0.3)
+        doc.SendCommand(f"ZOOM\nW\n193.0,{Y_BOT - 1.0}\n258.0,{Y_TOP + 1.5}\n")
+        time.sleep(0.3)
+        doc.SendCommand("PSPACE\n")
+        time.sleep(0.2)
+    except Exception:
+        pass
+
+    try:
+        doc.Save()
+    except Exception:
+        pass
+
     return (
-        "Drew 3-sheet valve schematic for '" + valve_label + "' "
-        "using Bernard " + aq_key + " at 3x400VAC 50Hz. "
-        "Specs: " + str(torque) + "Nm  " + str(t_s) + "s/90  "
-        + str(kW) + "kW  In=" + str(In) + "A  Istart=" + str(Istart) + "A. "
-        "Motor protection: " + rv_part + "  Ir=" + rv_range + "A  set=" + rv_set + "A"
-        " + 3RV2901-1D aux. "
-        "Phase monitor: 3UG4512-1AR20 ("+P+"A1). "
-        "Contactors: 3TG1010-0BB4 24VDC ("+P+"K1 OPEN, "+P+"K2 CLOSE). "
-        "Main MCB: "+main_mcb+" 3P ("+P+"F1). Ctrl MCB: "+ctrl_mcb+" 2P ("+P+"F2). "
-        "Terminal block "+P+"X1: 14 terminals -> AQ terms 1,2,3,PE,26,27,10-15,40-41. "
-        "Cables: W1=7x1.5mm2  W2=4x2x0.75mm2 shielded. "
-        "PLC: "+plc_model+"  DI I0.0-I1.0  DQ Q0.0-Q0.1. "
-        "Layouts: " + "; ".join(created) + ". "
-        "Supported models: AQ5/10/15/25/30/50/80/150/280/430/610/830/1000."
+        f"OK: '{valve_label}' [{aq_key}] saved to {output_path}\n"
+        f"Motor prot: {rv_part}  Ir={rv_range}A  set={rv_set}A  + 3RV2901-1D aux\n"
+        f"Power MCB: {main_mcb} ({P}F1)  Ctrl MCB: {ctrl_mcb} ({P}F2)\n"
+        f"Contactors: 3TG1010-0BB4 24VDC ({P}K1 OPEN, {P}K2 CLOSE)\n"
+        f"Phase monitor: 3UG4512-1AR20 ({P}A1)\n"
+        f"PLC: {plc_model}  DI I0.0-I0.6  DQ Q0.0-Q0.1\n"
+        f"AQ specs: {torque}Nm {t_s}s/90 {kW}kW In={In}A Istart={Istart}A\n"
+        f"Terminals: {P}X1 -> AQ (1-3/PE/26/27/10-15/40-41)\n"
+        f"Cables: W1=7x1.5mm2  W2=4x2x0.75mm2 shielded\n"
+        f"Supported AQ: AQ5/10/15/25/30/50/80/150/280/430/610/830/1000"
     )
 
 
