@@ -3323,10 +3323,9 @@ def draw_single_valve(
 
     # Coil columns — vertical rungs (matching örnek's vertical layout)
     X_K1C = 217.2;  X_K2C = 218.4   # K1 OPEN / K2 CLOSE coil column X positions
-    Y_RUNG_TOP = 105.5  # K1/K2 rung top — PLC DQ output connection level
-    Y_NK   = 103.4  # electrical interlock NK contact Y
-    Y_NA   = 102.0  # travel limit NC contact Y (stops at end-of-travel)
-    Y_COIL = 100.2  # BOBIN block centre Y
+    Y_RUNG_TOP = 104.79  # K1/K2 rung top — PLC DQ output connection level
+    Y_NK   = 102.84  # electrical interlock NK contact Y
+    Y_COIL = 100.0   # BOBIN block centre Y
 
     # Terminal / wiring section
     X_X1  = 228.0   # 1X1 cabinet terminal strip label X
@@ -3341,11 +3340,8 @@ def draw_single_valve(
     # ═══════════════════════════════════════════════════════════════════════
 
     # Supply buses R/S/T
-    # OK at entry of each phase — wire comes from main distribution panel
     for xb, lbl in ((X_L1, "R"), (X_L2, "S"), (X_L3, "T")):
-        terminal(xb, Y_SUPPLY + 0.3)          # OK: wire entry from main panel
-        T("/", xb + 0.15, Y_SUPPLY + 0.32, 0.14)  # cross-ref placeholder
-        L(xb, Y_SUPPLY + 0.3, xb, Y_MCB + 0.8)
+        L(xb, Y_SUPPLY, xb, Y_MCB + 0.8)
         T(lbl, xb - 0.12, Y_SUPPLY + 0.15, 0.22)
         dot(xb, Y_SUPPLY)
     T("400V 50Hz", X_L1 - 0.2, Y_SUPPLY + 0.5, 0.22)
@@ -3378,7 +3374,6 @@ def draw_single_valve(
     # Bus connections from MCB output to phase lines (before motor prot and relay)
     for xb in (X_L1, X_L2, X_L3):
         L(xb, Y_MCB - 0.8, xb, Y_MP + 0.8)
-        dot(xb, Y_MCB - 0.8)
 
     # Q1 Motor protection
     motor_prot(X_MP, Y_MP)
@@ -3407,21 +3402,12 @@ def draw_single_valve(
     L(X_K1 + 0.7, Y_K, X_K2, Y_K)
     T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
 
-    # Wires from contactors to motor KLESIG terminal strip
+    # Wires from contactors to motor
     for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_K - 0.3, xb, Y_KLESIG + 0.3)
+        L(xb, Y_K - 0.3, xb, Y_MOT + 0.6)
         dot(xb, Y_K - 0.3)
 
-    # Motor KLESIG terminal strip (1X5) — three terminals for L1/L2/L3
-    term_blk(X_L1 + 0.1, Y_KLESIG)
-    term_blk(X_L2 + 0.1, Y_KLESIG)
-    term_blk(X_L3 + 0.1, Y_KLESIG)
-    T(P + "X5", X_L1 - 0.5, Y_KLESIG + 0.32, 0.22)
-    T("1  2  3", X_L1 - 0.05, Y_KLESIG - 0.28, 0.16)
-
     # Motor symbol + connections
-    for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_KLESIG - 0.3, xb, Y_MOT + 0.6)
     C(X_MOT, Y_MOT, 0.55)
     T("M", X_MOT - 0.12, Y_MOT - 0.10, 0.30)
     T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
@@ -3429,20 +3415,19 @@ def draw_single_valve(
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN  CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
 
-    # Heater branch — branches off from supply AFTER the main MCB (before motor prot)
-    # Two KLESIG terminals for HTR L and HTR N
-    L(X_L2, Y_K + 0.3, X_HTR, Y_K + 0.3)        # horizontal tap from L2 bus
-    L(X_HTR, Y_K + 0.3, X_HTR, Y_HTR_MCB + 0.3) # down to heater MCB top
+    # Heater branch — branches off from L2 bus at contactor level
+    X_HTR_KLESIG = 201.5
+    Y_HTR_KLESIG = 107.24
+    dot(X_HTR_KLESIG + 0.1, Y_SUPPLY)               # junction at supply bus (heater entry)
+    L(X_L2, Y_K + 0.3, X_HTR_KLESIG, Y_K + 0.3)   # horizontal tap from L2
     dot(X_L2, Y_K + 0.3)
-    T(P + "F3", X_HTR + 0.15, Y_HTR_MCB + 0.5, 0.18)  # heater L MCB
-    L(X_HTR, Y_HTR_MCB + 0.3, X_HTR, Y_HTR_MCB - 0.3) # through MCB
-    L(X_HTR, Y_HTR_MCB - 0.3, X_HTR, Y_KLESIG + 0.3)  # down to heater KLESIG
-    term_blk(X_HTR + 0.1, Y_KLESIG)
-    term_blk(X_HTR + 0.5, Y_KLESIG)
-    T("26", X_HTR + 0.05, Y_KLESIG - 0.28, 0.16)
-    T("27", X_HTR + 0.45, Y_KLESIG - 0.28, 0.16)
-    T("HEATER", X_HTR + 0.15, Y_KLESIG - 0.55, 0.16)
-    T("400VAC", X_HTR + 0.15, Y_KLESIG - 0.75, 0.16)
+    T(P + "F3", X_HTR_KLESIG + 0.15, Y_K + 0.55, 0.18)
+    term_blk(X_HTR_KLESIG + 0.1, Y_HTR_KLESIG)
+    term_blk(X_HTR_KLESIG + 0.5, Y_HTR_KLESIG)
+    T("26", X_HTR_KLESIG + 0.05, Y_HTR_KLESIG - 0.28, 0.16)
+    T("27", X_HTR_KLESIG + 0.45, Y_HTR_KLESIG - 0.28, 0.16)
+    T("HEATER", X_HTR_KLESIG + 0.15, Y_HTR_KLESIG - 0.55, 0.16)
+    T("400VAC", X_HTR_KLESIG + 0.15, Y_HTR_KLESIG - 0.75, 0.16)
 
     # ═══════════════════════════════════════════════════════════════════════
     # CONTROL SECTION  (X ≈ 209–220)
@@ -3452,7 +3437,6 @@ def draw_single_valve(
 
     # 24VDC horizontal buses
     # TOP bus — L+ (24VDC positive)
-    terminal(X_BUS_L, Y_TOP_BUS)          # OK: enters from PSU/another drawing
     T("+",    X_BUS_L - 0.15, Y_TOP_BUS + 0.05, 0.18)
     T("/",    X_BUS_L + 0.15, Y_TOP_BUS + 0.03, 0.13)
     L(X_BUS_L, Y_TOP_BUS, X_BUS_R, Y_TOP_BUS)   # L+ horizontal bus
@@ -3461,7 +3445,6 @@ def draw_single_valve(
     T("24VDC", X_BUS_L + 0.68, Y_TOP_BUS + 0.30, 0.22)
 
     # BOTTOM bus — M (0V / neutral)
-    terminal(X_BUS_L, Y_BOT_BUS)          # OK: returns to PSU
     T("-",    X_BUS_L - 0.15, Y_BOT_BUS + 0.05, 0.18)
     T("/",    X_BUS_L + 0.15, Y_BOT_BUS + 0.03, 0.13)
     L(X_BUS_L, Y_BOT_BUS, X_BUS_R, Y_BOT_BUS)   # M horizontal bus
@@ -3469,6 +3452,9 @@ def draw_single_valve(
     # F2 — 24VDC supply MCB label (just text, no block — matches örnek)
     T(P + "F2", X_BUS_L - 0.10, Y_TOP_BUS - 0.62, 0.20)
     T(ctrl_mcb + "  2P", X_BUS_L - 0.10, Y_TOP_BUS - 0.85, 0.16)
+
+    # PLC power supply terminal (24VDC M) — matches örnek OK at (211.47, 102.12)
+    terminal(X_PLC_L + 1.47, Y_PLC_B - 0.88)
 
     # PLC block (rectangle with I/O labels)
     L(X_PLC_L, Y_PLC_T, X_PLC_R, Y_PLC_T)
@@ -3509,7 +3495,6 @@ def draw_single_valve(
     X_OL_AUX_R = 216.03   # Q1 OL aux NC contact (terms 11-14) → PLC I0.2
     Y_STAT_NA  = 110.14   # Status NA contact Y; above PLC box top (Y_PLC_T=107)
 
-    dot(X_OPENED_R, Y_TOP_BUS)
     L(X_OPENED_R, Y_TOP_BUS, X_OPENED_R, Y_STAT_NA + 0.40)
     BLK('NA', X_OPENED_R, Y_STAT_NA)
     T("12",            X_OPENED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
@@ -3518,7 +3503,6 @@ def draw_single_valve(
     L(X_OPENED_R, Y_STAT_NA - 0.40, X_OPENED_R, Y_PLC_T + 0.10)
     T("I0.0",          X_OPENED_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
-    dot(X_CLOSED_R, Y_TOP_BUS)
     L(X_CLOSED_R, Y_TOP_BUS, X_CLOSED_R, Y_STAT_NA + 0.40)
     BLK('NA', X_CLOSED_R, Y_STAT_NA)
     T("14",            X_CLOSED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
@@ -3526,7 +3510,6 @@ def draw_single_valve(
     L(X_CLOSED_R, Y_STAT_NA - 0.40, X_CLOSED_R, Y_PLC_T + 0.10)
     T("I0.1",          X_CLOSED_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
-    dot(X_OL_AUX_R, Y_TOP_BUS)
     L(X_OL_AUX_R, Y_TOP_BUS, X_OL_AUX_R, Y_STAT_NA + 0.40)
     BLK('NA', X_OL_AUX_R, Y_STAT_NA)
     T("11",            X_OL_AUX_R + 0.08, Y_STAT_NA + 0.25, 0.11)
@@ -3540,14 +3523,12 @@ def draw_single_valve(
     X_THERM_R = 208.81   # AQ thermostat contact (terminals 40-41)
     Y_PROT_NA = 111.31   # Contact Y level (matches örnek position)
 
-    dot(X_A1_R, Y_TOP_BUS)
     L(X_A1_R, Y_TOP_BUS, X_A1_R, Y_PROT_NA + 0.40)
     BLK('NA', X_A1_R, Y_PROT_NA)
     T(P + "A1",        X_A1_R - 0.36, Y_PROT_NA - 0.18, 0.12)
     L(X_A1_R, Y_PROT_NA - 0.40, X_A1_R, Y_PLC_T + 0.10)
     T("I0.3",          X_A1_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
-    dot(X_THERM_R, Y_TOP_BUS)
     L(X_THERM_R, Y_TOP_BUS, X_THERM_R, Y_PROT_NA + 0.40)
     BLK('NA', X_THERM_R, Y_PROT_NA)
     T("40",            X_THERM_R + 0.08, Y_PROT_NA + 0.25, 0.11)
@@ -3560,49 +3541,33 @@ def draw_single_valve(
     # In the örnek, PLC DQ outputs feed the coil rungs at this Y level.
     # Horizontal bus from PLC right edge to K2 rung; junctions for K1 and K2.
     L(X_PLC_R, Y_RUNG_TOP, X_K2C + 0.3, Y_RUNG_TOP)  # DQ output bus
-    dot(X_K1C, Y_RUNG_TOP)                              # K1 junction
-    dot(X_K2C, Y_RUNG_TOP)                              # K2 junction
     T("Q0.0", X_K1C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K1
     T("Q0.1", X_K2C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K2
 
     # ── K1 OPEN coil rung — vertical column at X_K1C ─────────────────────
-    # Flow: PLC DQ0 → NK(K2nc) → nc_contact(OPEN LIMIT, term 11) → BOBIN K1 → 0V bus
+    # Flow: PLC DQ0 → NK(K2nc) → BOBIN K1 → 0V bus
     L(X_K1C, Y_RUNG_TOP, X_K1C, Y_NK + 0.22)          # wire from DQ connection to NK
     relay_nc(X_K1C, Y_NK)                              # NK = K2 NC (electrical interlock)
     T(P + "K2", X_K1C - 0.32, Y_NK + 0.25, 0.13)     # label: K2nc interlock
-    L(X_K1C, Y_NK - 0.22, X_K1C, Y_NA + 0.22)        # wire from NK to travel limit
-    nc_contact(X_K1C, Y_NA)                            # OPEN travel limit NC (terminal 11)
-    T("10", X_K1C - 0.36, Y_NA + 0.22, 0.12)          # terminal 10 (common)
-    T("11", X_K1C + 0.10, Y_NA + 0.22, 0.12)          # terminal 11 (NC limit)
-    T("travel limit",  X_K1C - 0.45, Y_NA - 0.22, 0.10)
-    T(valve_label.upper(), X_K1C - 0.45, Y_NA - 0.36, 0.09)
-    L(X_K1C, Y_NA - 0.22, X_K1C, Y_COIL + 0.32)      # wire from contact to coil
+    L(X_K1C, Y_NK - 0.22, X_K1C, Y_COIL + 0.32)      # wire from NK to coil
     coil(X_K1C, Y_COIL)                                # BOBIN K1
     T(P + "K1", X_K1C - 0.28, Y_COIL - 0.27, 0.18)
     T("OPEN",   X_K1C - 0.24, Y_COIL - 0.48, 0.15)
     T("3TG1010-0BB4", X_K1C - 0.32, Y_COIL - 0.68, 0.12)
-    desc_box(X_K1C, Y_COIL - 0.90)                    # cross-reference box
+    desc_box(X_K1C, Y_COIL - 1.16)                    # cross-reference box
     L(X_K1C, Y_COIL - 0.32, X_K1C, Y_BOT_BUS)        # wire from coil A2 to 0V bus
-    dot(X_K1C, Y_BOT_BUS)                              # BENEK at 0V bus
 
     # ── K2 CLOSE coil rung — vertical column at X_K2C ────────────────────
     L(X_K2C, Y_RUNG_TOP, X_K2C, Y_NK + 0.22)
     relay_nc(X_K2C, Y_NK)                              # NK = K1 NC (electrical interlock)
     T(P + "K1", X_K2C - 0.32, Y_NK + 0.25, 0.13)
-    L(X_K2C, Y_NK - 0.22, X_K2C, Y_NA + 0.22)
-    nc_contact(X_K2C, Y_NA)                            # CLOSE travel limit NC (terminal 14)
-    T("13", X_K2C - 0.36, Y_NA + 0.22, 0.12)          # terminal 13 (common)
-    T("14", X_K2C + 0.10, Y_NA + 0.22, 0.12)          # terminal 14 (NC limit)
-    T("travel limit",  X_K2C - 0.45, Y_NA - 0.22, 0.10)
-    T(valve_label.upper(), X_K2C - 0.45, Y_NA - 0.36, 0.09)
-    L(X_K2C, Y_NA - 0.22, X_K2C, Y_COIL + 0.32)
+    L(X_K2C, Y_NK - 0.22, X_K2C, Y_COIL + 0.32)      # wire from NK to coil
     coil(X_K2C, Y_COIL)                                # BOBIN K2
     T(P + "K2",  X_K2C - 0.28, Y_COIL - 0.27, 0.18)
     T("CLOSE",   X_K2C - 0.28, Y_COIL - 0.48, 0.15)
     T("3TG1010-0BB4", X_K2C - 0.32, Y_COIL - 0.68, 0.12)
-    desc_box(X_K2C, Y_COIL - 0.90)
-    L(X_K2C, Y_COIL - 0.32, X_K2C, Y_BOT_BUS)
-    dot(X_K2C, Y_BOT_BUS)
+    desc_box(X_K2C, Y_COIL - 1.16)
+    L(X_K2C, Y_COIL - 0.32, X_K2C, Y_BOT_BUS)        # wire from coil A2 to 0V bus
 
     # ═══════════════════════════════════════════════════════════════════════
     # TERMINAL / WIRING SECTION  (X ≈ 228–255)  — örnek style
@@ -3646,11 +3611,14 @@ def draw_single_valve(
         # Horizontal line from cabinet side toward field
         L(X_X1 + 2.1, ty + 0.05, X_W1 - 0.8, ty + 0.05)
 
-    # OK at each cable exit — W1 and W2 wires leave this drawing to the field
-    terminal(X_W1 - 0.3, 108.3)               # OK: W1 exits to AQ field wiring
-    T("/", X_W1 - 0.05, 108.32, 0.14)
-    terminal(X_W2 - 0.3, 108.3)               # OK: W2 exits to AQ field wiring
-    T("/", X_W2 - 0.05, 108.32, 0.14)
+    # OK terminals at terminal section entry (L+ bus level) — matches örnek positions
+    terminal(235.4, 112.36)
+    terminal(235.4, 112.75)
+    # Travel limit switch contacts drawn in terminal/cable section
+    BLK("NK", X_W1 + 2.12, 102.56)   # OPEN limit NC (terminal 11)
+    BLK("NK", X_W1 + 3.32, 102.56)   # CLOSE limit NC (terminal 14)
+    BLK("NA", X_W2 + 0.42, 102.56)   # OPEN limit NO (terminal 12)
+    BLK("NA", X_W2 + 1.02, 102.56)   # CLOSE limit NO (terminal 15)
 
     # ── W1 power cable column (motor L1/L2/L3/PE + heater 26/27) ──────────
     cable_lbl(X_W1 - 0.5, 107.5)
