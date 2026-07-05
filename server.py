@@ -3284,6 +3284,26 @@ def draw_single_valve(
         except Exception:
             return None
 
+    def HR(x1, y1, x2, y2):
+        """Solid-fill hatch rectangle — connector-crossing squares (matches örnek ET8)."""
+        import array as _arr
+        vpts = win32com.client.VARIANT(
+            pythoncom.VT_ARRAY | pythoncom.VT_R8,
+            list(_arr.array('d', [x1, y1, x2, y1, x2, y2, x1, y2])))
+        pl = ms.AddLightWeightPolyline(vpts)
+        pl.Closed = True
+        try:
+            loop = win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, [pl])
+            h = ms.AddHatch(1, "SOLID", False)
+            h.AppendOuterLoop(loop)
+            h.Evaluate()
+        except Exception:
+            pass
+        try:
+            pl.Delete()
+        except Exception:
+            pass
+
     # Shorthand block helpers using örnek block names
     def dot(x, y):         BLK("BENEK", x, y)            # junction dot
     def nc_contact(x, y):  BLK("NA", x, y)               # NC contact symbol
@@ -3497,7 +3517,7 @@ def draw_single_valve(
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
     T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
     T(P + "F4", X_HTR_L2 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)   # second heater fuse
-    T("2A",     X_HTR_L1 + 0.1, Y_HTR_KLESIG + 0.15, 0.14)   # heater fuse current rating
+    T("2A",     201.88, 106.31, 0.14)                            # heater fuse current rating
     T("HEATER", 201.42, 101.31, 0.16)
     T("400VAC", 201.45, 101.61, 0.16)
     # Heater terminal numbers at connector plate (örnek exact positions)
@@ -3696,6 +3716,7 @@ def draw_single_valve(
     T("switch", 217.05, 101.93, 0.12)
     T("11K9", 216.99, 99.77, 0.14)
     T("OPEN", 217.02, 97.51, 0.14)
+    T("3TG1010-0BB4", 216.67, 97.76, 0.14)
     T("O",    216.98, 102.65, 0.12)
 
     # ── K2 CLOSE coil rung (X=218.43) — 8 segments matching örnek ───────
@@ -3722,6 +3743,7 @@ def draw_single_valve(
     T("switch", 218.25, 101.96, 0.12)
     T("11K10", 218.13, 99.77, 0.14)
     T("CLOSE", 218.17, 97.51, 0.14)
+    T("3TG1010-0BB4", 217.87, 97.76, 0.14)
     T("C",    218.17, 102.65, 0.12)
 
     # ── Additional DI/DQ channel labels (to right of K2) ─────────────────
@@ -3937,6 +3959,41 @@ def draw_single_valve(
     T("nc",           251.32, 101.96, 0.12)
     T("1",            251.57, 101.96, 0.12)
     T("3",            251.57, 102.51, 0.12)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # HATCH SQUARES — solid 0.10×0.10 connector-crossing fills (ET8, matches örnek)
+    # ═══════════════════════════════════════════════════════════════════════
+    # Motor cable connector plate crossings (L1/L2/L3 at Y=104.39-104.49)
+    for _xs in (X_L1, X_L2, X_L3):
+        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+    # Motor terminal connection box
+    HR(198.22, 102.56, 199.32, 103.66)
+    # Heater cable connector plate crossings (upper Y=104.39 and lower Y=103.53)
+    for _xs in (X_HTR_L1, X_HTR_L2):
+        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+        HR(_xs - 0.05, 103.53, _xs + 0.05, 103.63)
+    # Supply cable (R/S/T) connector plate crossings
+    for _xs in (X_MCB - 0.40, X_MCB, X_MCB + 0.40):
+        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+    # PLC terminal connection squares (control section)
+    HR(214.78, 109.04, 214.88, 109.14);  HR(214.78, 110.54, 214.88, 110.64)
+    HR(214.78, 111.34, 214.88, 111.44);  HR(213.58, 108.25, 213.68, 108.35)
+    HR(213.58, 109.04, 213.68, 109.14);  HR(213.58, 110.54, 213.68, 110.64)
+    HR(213.58, 111.34, 213.68, 111.44);  HR(214.78, 108.25, 214.88, 108.35)
+    # K1 coil rung junction squares
+    HR(217.18, 104.36, 217.28, 104.46);  HR(217.18, 100.66, 217.28, 100.76)
+    HR(217.18, 101.94, 217.28, 102.04);  HR(217.18, 103.04, 217.28, 103.14)
+    # K2 coil rung junction squares
+    HR(218.38, 100.66, 218.48, 100.76);  HR(218.38, 104.36, 218.48, 104.46)
+    HR(218.38, 101.94, 218.48, 102.04);  HR(218.38, 103.04, 218.48, 103.14)
+    # Interlock junction squares
+    HR(217.99, 102.49, 218.14, 102.64);  HR(216.79, 102.49, 216.94, 102.64)
+    # Control section entry squares
+    HR(208.41, 103.50, 208.51, 103.60);  HR(208.76, 103.50, 208.86, 103.60)
+    # Terminal section: motor box (W1 area) + NK/NA contact junction squares
+    HR(246.67, 101.79, 247.37, 102.49)
+    HR(248.87, 102.21, 248.97, 102.31);  HR(250.07, 102.21, 250.17, 102.31)
+    HR(250.67, 102.21, 250.77, 102.31);  HR(251.27, 102.21, 251.37, 102.31)
 
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
