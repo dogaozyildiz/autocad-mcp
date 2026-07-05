@@ -3202,6 +3202,9 @@ def draw_single_valve(
             except Exception:
                 return "ERROR: Cannot open output document in ZWCAD (doc limit)."
 
+    if doc is None:
+        return "ERROR: Could not obtain a ZWCAD document."
+
     ms = doc.ModelSpace
 
     # Erase all existing model-space entities (block definitions are preserved)
@@ -3359,9 +3362,12 @@ def draw_single_valve(
 
     # ── Three staggered supply buses (horizontal, L1/L2/L3 at different Y) ──
     T("400V 50Hz", X_F_L1 - 0.2, Y_BUS_L1 + 0.5, 0.22)
-    T("R/L1", X_F_L1 - 0.15, Y_BUS_L1 - 0.15, 0.18)
-    T("S/L2", X_F_L2 - 0.15, Y_BUS_L2 - 0.15, 0.18)
-    T("T/L3", X_F_L3 - 0.15, Y_BUS_L3 - 0.15, 0.18)
+    # Supply cable entry labels (örnek positions at Y=104.54)
+    T("R", 195.44, 104.54, 0.18)
+    T("S", 195.84, 104.54, 0.18)
+    T("T", 196.24, 104.54, 0.18)
+    # Cable X1 references (örnek positions)
+    T("1X1", 194.76, 104.36, 0.14)
     L(X_F_L1, Y_BUS_L1, 205.1, Y_BUS_L1)
     L(X_F_L2, Y_BUS_L2, 204.7, Y_BUS_L2)
     L(X_F_L3, Y_BUS_L3, 204.3, Y_BUS_L3)
@@ -3370,32 +3376,36 @@ def draw_single_valve(
     mcb_3p(X_MCB, Y_MCB)
     T(P + "F1", X_MCB - 0.8, Y_MCB + 0.55, 0.22)
     T(main_mcb, X_MCB - 0.8, Y_MCB + 0.30, 0.18)
-    T("16 A", X_MCB - 0.8, Y_MCB + 0.08, 0.20)
+    T("16 A", 196.42, 110.68, 0.20)   # örnek position (right of fuse block)
+    T("16 A", 207.92, 110.76, 0.20)   # örnek second instance (control entry)
     # Fuse → supply bus (each pole at its own bus Y)
     L(X_F_L1, Y_BUS_L1, X_F_L1, Y_MCB)
     L(X_F_L2, Y_BUS_L2, X_F_L2, Y_MCB)
-    L(X_F_L3, Y_BUS_L3, X_F_L3, Y_MCB)
+    L(X_F_L3, Y_BUS_L3, X_F_L3, 111.01)  # L3 terminal at 111.01 (not Y_MCB 111.09)
     # Incoming supply from cable entry (below fuse load side → Y_MOT_ENTRY)
     for xf in (X_F_L1, X_F_L2, X_F_L3):
         L(xf, Y_FUSE_BOT, xf, Y_MOT_ENTRY)
 
     # ── Phase relay A1 box ────────────────────────────────────────────────
-    # Phase relay (3UG4512-1AR20) — label only, no box (matches örnek)
+    # Phase relay A1 — labels only (no box in örnek)
     T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
-    T("3UG4512-1AR20", X_RELAY_L + 0.05, Y_RELAY_B - 0.22, 0.16)
     T("PHASE CONTROL", X_RELAY_L + 0.05, Y_RELAY_B - 0.42, 0.16)
     # L1/L2/L3 supply connections at right end of buses (vertical lines)
     for xr, ybus in ((205.1, Y_BUS_L1), (204.7, Y_BUS_L2), (204.3, Y_BUS_L3)):
         L(xr, 105.88, xr, ybus)
+    # Phase relay input labels at right end of buses (örnek exact positions)
+    T("L1", 204.19, 105.6, 0.18)
+    T("L2", 204.57, 105.6, 0.18)
+    T("L3", 204.97, 105.6, 0.18)
 
     # ── Q1 Motor protection (CB_TM) ───────────────────────────────────────
     # Poles at X_L1/L2/L3; each pole taps the supply bus with a BENEK junction
     motor_prot(X_MP, Y_MP)
     T(P + "Q1", X_MP + 0.8, Y_MP + 0.55, 0.22)
     T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
-    T(f"Ir={rv_range}A", X_MP + 0.8, Y_MP + 0.08, 0.20)
-    T(f"set={rv_set}A", X_MP + 0.8, Y_MP - 0.15, 0.20)
-    T("3RV2901-1D", X_MP + 0.8, Y_MP - 0.38, 0.16)
+    _rv_r = rv_range.replace('.', ','); _rv_s = rv_set.replace('.', ',')
+    T(f"Ir={_rv_r}A", X_MP + 0.8, Y_MP + 0.08, 0.20)
+    T(f"set={_rv_s}A", X_MP + 0.8, Y_MP - 0.15, 0.20)
     # CB_TM line-side to supply bus (BENEK at junction)
     L(X_L1, Y_MCB, X_L1, Y_BUS_L1);  dot(X_L1, Y_BUS_L1)
     L(X_L2, Y_MCB, X_L2, Y_BUS_L2);  dot(X_L2, Y_BUS_L2)
@@ -3419,7 +3429,6 @@ def draw_single_valve(
     contactor(X_K2, Y_K)
     T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
     T("CLOSE", X_K2 + 0.5, Y_K + 0.10, 0.20)
-    T("3TG1010-0BB4", X_K1 - 0.3, Y_K - 0.55, 0.17)
 
     # K2 input wires from cross-bus to contactor top
     L(X_K2_L1, Y_K, X_K2_L1, Y_CROSS_L1)
@@ -3435,27 +3444,34 @@ def draw_single_valve(
     L(X_K2_L1, Y_MOT_L3, X_L3, Y_MOT_L3)   # K2 L1 ↔ K1 L3
     L(X_K2_L2, Y_MOT_L2, X_L2, Y_MOT_L2)   # K2 L2 ↔ K1 L2
     L(X_K2_L3, Y_MOT_L1, X_L1, Y_MOT_L1)   # K2 L3 ↔ K1 L1
-    # K1 output wires: from K1 load-side down through motor junction to motor entry
-    L(X_L1, Y_K_BOT, X_L1, 104.39)
-    L(X_L2, Y_K_BOT, X_L2, 104.39)
-    L(X_L3, Y_K_BOT, X_L3, 104.39)
+    # K1 output wires: from K1 load-side down to motor cable connector top (Y=104.49)
+    L(X_L1, Y_K_BOT, X_L1, Y_MOT_ENTRY)
+    L(X_L2, Y_K_BOT, X_L2, Y_MOT_ENTRY)
+    L(X_L3, Y_K_BOT, X_L3, Y_MOT_ENTRY)
     # BENEK at motor junctions (where K2 cross-wire meets K1 output)
     dot(X_L1, Y_MOT_L1)
     dot(X_L2, Y_MOT_L2)
     dot(X_L3, Y_MOT_L3)
-    # Motor entry stubs + diagonal cable entry lines (matching örnek)
-    L(X_L1, 104.39, X_L1, 103.96)               # L1 stub
+    # Motor entry stubs (gap Y=104.49→104.39 is cable connector plate) + diagonals
+    L(X_L1, 104.39, X_L1, 103.96)               # L1 stub below connector
     L(X_L2, 103.66, X_L2, 104.39)               # L2 stub
     L(X_L3, 104.39, X_L3, 103.96)               # L3 stub
-    L(198.53, 103.61, X_L1, 103.96)             # L1 diagonal entry
-    L(199.01, 103.61, X_L3, 103.96)             # L3 diagonal entry
+    L(198.53, 103.61, X_L1, 103.96)             # L1 diagonal cable entry
+    L(199.01, 103.61, X_L3, 103.96)             # L3 diagonal cable entry
+    # Motor terminal numbers at connector plate (örnek exact positions)
+    T("14", 198.47, 104.54, 0.14)
+    T("15", 198.87, 104.54, 0.14)
+    T("16", 199.27, 104.54, 0.14)
+    T("3",  198.52, 102.86, 0.14)
+    # Motor cable reference
+    T("1X5", 197.8, 104.36, 0.14)
 
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, Y_MOT, 0.55)
     T("M", X_MOT - 0.12, Y_MOT - 0.10, 0.30)
     T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
-    T("OPEN  CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
+    T("OPEN CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
     # Motor terminal connection arcs (from örnek ET4 entities)
     A(198.85, 102.96, 0.075)
     A(199.0,  102.96, 0.075)
@@ -3466,22 +3482,27 @@ def draw_single_valve(
     X_HTR_L2 = 201.99   # heater wire 2 taps from L3 bus
     dot(X_HTR_L1, Y_BUS_L2)
     dot(X_HTR_L2, Y_BUS_L3)
-    L(X_HTR_L1, Y_BUS_L2, X_HTR_L1, 104.39)    # heater L1: bus to connector upper
-    L(X_HTR_L2, Y_BUS_L3, X_HTR_L2, 104.39)    # heater L2: bus to connector upper
+    L(X_HTR_L1, Y_BUS_L2, X_HTR_L1, Y_MOT_ENTRY)  # heater L1: bus to connector top
+    L(X_HTR_L2, Y_BUS_L3, X_HTR_L2, Y_MOT_ENTRY)  # heater L2: bus to connector top
     term_blk(X_HTR_L1, Y_HTR_KLESIG)
     term_blk(X_HTR_L2, Y_HTR_KLESIG)
-    # Lower heater cable entry section (matching örnek)
-    L(X_HTR_L1, 103.63, X_HTR_L1, 104.39)       # HTR L1 upper stub
+    # Lower heater cable entry section (matching örnek; gap Y=104.49→104.39 = connector plate)
+    L(X_HTR_L1, 103.63, X_HTR_L1, 104.39)       # HTR L1 upper stub below connector
     L(X_HTR_L2, 103.63, X_HTR_L2, 104.39)       # HTR L2 upper stub
     L(X_HTR_L1, 102.06, X_HTR_L1, 103.53)       # HTR L1 lower section
     L(X_HTR_L2, 102.81, X_HTR_L2, 103.53)       # HTR L2 middle section
     L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
     T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
-    T("26", X_HTR_L1 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
-    T("27", X_HTR_L2 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
     T("HEATER", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.55, 0.16)
     T("400VAC", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.75, 0.16)
+    # Heater terminal numbers at connector plate (örnek exact positions)
+    T("17", 201.69, 104.49, 0.14)
+    T("18", 202.09, 104.49, 0.14)
+    T("26", 201.7,  103.47, 0.14)   # heater cable terminal numbers
+    T("27", 202.1,  103.47, 0.14)
+    # Heater cable reference
+    T("1X5", 201.02, 104.2, 0.14)
 
     # ═══════════════════════════════════════════════════════════════════════
     # CONTROL SECTION  (X ≈ 208–227)  — exact örnek coordinates
@@ -3660,9 +3681,11 @@ def draw_single_valve(
     T("0.0", 217.08, 105.25, 0.14)
     T("A2",  217.33, 99.55, 0.14)
     T("A1",  217.33, 100.05, 0.14)
+    T("1X5", 216.66, 100.64, 0.12)   # cable ref (örnek position)
     T("7",   217.38, 100.64, 0.12)
     T("11",  217.38, 101.94, 0.12)
     T("10",  217.38, 103.04, 0.12)
+    T("1X5", 216.66, 104.34, 0.12)   # cable ref (örnek position)
     T("6",   217.38, 104.34, 0.12)
     T(valve_label.upper(), 216.64, 101.74, 0.14)
     T("travel limit", 216.91, 101.78, 0.12)
