@@ -3268,6 +3268,10 @@ def draw_single_valve(
     def C(cx, cy, r):
         ms.AddCircle(_pt(cx, cy), float(r))
 
+    def A(cx, cy, r, s=0, e=360):
+        import math
+        ms.AddArc(_pt(cx, cy), float(r), math.radians(float(s)), math.radians(float(e)))
+
     def T(s, x, y, h=0.25):
         ms.AddText(str(s), _pt(x, y), float(h))
 
@@ -3303,27 +3307,11 @@ def draw_single_valve(
     X_K1  = 198.77; X_K2  = 200.72; Y_K = 107.31  # contactor block insertions
     X_MOT = 198.77; Y_MOT = 102.5   # motor circle centre, r=0.55
 
-    # Control section — 24VDC buses are HORIZONTAL (top and bottom)
-    X_BUS_L = 208.0   # left edge of 24VDC horizontal buses (extended left for A1/therm rungs)
-    X_BUS_R = 220.5   # right edge of 24VDC horizontal buses
-    Y_TOP_BUS = 112.3  # 24VDC+ (L+) horizontal bus Y position
-    Y_BOT_BUS = 99.3   # 0V (M) horizontal bus Y position
-
-    # PLC box
-    X_PLC_L = 210.0;  X_PLC_R = 216.0
-    Y_PLC_T = 107.0;  Y_PLC_B = 103.0
-
     # Coil columns — vertical rungs (matching örnek's vertical layout)
     X_K1C = 217.23; X_K2C = 218.43  # K1 OPEN / K2 CLOSE coil column X positions
     Y_RUNG_TOP = 104.79  # K1/K2 rung top — PLC DQ output connection level
     Y_NK   = 102.84  # electrical interlock NK contact Y
     Y_COIL = 100.0   # BOBIN block centre Y
-
-    # Terminal / wiring section
-    X_X1  = 228.0   # 1X1 cabinet terminal strip label X
-    X_W1  = 247.0   # W1 power cable column X
-    X_W2  = 250.5   # W2 signal cable column X
-    X_AQ  = 253.0   # AQ actuator label X
 
     Y_BOT = 99.0;  Y_TOP = 113.5
 
@@ -3392,17 +3380,13 @@ def draw_single_valve(
         L(xf, Y_FUSE_BOT, xf, Y_MOT_ENTRY)
 
     # ── Phase relay A1 box ────────────────────────────────────────────────
-    L(X_RELAY_L, Y_RELAY_T, X_RELAY_R, Y_RELAY_T)
-    L(X_RELAY_R, Y_RELAY_T, X_RELAY_R, Y_RELAY_B)
-    L(X_RELAY_R, Y_RELAY_B, X_RELAY_L, Y_RELAY_B)
-    L(X_RELAY_L, Y_RELAY_B, X_RELAY_L, Y_RELAY_T)
+    # Phase relay (3UG4512-1AR20) — label only, no box (matches örnek)
     T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
     T("3UG4512-1AR20", X_RELAY_L + 0.05, Y_RELAY_B - 0.22, 0.16)
     T("PHASE CONTROL", X_RELAY_L + 0.05, Y_RELAY_B - 0.42, 0.16)
     # L1/L2/L3 supply connections at right end of buses (vertical lines)
     for xr, ybus in ((205.1, Y_BUS_L1), (204.7, Y_BUS_L2), (204.3, Y_BUS_L3)):
         L(xr, 105.88, xr, ybus)
-    L(X_RELAY_R, Y_RELAY, X_RELAY_R + 0.4, Y_RELAY)  # NC output to control circuit
 
     # ── Q1 Motor protection (CB_TM) ───────────────────────────────────────
     # Poles at X_L1/L2/L3; each pole taps the supply bus with a BENEK junction
@@ -3436,8 +3420,6 @@ def draw_single_valve(
     T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
     T("CLOSE", X_K2 + 0.5, Y_K + 0.10, 0.20)
     T("3TG1010-0BB4", X_K1 - 0.3, Y_K - 0.55, 0.17)
-    L(X_K1 + 0.7, Y_K, X_K2, Y_K)
-    T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
 
     # K2 input wires from cross-bus to contactor top
     L(X_K2_L1, Y_K, X_K2_L1, Y_CROSS_L1)
@@ -3454,13 +3436,19 @@ def draw_single_valve(
     L(X_K2_L2, Y_MOT_L2, X_L2, Y_MOT_L2)   # K2 L2 ↔ K1 L2
     L(X_K2_L3, Y_MOT_L1, X_L1, Y_MOT_L1)   # K2 L3 ↔ K1 L1
     # K1 output wires: from K1 load-side down through motor junction to motor entry
-    L(X_L1, Y_K_BOT, X_L1, Y_MOT_ENTRY)
-    L(X_L2, Y_K_BOT, X_L2, Y_MOT_ENTRY)
-    L(X_L3, Y_K_BOT, X_L3, Y_MOT_ENTRY)
+    L(X_L1, Y_K_BOT, X_L1, 104.39)
+    L(X_L2, Y_K_BOT, X_L2, 104.39)
+    L(X_L3, Y_K_BOT, X_L3, 104.39)
     # BENEK at motor junctions (where K2 cross-wire meets K1 output)
     dot(X_L1, Y_MOT_L1)
     dot(X_L2, Y_MOT_L2)
     dot(X_L3, Y_MOT_L3)
+    # Motor entry stubs + diagonal cable entry lines (matching örnek)
+    L(X_L1, 104.39, X_L1, 103.96)               # L1 stub
+    L(X_L2, 103.66, X_L2, 104.39)               # L2 stub
+    L(X_L3, 104.39, X_L3, 103.96)               # L3 stub
+    L(198.53, 103.61, X_L1, 103.96)             # L1 diagonal entry
+    L(199.01, 103.61, X_L3, 103.96)             # L3 diagonal entry
 
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, Y_MOT, 0.55)
@@ -3468,6 +3456,9 @@ def draw_single_valve(
     T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN  CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
+    # Motor terminal connection arcs (from örnek ET4 entities)
+    A(198.85, 102.96, 0.075)
+    A(199.0,  102.96, 0.075)
 
     # ── Heater — taps directly from L2 and L3 supply buses ───────────────
     # BENEK at bus tap points; KLESIG terminals at Y=107.24
@@ -3475,10 +3466,17 @@ def draw_single_valve(
     X_HTR_L2 = 201.99   # heater wire 2 taps from L3 bus
     dot(X_HTR_L1, Y_BUS_L2)
     dot(X_HTR_L2, Y_BUS_L3)
-    L(X_HTR_L1, Y_BUS_L2, X_HTR_L1, Y_MOT_ENTRY)
-    L(X_HTR_L2, Y_BUS_L3, X_HTR_L2, Y_MOT_ENTRY)
+    L(X_HTR_L1, Y_BUS_L2, X_HTR_L1, 104.39)    # heater L1: bus to connector upper
+    L(X_HTR_L2, Y_BUS_L3, X_HTR_L2, 104.39)    # heater L2: bus to connector upper
     term_blk(X_HTR_L1, Y_HTR_KLESIG)
     term_blk(X_HTR_L2, Y_HTR_KLESIG)
+    # Lower heater cable entry section (matching örnek)
+    L(X_HTR_L1, 103.63, X_HTR_L1, 104.39)       # HTR L1 upper stub
+    L(X_HTR_L2, 103.63, X_HTR_L2, 104.39)       # HTR L2 upper stub
+    L(X_HTR_L1, 102.06, X_HTR_L1, 103.53)       # HTR L1 lower section
+    L(X_HTR_L2, 102.81, X_HTR_L2, 103.53)       # HTR L2 middle section
+    L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
+    L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
     T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
     T("26", X_HTR_L1 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
     T("27", X_HTR_L2 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
@@ -3486,256 +3484,435 @@ def draw_single_valve(
     T("400VAC", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.75, 0.16)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # CONTROL SECTION  (X ≈ 209–220)
-    # 24VDC buses are HORIZONTAL (top and bottom), matching örnek layout
-    # Each coil rung is a VERTICAL COLUMN between the two buses
+    # CONTROL SECTION  (X ≈ 208–227)  — exact örnek coordinates
     # ═══════════════════════════════════════════════════════════════════════
 
-    # 24VDC horizontal buses
-    # TOP bus — L+ (24VDC positive)
-    T("+",    X_BUS_L - 0.15, Y_TOP_BUS + 0.05, 0.18)
-    T("/",    X_BUS_L + 0.15, Y_TOP_BUS + 0.03, 0.13)
-    L(X_BUS_L, Y_TOP_BUS, X_BUS_R, Y_TOP_BUS)   # L+ horizontal bus
-    T("L+",   X_BUS_L - 0.18, Y_TOP_BUS - 0.22, 0.18)
-    T("M",    X_BUS_L + 0.32, Y_TOP_BUS - 0.22, 0.18)
-    T("24VDC", X_BUS_L + 0.68, Y_TOP_BUS + 0.30, 0.22)
+    # Bus Y levels from örnek
+    Y_LP   = 112.75   # L+ incoming (unprotected) bus
+    Y_PROT = 112.36   # Protected 24V bus (after protection contacts)
+    Y_0V   = 99.3     # External 0V M bus
+    Y_0VI  = 99.69    # Internal 0V bus (status + coil common)
 
-    # BOTTOM bus — M (0V / neutral)
-    T("-",    X_BUS_L - 0.15, Y_BOT_BUS + 0.05, 0.18)
-    T("/",    X_BUS_L + 0.15, Y_BOT_BUS + 0.03, 0.13)
-    L(X_BUS_L, Y_BOT_BUS, X_BUS_R, Y_BOT_BUS)   # M horizontal bus
+    # ── L+ and protected buses ────────────────────────────────────────────
+    L(208.46, Y_LP,   235.42, Y_LP)     # full L+ bus to OK terminal
+    L(208.81, Y_LP,   234.25, Y_LP)     # duplicate L+ bus segment (örnek has both)
+    L(208.81, Y_PROT, 234.25, Y_PROT)   # protected bus
+    L(209.98, Y_0V,   218.43, Y_0V)     # external 0V bus
+    T("24VDC", 221.85, 112.96, 0.22)
 
-    # F2 — 24VDC supply MCB label (just text, no block — matches örnek)
-    T(P + "F2", X_BUS_L - 0.10, Y_TOP_BUS - 0.62, 0.20)
-    T(ctrl_mcb + "  2P", X_BUS_L - 0.10, Y_TOP_BUS - 0.85, 0.16)
+    # ── Supply terminal labels (SUPPLY / 24VDC at X≈208) ─────────────────
+    T("SUPPLY", 208.25, 102.7, 0.16)
+    T("24VDC",  208.32, 103.0, 0.16)
+    T("+", 208.56, 103.65, 0.18)
+    T("-", 208.91, 103.65, 0.18)
 
-    # PLC power supply terminal (24VDC M) — matches örnek OK at (211.47, 102.12)
-    terminal(X_PLC_L + 1.47, Y_PLC_B - 0.88)
+    # ── Protection contact 1: thermostat NA at (208.46, 111.31) ──────────
+    L(208.46, Y_LP, 208.46, 111.31)       # L+ bus down to thermostat top
+    BLK('NA', 208.46, 111.31)
+    T("1", 208.51, 111.16, 0.11)
+    T("2", 208.51, 110.76, 0.11)
+    L(208.44, 110.91, 208.79, 110.91)     # bridge to phase relay
+    L(208.46, 110.78, 208.46, 103.6)      # thermostat bottom wire down to supply
 
-    # PLC block (rectangle with I/O labels)
-    L(X_PLC_L, Y_PLC_T, X_PLC_R, Y_PLC_T)
-    L(X_PLC_R, Y_PLC_T, X_PLC_R, Y_PLC_B)
-    L(X_PLC_R, Y_PLC_B, X_PLC_L, Y_PLC_B)
-    L(X_PLC_L, Y_PLC_B, X_PLC_L, Y_PLC_T)
-    T("PLC  S7-1200",      X_PLC_L + 0.15, Y_PLC_T - 0.35, 0.22)
-    T(plc_model,           X_PLC_L + 0.15, Y_PLC_T - 0.58, 0.16)
-    T("ETHERNET CONNECTION", X_PLC_L + 0.15, Y_PLC_T - 0.80, 0.16)
-    T("RJ45",              X_PLC_L + 0.15, Y_PLC_T - 1.00, 0.16)
+    # Thermostat device symbol (zig-zag lines at Y≈111)
+    for _s, _e in [
+        ((208.15, 111.0),  (208.21, 111.0)),
+        ((208.19, 111.06), (208.14, 111.03)),
+        ((208.2,  111.05), (208.15, 111.0)),
+        ((208.23, 111.08), (208.24, 111.06)),
+        ((208.26, 111.0),  (208.26, 111.03)),
+        ((208.26, 111.03), (208.25, 111.05)),
+        ((208.31, 111.11), (208.23, 111.08)),
+        ((208.32, 111.09), (208.31, 111.11)),
+        ((208.36, 111.1),  (208.32, 111.09)),
+        ((208.37, 111.08), (208.26, 111.03)),
+    ]:
+        L(_s[0], _s[1], _e[0], _e[1])
 
-    T("INPUT",  X_PLC_L + 0.15, Y_PLC_T - 1.22, 0.18)
-    di_rows = [
-        ("0.0", "travel OPEN NO (term 12)"),
-        ("0.1", "travel CLOSE NC (term 14)"),
-        ("0.2", "Q1 OL NC aux"),
-        ("0.3", "A1 phase fault NC"),
-        ("0.4", "therm NC (40-41)"),
-        ("0.5", "HMI OPEN"),
-        ("0.6", "HMI CLOSE"),
-    ]
-    for i, (addr, desc) in enumerate(di_rows):
-        ry = Y_PLC_T - 1.45 - i * 0.25
-        T(addr, X_PLC_L + 0.15, ry, 0.16)
-        T(desc, X_PLC_L + 0.52, ry, 0.12)
+    # ── Protection contact 2: phase relay NA at (208.81, 111.31) ─────────
+    L(208.81, 111.31, 208.81, Y_PROT)     # phase relay top to protected bus
+    BLK('NA', 208.81, 111.31)
+    T("3", 208.86, 111.16, 0.11)
+    T("4", 208.86, 110.76, 0.11)
+    L(208.81, 110.71, 208.81, 103.6)      # phase relay bottom wire down
 
-    T("OUTPUT", X_PLC_R - 0.85, Y_PLC_T - 1.22, 0.18)
-    for i, (addr, lbl) in enumerate([("0.0", P + "K1 OPEN"), ("0.1", P + "K2 CLOSE")]):
-        ry = Y_PLC_T - 1.45 - i * 0.25
-        T(addr, X_PLC_R - 0.72, ry, 0.16)
-        T(lbl,  X_PLC_R - 0.08, ry, 0.12)
+    # Phase relay device symbol
+    for _s, _e in [
+        ((208.55, 111.0),  (208.61, 111.0)),
+        ((208.58, 111.08), (208.59, 111.06)),
+        ((208.59, 111.06), (208.54, 111.03)),
+        ((208.6,  111.05), (208.55, 111.0)),
+        ((208.61, 111.0),  (208.61, 111.03)),
+        ((208.61, 111.03), (208.6,  111.05)),
+        ((208.66, 111.11), (208.58, 111.08)),
+        ((208.67, 111.09), (208.66, 111.11)),
+        ((208.71, 111.1),  (208.67, 111.09)),
+        ((208.72, 111.08), (208.61, 111.03)),
+    ]:
+        L(_s[0], _s[1], _e[0], _e[1])
 
-    # ── Valve status contact rungs → PLC DI inputs ───────────────────────
-    # Three vertical rungs from 24VDC bus through NA contacts to PLC DI inputs.
-    # Matches örnek X positions (213.63/214.83/216.03) and NA contact at Y=110.14.
-    X_OPENED_R = 213.63   # AQ terminal 12 NO (OPEN travel limit) → PLC I0.0
-    X_CLOSED_R = 214.83   # AQ terminal 14 NC (CLOSE travel limit) → PLC I0.1
-    X_OL_AUX_R = 216.03   # Q1 OL aux NC contact (terms 11-14) → PLC I0.2
-    Y_STAT_NA  = 110.14   # Status NA contact Y (OPENED/CLOSED travel limit rungs)
-    Y_OL_AUX   = 110.19   # OL_AUX contact Y (from örnek: slightly higher than STAT_NA)
+    # ── Control section boundary lines ────────────────────────────────────
+    L(209.18, Y_0VI, 214.83, Y_0VI)       # horizontal boundary at Y=99.69
+    L(209.18, Y_LP,  209.18, Y_0VI)       # left vertical wall
+    L(209.98, Y_PROT, 209.98, Y_0V)       # vertical at X=209.98
 
-    L(X_OPENED_R, Y_TOP_BUS, X_OPENED_R, Y_STAT_NA + 0.40)
-    BLK('NA', X_OPENED_R, Y_STAT_NA)
-    T("12",            X_OPENED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
-    T("OPENED",        X_OPENED_R - 0.50, Y_STAT_NA - 0.18, 0.12)
-    T(valve_label.upper(), X_OPENED_R - 0.50, Y_STAT_NA - 0.33, 0.09)
-    L(X_OPENED_R, Y_STAT_NA - 0.40, X_OPENED_R, Y_PLC_T + 0.10)
-    T("I0.0",          X_OPENED_R - 0.26, Y_PLC_T + 0.08, 0.11)
+    # ── PLC DI column verticals + short stubs ─────────────────────────────
+    L(210.33, 105.53, 210.33, 106.53)
+    L(210.63, 106.93, 210.63, Y_LP)       # DI column 1
+    L(211.23, 106.93, 211.23, Y_PROT)     # DI column 2
+    L(211.83, 106.93, 211.83, Y_PROT)     # DI column 3
 
-    L(X_CLOSED_R, Y_TOP_BUS, X_CLOSED_R, Y_STAT_NA + 0.40)
-    BLK('NA', X_CLOSED_R, Y_STAT_NA)
-    T("14",            X_CLOSED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
-    T("CLOSED",        X_CLOSED_R - 0.52, Y_STAT_NA - 0.18, 0.12)
-    L(X_CLOSED_R, Y_STAT_NA - 0.40, X_CLOSED_R, Y_PLC_T + 0.10)
-    T("I0.1",          X_CLOSED_R - 0.26, Y_PLC_T + 0.08, 0.11)
+    # PLC DI pin stubs (4 pins at X=211.04/211.33/211.61/211.89)
+    for _xp in (211.04, 211.33, 211.61, 211.89):
+        L(_xp, 105.13, _xp, 104.85)       # top stub
+        L(_xp, 104.62, _xp, 103.32)       # bottom stub
+        A(_xp, 104.75, 0.1)               # pin connection arc (örnek ET4)
+    L(211.89, 103.32, 211.04, 103.32)     # horizontal connector
+    L(211.47, 103.32, 211.47, 102.12)     # down to OK terminal
+    terminal(211.47, 102.12)              # 0V OK terminal
 
-    L(X_OL_AUX_R, Y_TOP_BUS, X_OL_AUX_R, Y_OL_AUX + 0.40)
-    BLK('NA', X_OL_AUX_R, Y_OL_AUX)
-    T("11",            X_OL_AUX_R + 0.08, Y_OL_AUX + 0.25, 0.11)
-    T("14",            X_OL_AUX_R + 0.08, Y_OL_AUX - 0.03, 0.11)
-    T(P + "Q1",        X_OL_AUX_R - 0.44, Y_OL_AUX - 0.18, 0.12)
-    L(X_OL_AUX_R, Y_OL_AUX - 0.40, X_OL_AUX_R, Y_PLC_T + 0.10)
-    T("I0.2",          X_OL_AUX_R - 0.26, Y_PLC_T + 0.08, 0.11)
+    # PLC labels
+    T("L+",  210.51, 106.69, 0.18)
+    T("M",   211.14, 106.69, 0.18)
+    T("M",   211.74, 106.69, 0.18)
+    T("A1",  210.42, 105.79, 0.18)
+    T("ETHERNET CONNECTION", 210.66, 105.29, 0.16)
+    T("RJ45", 212.13, 104.71, 0.16)
+    T("FROM TOUCH SCREEN", 210.29, 101.65, 0.16)
+    T("GW",  211.01, 103.61, 0.16)
+    T("OW",  211.29, 103.61, 0.16)
+    T("G",   211.58, 103.61, 0.16)
+    T("O",   211.86, 103.61, 0.16)
+    T("CAT7", 211.56, 102.85, 0.14)
+    T("CAT8", 211.56, 103.09, 0.14)
+    T("O  :", 212.4, 103.82, 0.12)
+    T("G  :", 212.4, 103.97, 0.12)
+    T("OW :", 212.4, 104.13, 0.12)
+    T("GW :", 212.4, 104.28, 0.12)
+    T("ORANGE",       212.77, 103.82, 0.12)
+    T("GREEN",        212.77, 103.97, 0.12)
+    T("ORANGE WHITE", 212.77, 104.13, 0.12)
+    T("GREEN WHITE",  212.77, 104.28, 0.12)
 
-    # ── Protection rungs left of bus: A1 phase monitor (I0.3) and thermostat (I0.4) ──
-    X_A1_R    = 208.46   # A1 phase monitor NO contact (closes when phases OK)
-    X_THERM_R = 208.81   # AQ thermostat contact (terminals 40-41)
-    Y_PROT_NA = 111.31   # Contact Y level (matches örnek position)
+    # ── OPENED status rung (X=213.63) — 6 segments matching örnek ────────
+    L(213.63, 111.44, 213.63, Y_LP)
+    L(213.63, 110.64, 213.63, 111.34)
+    BLK('NA', 213.63, 110.14)
+    L(213.63, 110.14, 213.63, 110.54)
+    L(213.63, 109.14, 213.63, 109.54)
+    L(213.63, 108.35, 213.63, 109.04)
+    L(213.63, 108.24, 213.63, 106.93)
+    T("0.0",  213.48, 106.65, 0.14)
+    T(valve_label.upper(), 213.1, 108.69, 0.14)
+    T("OPENED", 213.38, 109.54, 0.14)
+    T("1X5",  213.06, 108.22, 0.12)
+    T("1X5",  213.06, 111.31, 0.12)
+    T("24",   213.78, 108.22, 0.12)
+    T("22",   213.78, 108.99, 0.12)
+    T("20",   213.78, 110.49, 0.12)
+    T("23",   213.78, 111.31, 0.12)
 
-    L(X_A1_R, Y_TOP_BUS, X_A1_R, Y_PROT_NA + 0.40)
-    BLK('NA', X_A1_R, Y_PROT_NA)
-    T(P + "A1",        X_A1_R - 0.36, Y_PROT_NA - 0.18, 0.12)
-    L(X_A1_R, Y_PROT_NA - 0.40, X_A1_R, Y_PLC_T + 0.10)
-    T("I0.3",          X_A1_R - 0.26, Y_PLC_T + 0.08, 0.11)
+    # ── CLOSED status rung (X=214.83) — 7 segments matching örnek ────────
+    L(214.83, 111.44, 214.83, Y_LP)
+    L(214.83, 110.64, 214.83, 111.34)
+    BLK('NA', 214.83, 110.14)
+    L(214.83, 110.14, 214.83, 110.54)
+    L(214.83, 109.14, 214.83, 109.54)
+    L(214.83, 108.35, 214.83, 109.04)
+    L(214.83, 108.24, 214.83, 106.93)
+    L(214.83, 105.13, 214.83, Y_0VI)       # continues down to internal 0V bus
+    T("0.1",  214.68, 106.65, 0.14)
+    T("CLOSED", 214.58, 109.55, 0.14)
+    T("1X5",  214.26, 108.22, 0.12)
+    T("1X5",  214.26, 111.31, 0.12)
+    T("26",   214.98, 108.22, 0.12)
+    T("25",   214.98, 108.99, 0.12)
+    T("23",   214.98, 110.49, 0.12)
+    T("25",   214.98, 111.31, 0.12)
+    T("1L",   214.71, 105.25, 0.14)
 
-    L(X_THERM_R, Y_TOP_BUS, X_THERM_R, Y_PROT_NA + 0.40)
-    BLK('NA', X_THERM_R, Y_PROT_NA)
-    T("40",            X_THERM_R + 0.08, Y_PROT_NA + 0.25, 0.11)
-    T("41",            X_THERM_R + 0.08, Y_PROT_NA - 0.03, 0.11)
-    T("therm",         X_THERM_R - 0.50, Y_PROT_NA - 0.18, 0.12)
-    L(X_THERM_R, Y_PROT_NA - 0.40, X_THERM_R, Y_PLC_T + 0.10)
-    T("I0.4",          X_THERM_R - 0.26, Y_PLC_T + 0.08, 0.11)
+    # ── OL_AUX rung (X=216.03) — 2 segments matching örnek ──────────────
+    L(216.03, 110.19, 216.03, Y_LP)
+    BLK('NA', 216.03, 110.19)
+    L(216.03, 109.59, 216.03, 106.93)
+    T("0.2",  215.88, 106.65, 0.14)
+    T("8A1",  215.46, 109.84, 0.14)
+    T("11",   216.08, 110.09, 0.14)
+    T("14",   216.08, 109.64, 0.14)
 
-    # ── PLC DQ output bus connecting to K1/K2 rung tops ──────────────────
-    # In the örnek, PLC DQ outputs feed the coil rungs at this Y level.
-    # Horizontal bus from PLC right edge to K2 rung; junctions for K1 and K2.
-    L(X_PLC_R, Y_RUNG_TOP, X_K2C + 0.3, Y_RUNG_TOP)  # DQ output bus
-    T("Q0.0", X_K1C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K1
-    T("Q0.1", X_K2C - 0.32, Y_RUNG_TOP + 0.20, 0.12)  # DQ address K2
+    # ── DQ output bus (örnek: X=214.83 to X=226.83 at Y=104.79) ─────────
+    L(226.83, Y_RUNG_TOP, 214.83, Y_RUNG_TOP)
+    L(226.83, Y_RUNG_TOP, 226.83, 105.13)
 
-    # ── K1 OPEN coil rung — vertical column at X_K1C ─────────────────────
-    # Flow: PLC DQ0 → NK(K2nc) → BOBIN K1 → 0V bus
-    L(X_K1C, Y_RUNG_TOP, X_K1C, Y_NK + 0.22)          # wire from DQ connection to NK
-    relay_nc(X_K1C, Y_NK)                              # NK = K2 NC (electrical interlock)
-    T(P + "K2", X_K1C - 0.32, Y_NK + 0.25, 0.13)     # label: K2nc interlock
-    L(X_K1C, Y_NK - 0.22, X_K1C, Y_COIL + 0.32)      # wire from NK to coil
-    coil(X_K1C, Y_COIL)                                # BOBIN K1
-    T(P + "K1", X_K1C - 0.28, Y_COIL - 0.27, 0.18)
-    T("OPEN",   X_K1C - 0.24, Y_COIL - 0.48, 0.15)
-    T("3TG1010-0BB4", X_K1C - 0.32, Y_COIL - 0.68, 0.12)
-    desc_box(X_K1C, Y_COIL - 1.16)                    # cross-reference box
-    L(X_K1C, Y_COIL - 0.32, X_K1C, Y_BOT_BUS)        # wire from coil A2 to 0V bus
+    # ── K1 OPEN coil rung (X=217.23) — 8 segments matching örnek ────────
+    L(217.23, 104.46, 217.23, 105.13)
+    L(217.23, 104.36, 217.23, 103.14)
+    BLK('NK', 217.23, Y_NK)
+    L(217.23, 103.04, 217.23, Y_NK)
+    L(217.23, 102.24, 217.23, 102.04)
+    L(217.23, 101.94, 217.23, 100.76)
+    BLK('BOBIN', 217.23, Y_COIL)
+    L(217.23, 100.66, 217.23, Y_COIL)
+    L(217.23, Y_0VI, 217.23, Y_0V)        # from internal 0V to external 0V
+    L(217.28, 102.56, 216.94, 102.56)     # NK horizontal stub
+    BLK('role aciklama', 217.23, 98.84)
+    T("0.3", 217.08, 106.65, 0.14)
+    T("0.0", 217.08, 105.25, 0.14)
+    T("A2",  217.33, 99.55, 0.14)
+    T("A1",  217.33, 100.05, 0.14)
+    T("7",   217.38, 100.64, 0.12)
+    T("11",  217.38, 101.94, 0.12)
+    T("10",  217.38, 103.04, 0.12)
+    T("6",   217.38, 104.34, 0.12)
+    T(valve_label.upper(), 216.64, 101.74, 0.14)
+    T("travel limit", 216.91, 101.78, 0.12)
+    T("switch", 217.05, 101.93, 0.12)
+    T("11K9", 216.99, 99.77, 0.14)
+    T("OPEN", 217.02, 97.51, 0.14)
+    T("3TG1010-0BB4", 216.67, 97.76, 0.14)
+    T("O",    216.98, 102.65, 0.12)
 
-    # ── K2 CLOSE coil rung — vertical column at X_K2C ────────────────────
-    L(X_K2C, Y_RUNG_TOP, X_K2C, Y_NK + 0.22)
-    relay_nc(X_K2C, Y_NK)                              # NK = K1 NC (electrical interlock)
-    T(P + "K1", X_K2C - 0.32, Y_NK + 0.25, 0.13)
-    L(X_K2C, Y_NK - 0.22, X_K2C, Y_COIL + 0.32)      # wire from NK to coil
-    coil(X_K2C, Y_COIL)                                # BOBIN K2
-    T(P + "K2",  X_K2C - 0.28, Y_COIL - 0.27, 0.18)
-    T("CLOSE",   X_K2C - 0.28, Y_COIL - 0.48, 0.15)
-    T("3TG1010-0BB4", X_K2C - 0.32, Y_COIL - 0.68, 0.12)
-    desc_box(X_K2C, Y_COIL - 1.16)
-    L(X_K2C, Y_COIL - 0.32, X_K2C, Y_BOT_BUS)        # wire from coil A2 to 0V bus
+    # ── K2 CLOSE coil rung (X=218.43) — 8 segments matching örnek ───────
+    L(218.43, 104.46, 218.43, 105.13)
+    L(218.43, 104.36, 218.43, 103.14)
+    BLK('NK', 218.43, Y_NK)
+    L(218.43, 103.04, 218.43, Y_NK)
+    L(218.43, 102.24, 218.43, 102.04)
+    L(218.43, 101.94, 218.43, 100.76)
+    BLK('BOBIN', 218.43, Y_COIL)
+    L(218.43, 100.66, 218.43, Y_COIL)
+    L(218.43, Y_0VI, 218.43, Y_0V)
+    L(218.48, 102.56, 218.14, 102.56)
+    BLK('role aciklama', 218.43, 98.84)
+    T("0.4", 218.88, 106.65, 0.14)
+    T("0.1", 218.88, 105.25, 0.14)
+    T("A2",  218.53, 99.55, 0.14)
+    T("A1",  218.53, 100.05, 0.14)
+    T("9",   218.58, 100.64, 0.12)
+    T("14",  218.58, 101.94, 0.12)
+    T("13",  218.58, 103.04, 0.12)
+    T("8",   218.58, 104.34, 0.12)
+    T("travel limit", 218.11, 101.81, 0.12)
+    T("switch", 218.25, 101.96, 0.12)
+    T("11K10", 218.13, 99.77, 0.14)
+    T("CLOSE", 218.17, 97.51, 0.14)
+    T("3TG1010-0BB4", 217.87, 97.76, 0.14)
+    T("C",    218.17, 102.65, 0.12)
+
+    # ── Additional DI/DQ channel labels (to right of K2) ─────────────────
+    T("0.5", 220.08, 106.65, 0.14)
+    T("0.2", 220.68, 105.25, 0.14)
+    T("0.6", 221.28, 106.65, 0.14)
+    T("0.3", 222.48, 105.25, 0.14)
+    T("0.7", 222.48, 106.65, 0.14)
+    T("1.0", 223.68, 106.65, 0.14)
+    T("0.4", 224.28, 105.25, 0.14)
+    T("OUTPUT", 224.4, 105.61, 0.16)
+    T("INPUT",  224.44, 106.24, 0.16)
+    T("1.1", 224.88, 106.65, 0.14)
+    T("0.5", 226.08, 105.25, 0.14)
+    T("1.2", 226.08, 106.65, 0.14)
+    T("2L",  226.71, 105.25, 0.14)
+    T("1.3", 227.28, 106.65, 0.14)
+    T("0.6", 227.88, 105.25, 0.14)
+    T("1.4", 228.48, 106.65, 0.14)
+    T("0.7", 229.68, 105.25, 0.14)
+    T("1.5", 229.68, 106.65, 0.14)
+    T("1.0", 231.48, 105.25, 0.14)
+    T("1.1", 233.28, 105.25, 0.14)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # TERMINAL / WIRING SECTION  (X ≈ 228–255)  — örnek style
-    # No OK block per row; use text columns + small circles + cable_lbl blocks
+    # TERMINAL / WIRING SECTION  (X ≈ 228–255)  — exact örnek coordinates
     # ═══════════════════════════════════════════════════════════════════════
 
-    T("OPEN CLOSE",       X_X1 + 0.5, Y_TOP - 0.50, 0.22)
-    T("FROM TOUCH SCREEN", X_X1 + 0.5, Y_TOP - 0.78, 0.18)
+    # ── OK power supply terminals + bus extension to them ─────────────────
+    terminal(235.42, Y_PROT)           # L- terminal
+    terminal(235.42, Y_LP)             # L+ terminal
+    L(234.25, Y_PROT, 235.42, Y_PROT) # bus extension to OK terminal
+    T("+",    235.3,  112.78, 0.16)
+    T("-",    235.31, 112.42, 0.16)
+    T("11/0", 235.67, 112.75, 0.14)
+    T("11/0", 235.67, 112.36, 0.14)
 
-    # 1X1 — cabinet terminal strip header
-    T(P + "X1", X_X1 - 0.5, Y_TOP - 1.10, 0.22)
+    # PLC boundary near terminal section
+    L(234.93, 105.13, 235.41, 105.13)
+    L(234.93, 105.53, 235.56, 105.53)
+    L(234.93, 106.53, 235.26, 106.53)
+    L(234.93, 106.93, 235.41, 106.93)
+    # Terminal section arcs (örnek ET4 entities)
+    A(234.81, 105.58, 0.75)
+    A(236.01, 106.48, 0.75)
 
-    # Vertical separator line between cabinet and field sections
-    L(X_X1 + 2.0, Y_TOP - 0.5, X_X1 + 2.0, Y_BOT + 0.5)
+    # External fire system label
+    T("EXTERNAL FIRE FIGHTING SYSTEM", 243.44, 112.29, 0.18)
+    T("CONTROL CABINET", 244.6, 111.89, 0.16)
+    T("1X5", 245.53, 111.24, 0.14)
 
-    # Cabinet terminal labels (1X1) — text only, small circles at connection points
-    cab_rows = [
-        ("1",  "L1",      "Motor"),
-        ("2",  "L2",      "Motor"),
-        ("3",  "L3",      "Motor"),
-        ("PE", "PE",      "Motor"),
-        ("26", "HTR L",   "Heater"),
-        ("27", "HTR N",   "Heater"),
-        ("10", "C",       "travel limit"),
-        ("11", "nc",      "trav OPEN"),
-        ("12", "opened",  "trav OPEN NO"),
-        ("13", "C",       "travel limit"),
-        ("14", "nc",      "trav CLOSE"),
-        ("15", "closed",  "trav CLOSE NO"),
-        ("40", "therm +", "thermostat"),
-        ("41", "therm -", "thermostat"),
-    ]
-    Y_ROW_START = Y_TOP - 1.8
-    ROW_STEP = 0.55
-    for i, (no, sig, desc) in enumerate(cab_rows):
-        ty = Y_ROW_START - i * ROW_STEP
-        C(X_X1 + 0.05, ty + 0.05, 0.05)
-        T(no,   X_X1 - 0.40, ty,       0.20)
-        T(sig,  X_X1 + 0.20, ty,       0.18)
-        T(desc, X_X1 + 0.80, ty,       0.15)
-        # Horizontal line from cabinet side toward field
-        L(X_X1 + 2.1, ty + 0.05, X_W1 - 0.8, ty + 0.05)
-
-    # OK terminals at terminal section entry (L+ bus level) — matches örnek positions
-    terminal(235.42, 112.36)
-    terminal(235.42, 112.75)
-    # Travel limit switch contacts drawn in terminal/cable section
-    BLK("NK", X_W1 + 2.12, 102.56)   # OPEN limit NC (terminal 11)
-    BLK("NK", X_W1 + 3.32, 102.56)   # CLOSE limit NC (terminal 14)
-    BLK("NA", X_W2 + 0.42, 102.56)   # OPEN limit NO (terminal 12)
-    BLK("NA", X_W2 + 1.02, 102.56)   # CLOSE limit NO (terminal 15)
-
-    # ── W1 power cable column (motor L1/L2/L3/PE + heater 26/27) ──────────
+    # ── Wire (cable label) blocks + vertical connections ──────────────────
     cable_lbl(247.32, 107.8)
-    T("W1",         X_W1 - 0.15, 108.0, 0.22)
-    T("7x1.5mm2",   X_W1 - 0.30, 107.7, 0.16)
+    T("7x1.5mm2",  247.22, 107.86, 0.16)
+    T("1W5-3",     247.4,  106.89, 0.14)
+    L(247.32, 107.8, 247.32, 110.21)   # up to upper bus
+    L(247.32, 106.6, 247.32, 104.26)   # down to connector top bus
 
-    # Vertical cable conductor column — top row
-    w1_top = [("26","HTR L"),("27","HTR N"),("1","L1"),("2","L2"),("3","L3"),("PE","PE")]
-    for j, (tn, lbl) in enumerate(w1_top):
-        cx = X_W1 - 0.30 + j * 0.30
-        C(cx, 110.75, 0.05)
-        T(tn,  cx - 0.08, 110.85, 0.16)
-    # Bottom row labels
-    for j, (tn, lbl) in enumerate(w1_top):
-        cx = X_W1 - 0.30 + j * 0.30
-        T(lbl, cx - 0.18, 110.40, 0.13)
-
-    # ── W2 signal cable column (travel limits + thermostat) ───────────────
     cable_lbl(250.16, 107.8)
-    T("W2",             X_W2 - 0.15, 108.0, 0.22)
-    T("4x2x0.75mm2",    X_W2 - 0.40, 107.7, 0.16)
+    T("4x2x0.75mm2", 250.06, 107.86, 0.16)
+    T("1W5-4",       250.24, 106.89, 0.14)
+    L(250.16, 107.8, 250.16, 110.21)
+    L(250.16, 106.6, 250.16, 104.26)
 
-    w2_top = [("10","C"),("11","nc"),("12","opnd"),("13","C"),
-              ("14","nc"),("15","clsd"),("40","+"),("41","-")]
-    for j, (tn, lbl) in enumerate(w2_top):
-        cx = X_W2 - 0.30 + j * 0.30
-        C(cx, 110.75, 0.05)
-        T(tn,  cx - 0.08, 110.85, 0.16)
-    for j, (tn, lbl) in enumerate(w2_top):
-        cx = X_W2 - 0.30 + j * 0.30
-        T(lbl, cx - 0.14, 110.40, 0.13)
+    # ── Cable connector assembly body (X=246.57-251.67, Y=103.36-103.96) ─
+    L(246.57, 103.36, 251.67, 103.36)   # bottom rail
+    L(246.57, 103.96, 251.67, 103.96)   # top rail
+    L(246.57, 103.36, 246.57, 103.96)   # left wall
+    for _xd in (246.87, 247.17, 247.47, 247.77, 248.07, 248.37, 248.67,
+                248.97, 249.27, 249.57, 249.87, 250.17, 250.47, 250.77,
+                251.07, 251.37):
+        L(_xd, 103.36, _xd, 103.96)
+    L(251.67, 103.36, 251.67, 103.96)   # right wall
 
-    # AQ actuator label + terminal column
-    T(valve_label.upper(), X_AQ - 0.5, Y_TOP - 1.10, 0.22)
-    T("Bernard " + aq_key, X_AQ - 0.5, Y_TOP - 1.38, 0.18)
-    T("SWITCH  3x400VAC",  X_AQ - 0.5, Y_TOP - 1.60, 0.16)
+    # ── W1 cable group conductors (power: L1/L2/L3/PE/26/27) ─────────────
+    # Top bus for W1 group (Y=104.26)
+    L(247.92, 104.26, 246.72, 104.26)
+    # Upper bus for W1 group (Y=110.21)
+    L(247.92, 110.21, 246.72, 110.21)
 
-    # AQ terminal numbers as a vertical column (field side, text only)
-    aq_terms = [
-        ("1","L1"),("2","L2"),("3","L3"),("PE","PE"),
-        ("26","HTR L"),("27","HTR N"),
-        ("10","C"),("11","nc"),("12","OPENED"),
-        ("13","C"),("14","nc"),("15","CLOSED"),
-        ("40","therm +"),("41","therm -"),
-    ]
-    for i, (tn, lbl) in enumerate(aq_terms):
-        ty = Y_ROW_START - i * ROW_STEP
-        C(X_AQ - 0.05, ty + 0.05, 0.05)
-        T(tn,  X_AQ - 0.50, ty, 0.18)
-        T(lbl, X_AQ + 0.05, ty, 0.16)
+    # Individual W1 conductors (top stubs + upper stubs)
+    for _xc, _diag_coords in [
+        (246.72, (246.72, 102.59, 246.84, 102.44)),
+        (247.02, None),
+        (247.32, (247.32, 102.59, 247.21, 102.44)),
+        (247.62, None),
+        (247.92, None),
+    ]:
+        L(_xc, 104.11, _xc, 103.96)
+        L(_xc, 104.26, _xc, 104.11)
+        L(_xc, 110.36, _xc, 110.21)
+        L(_xc, 110.51, _xc, 110.36)
+        if _diag_coords:
+            L(*_diag_coords)
+    # W1 straight bottom conductors
+    L(247.02, 103.36, 247.02, 102.49)
+    L(247.62, 101.81, 247.62, 103.36)
+    L(247.62, 101.81, 247.92, 101.81)
+    L(247.92, 101.96, 247.92, 101.81)
+    L(247.92, 103.36, 247.92, 102.56)   # to NK
+    L(246.72, 103.36, 246.72, 102.59)
+    L(247.32, 103.36, 247.32, 102.59)
+    # Extra dividers W1 area
+    L(248.07, 103.36, 247.77, 103.36)
 
-    # 3PH supply label
-    T("3PH",    X_AQ - 0.5, Y_BOT + 1.6, 0.20)
-    T("400VAC", X_AQ - 0.5, Y_BOT + 1.3, 0.20)
-    T("50Hz",   X_AQ - 0.5, Y_BOT + 1.0, 0.18)
+    # ── NK/NA travel limit contacts (field side) ───────────────────────────
+    BLK("NK", 249.12, 102.56)           # OPEN NC limit
+    BLK("NK", 250.32, 102.56)           # CLOSE NC limit
+    BLK("NA", 250.92, 102.56)           # OPEN NO limit
+    BLK("NA", 251.52, 102.56)           # CLOSE NO limit
+    L(248.92, 102.26, 249.17, 102.26)
+    L(250.12, 102.26, 250.37, 102.26)
+    L(250.72, 102.26, 250.86, 102.26)
+    L(251.32, 102.26, 251.46, 102.26)
 
-    # Phoenix terminal type labels
-    T("2002-1611 (16mm2 grey)", X_X1 + 0.3, Y_BOT + 1.0, 0.16)
-    T("2002-1201 (2.5mm2 grey)", X_X1 + 0.3, Y_BOT + 0.7, 0.16)
-    T("2002-2201 (PE GN/YE)",    X_X1 + 0.3, Y_BOT + 0.4, 0.16)
+    # ── W2 cable group conductors (signal: limit switches, thermostat) ────
+    # Top bus for W2 group (Y=104.26)
+    L(251.52, 104.26, 248.81, 104.26)
+    # Upper bus for W2 group (Y=110.21)
+    L(251.21, 110.21, 249.11, 110.21)
+
+    # W2 conductors with top stubs, upper stubs, and bottom connections
+    for _xc, _bot_y, _has_upper in [
+        (248.82, 101.81, True),
+        (249.12, 102.56, False),
+        (250.02, 101.81, True),
+        (250.32, 102.56, False),
+        (250.62, 101.81, False),
+        (250.92, 102.56, False),
+        (251.22, 101.81, False),
+        (251.52, 102.56, True),
+    ]:
+        L(_xc, 104.11, _xc, 103.96)
+        L(_xc, 104.26, _xc, 104.11)
+        if _bot_y == 101.81:
+            L(_xc, 101.81, _xc, 103.36)
+        else:
+            L(_xc, 101.96, _xc, 101.81)
+            L(_xc, 103.36, _xc, 102.56)
+    for _bot_x, _nxt_x in [(248.82, 249.12), (250.02, 250.32), (250.62, 250.92), (251.22, 251.52)]:
+        L(_bot_x, 101.81, _nxt_x, 101.81)
+
+    # Upper stubs for W2 group
+    for _xc in (249.11, 249.41, 249.71, 250.01, 250.31, 250.61, 250.91, 251.21):
+        L(_xc, 110.36, _xc, 110.21)
+        L(_xc, 110.51, _xc, 110.36)
+
+    # W2 dividers
+    for _xd in (249.27, 249.57, 249.87, 250.17, 250.47, 250.77, 251.07, 251.37, 251.67):
+        pass   # already drawn as connector body dividers above
+
+    # ── Terminal labels — W1 power cable ──────────────────────────────────
+    for _x, _tn, _tb, _tt, _tu in [
+        (246.72, "1",  "1", "1",  "14"),
+        (247.02, "2",  "2", "2",  "15"),
+        (247.32, "3",  "3", "3",  "16"),
+        (247.62, "4",  "26","4",  "17"),
+        (247.92, "5",  "27","5",  "18"),
+    ]:
+        T(_tn,  _x - 0.10, 104.31, 0.12)
+        T(_tb,  _x - 0.10, 103.59, 0.12)
+        T(_tt,  _x - 0.10, 110.06, 0.12)
+        T(_tu,  _x - 0.10, 110.75, 0.12)
+
+    # W1 cable labels
+    T("400VAC", 246.77, 101.42, 0.14)
+    T("50Hz",   246.85, 101.28, 0.14)
+    T("3PH",    246.89, 101.15, 0.14)
+    T("3PH",    246.89, 101.94, 0.14)
+    T("M",      246.91, 102.14, 0.14)
+    T("400VAC", 247.68, 101.07, 0.14)
+    T("heater", 247.82, 101.11, 0.14)
+    T(valve_label.upper() + " W1", 247.8, 100.49, 0.14)
+
+    # ── Terminal labels — W2 signal cable ─────────────────────────────────
+    for _x, _tn, _tb, _tt, _tu in [
+        (248.82, "1", "10", "1", "19"),
+        (249.12, "2", "11", "2", "20"),  # NK-NC opened
+        (250.02, "3", "13", "4", "21"),
+        (250.32, "4", "14", "5", "22"),
+        (250.62, "5", "20", "6", "23"),
+        (250.92, "6", "22", "7", "24"),
+        (251.22, "7", "23", "8", "25"),
+        (251.52, "8", "25", None, "26"),
+    ]:
+        T(_tn,  _x - 0.10, 104.31, 0.12)
+        T(_tb,  _x - 0.10, 103.59, 0.12)
+        if _tt:
+            T(_tt, _x - 0.10, 110.06, 0.12)
+        T(_tu,  _x - 0.10, 110.75, 0.12)
+
+    # Travel limit and contact labels (field side)
+    T("travel limit", 248.88, 100.95, 0.12)
+    T("switch",       249.02, 101.12, 0.12)
+    T("opened",       249.14, 101.09, 0.12)
+    T("nc",           248.92, 101.96, 0.12)
+    T("1",            249.17, 101.96, 0.12)
+    T("2",            249.17, 102.51, 0.12)
+    T("travel limit", 250.08, 100.95, 0.12)
+    T("switch",       250.22, 101.12, 0.12)
+    T("closed",       250.34, 101.11, 0.12)
+    T("nc",           250.12, 101.96, 0.12)
+    T("1",            250.37, 101.96, 0.12)
+    T("2",            250.37, 102.51, 0.12)
+    T("extra limit",  250.68, 100.96, 0.12)
+    T("switch",       250.82, 101.12, 0.12)
+    T("opened",       250.94, 101.09, 0.12)
+    T("nc",           250.72, 101.96, 0.12)
+    T("1",            250.97, 101.96, 0.12)
+    T("3",            250.97, 102.51, 0.12)
+    T("extra limit",  251.28, 100.96, 0.12)
+    T("switch",       251.42, 101.12, 0.12)
+    T("closed",       251.54, 101.11, 0.12)
+    T("nc",           251.32, 101.96, 0.12)
+    T("1",            251.57, 101.96, 0.12)
+    T("3",            251.57, 102.51, 0.12)
 
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
