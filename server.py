@@ -3312,7 +3312,7 @@ def draw_single_valve(
     X_HTR = 202.8;  Y_HTR_MCB = 107.3
 
     # Control section — 24VDC buses are HORIZONTAL (top and bottom)
-    X_BUS_L = 209.0   # left edge of 24VDC horizontal buses
+    X_BUS_L = 208.0   # left edge of 24VDC horizontal buses (extended left for A1/therm rungs)
     X_BUS_R = 220.5   # right edge of 24VDC horizontal buses
     Y_TOP_BUS = 112.3  # 24VDC+ (L+) horizontal bus Y position
     Y_BOT_BUS = 99.3   # 0V (M) horizontal bus Y position
@@ -3534,6 +3534,27 @@ def draw_single_valve(
     T(P + "Q1",        X_OL_AUX_R - 0.44, Y_STAT_NA - 0.18, 0.12)
     L(X_OL_AUX_R, Y_STAT_NA - 0.40, X_OL_AUX_R, Y_PLC_T + 0.10)
     T("I0.2",          X_OL_AUX_R - 0.26, Y_PLC_T + 0.08, 0.11)
+
+    # ── Protection rungs left of bus: A1 phase monitor (I0.3) and thermostat (I0.4) ──
+    X_A1_R    = 208.46   # A1 phase monitor NO contact (closes when phases OK)
+    X_THERM_R = 208.81   # AQ thermostat contact (terminals 40-41)
+    Y_PROT_NA = 111.31   # Contact Y level (matches örnek position)
+
+    dot(X_A1_R, Y_TOP_BUS)
+    L(X_A1_R, Y_TOP_BUS, X_A1_R, Y_PROT_NA + 0.40)
+    BLK('NA', X_A1_R, Y_PROT_NA)
+    T(P + "A1",        X_A1_R - 0.36, Y_PROT_NA - 0.18, 0.12)
+    L(X_A1_R, Y_PROT_NA - 0.40, X_A1_R, Y_PLC_T + 0.10)
+    T("I0.3",          X_A1_R - 0.26, Y_PLC_T + 0.08, 0.11)
+
+    dot(X_THERM_R, Y_TOP_BUS)
+    L(X_THERM_R, Y_TOP_BUS, X_THERM_R, Y_PROT_NA + 0.40)
+    BLK('NA', X_THERM_R, Y_PROT_NA)
+    T("40",            X_THERM_R + 0.08, Y_PROT_NA + 0.25, 0.11)
+    T("41",            X_THERM_R + 0.08, Y_PROT_NA - 0.03, 0.11)
+    T("therm",         X_THERM_R - 0.50, Y_PROT_NA - 0.18, 0.12)
+    L(X_THERM_R, Y_PROT_NA - 0.40, X_THERM_R, Y_PLC_T + 0.10)
+    T("I0.4",          X_THERM_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
     # ── PLC DQ output bus connecting to K1/K2 rung tops ──────────────────
     # In the örnek, PLC DQ outputs feed the coil rungs at this Y level.
