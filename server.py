@@ -3291,25 +3291,17 @@ def draw_single_valve(
     def contactor(x, y):   BLK("KON3P", x, y)           # 3-pole contactor
 
     # ── COORDINATE CONSTANTS  (örnek scale: 60:1 on A1) ────────────────────
-    # Power section — match örnek's exact X positions
-    X_L1 = 195.5;  X_L2 = 195.9;  X_L3 = 196.3
-    Y_SUPPLY = 112.7
+    # Power section — exact values from örnek valf çizimi.dwg block/wire analysis
+    X_MCB = 195.74; Y_MCB = 111.09  # "3P FUSE" block insertion (centre pole = L2)
+    X_MP  = 198.77; Y_MP  = 111.09  # "CB_TM" block insertion (centre pole = L2)
 
-    X_MCB = 195.7;  Y_MCB = 111.1   # "3P FUSE" block
-    X_MP  = 198.8;  Y_MP  = 111.1   # "CB_TM" block (same level as MCB)
-
-    # Phase relay — positioned to the RIGHT of motor protection (matching örnek)
+    # Phase relay
     X_RELAY = 203.0;  Y_RELAY = 111.1
     X_RELAY_L = X_RELAY - 0.5;  X_RELAY_R = X_RELAY + 0.9
-    Y_RELAY_T = Y_RELAY + 0.45; Y_RELAY_B = Y_RELAY - 0.45
+    Y_RELAY_T = Y_RELAY + 0.45;  Y_RELAY_B = Y_RELAY - 0.45
 
-    X_K1  = 198.8;  X_K2  = 200.7;  Y_K = 107.3   # contactor blocks
-    Y_KLESIG = 104.8                                  # motor KLESIG strip Y
-    X_KLESIG_L = X_L1;  X_KLESIG_R = X_L3 + 1.2    # KLESIG span
-    X_MOT = 198.8;  Y_MOT = 102.5   # motor circle centre, r=0.55
-
-    # Heater MCB branch (right of contactors)
-    X_HTR = 202.8;  Y_HTR_MCB = 107.3
+    X_K1  = 198.77; X_K2  = 200.72; Y_K = 107.31  # contactor block insertions
+    X_MOT = 198.77; Y_MOT = 102.5   # motor circle centre, r=0.55
 
     # Control section — 24VDC buses are HORIZONTAL (top and bottom)
     X_BUS_L = 208.0   # left edge of 24VDC horizontal buses (extended left for A1/therm rungs)
@@ -3322,7 +3314,7 @@ def draw_single_valve(
     Y_PLC_T = 107.0;  Y_PLC_B = 103.0
 
     # Coil columns — vertical rungs (matching örnek's vertical layout)
-    X_K1C = 217.2;  X_K2C = 218.4   # K1 OPEN / K2 CLOSE coil column X positions
+    X_K1C = 217.23; X_K2C = 218.43  # K1 OPEN / K2 CLOSE coil column X positions
     Y_RUNG_TOP = 104.79  # K1/K2 rung top — PLC DQ output connection level
     Y_NK   = 102.84  # electrical interlock NK contact Y
     Y_COIL = 100.0   # BOBIN block centre Y
@@ -3337,26 +3329,69 @@ def draw_single_valve(
 
     # ═══════════════════════════════════════════════════════════════════════
     # POWER SECTION  (X ≈ 195–208)
+    # Layout matches örnek exactly: 3 staggered supply buses (L1/L2/L3 at
+    # different Y), CB_TM poles at X=198.37/198.77/199.17, reversing pair
+    # K1/K2 with phase swap for motor direction.
     # ═══════════════════════════════════════════════════════════════════════
 
-    # Supply buses R/S/T
-    for xb, lbl in ((X_L1, "R"), (X_L2, "S"), (X_L3, "T")):
-        L(xb, Y_SUPPLY, xb, Y_MCB + 0.8)
-        T(lbl, xb - 0.12, Y_SUPPLY + 0.15, 0.22)
-        dot(xb, Y_SUPPLY)
-    T("400V 50Hz", X_L1 - 0.2, Y_SUPPLY + 0.5, 0.22)
-    # Horizontal supply bus
-    L(X_L1, Y_SUPPLY, X_L3 + 0.5, Y_SUPPLY)
+    # Pole X positions — 3P FUSE poles (insertion at X_MCB, centre = L2)
+    X_F_L1 = X_MCB - 0.40   # 195.34
+    X_F_L2 = X_MCB           # 195.74
+    X_F_L3 = X_MCB + 0.40   # 196.14
 
-    # F1 Main MCB
+    # CB_TM + K1 contactor poles (insertion at X_MP = X_K1, centre = L2)
+    X_L1 = X_MP - 0.40      # 198.37
+    X_L2 = X_MP              # 198.77
+    X_L3 = X_MP + 0.40      # 199.17
+
+    # K2 contactor poles (insertion at X_K2, centre = L2)
+    X_K2_L1 = X_K2 - 0.40   # 200.32
+    X_K2_L2 = X_K2            # 200.72
+    X_K2_L3 = X_K2 + 0.40   # 201.12
+
+    # Staggered supply bus Y (one horizontal bus per phase, from örnek wire data)
+    Y_BUS_L1 = 112.74
+    Y_BUS_L2 = 112.39
+    Y_BUS_L3 = 112.04
+
+    # Key Y levels from örnek wire analysis
+    Y_FUSE_BOT  = 110.49   # 3P FUSE load-side terminal
+    Y_CB_BOT_L1 = 109.54   # CB_TM load-side L1 (block geometry)
+    Y_CB_BOT_L2 = 109.69   # CB_TM load-side L2
+    Y_CB_BOT_L3 = 109.54   # CB_TM load-side L3
+    Y_CROSS_L1  = 108.06   # K1–K2 cross-bus L1 (distributes CB_TM output to both contactors)
+    Y_CROSS_L2  = 108.46   # K1–K2 cross-bus L2
+    Y_CROSS_L3  = 108.86   # K1–K2 cross-bus L3
+    Y_K_BOT     = 106.71   # contactor load-side output terminal
+    Y_MOT_L1    = 105.20   # motor junction L1 (phase-swap cross point)
+    Y_MOT_L2    = 105.60   # motor junction L2
+    Y_MOT_L3    = 106.00   # motor junction L3
+    Y_MOT_ENTRY = 104.49   # motor terminal entry Y
+    Y_HTR_KLESIG = 107.24  # heater KLESIG terminal strip Y
+
+    # ── Three staggered supply buses (horizontal, L1/L2/L3 at different Y) ──
+    T("400V 50Hz", X_F_L1 - 0.2, Y_BUS_L1 + 0.5, 0.22)
+    T("R/L1", X_F_L1 - 0.15, Y_BUS_L1 - 0.15, 0.18)
+    T("S/L2", X_F_L2 - 0.15, Y_BUS_L2 - 0.15, 0.18)
+    T("T/L3", X_F_L3 - 0.15, Y_BUS_L3 - 0.15, 0.18)
+    L(X_F_L1, Y_BUS_L1, 205.1, Y_BUS_L1)
+    L(X_F_L2, Y_BUS_L2, 204.7, Y_BUS_L2)
+    L(X_F_L3, Y_BUS_L3, 204.3, Y_BUS_L3)
+
+    # ── F1 Main 3P FUSE — incoming line fuse ─────────────────────────────
     mcb_3p(X_MCB, Y_MCB)
     T(P + "F1", X_MCB - 0.8, Y_MCB + 0.55, 0.22)
     T(main_mcb, X_MCB - 0.8, Y_MCB + 0.30, 0.18)
     T("16 A", X_MCB - 0.8, Y_MCB + 0.08, 0.20)
-    for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_MCB + 0.8, xb, Y_MCB - 0.8)
+    # Fuse → supply bus (each pole at its own bus Y)
+    L(X_F_L1, Y_BUS_L1, X_F_L1, Y_MCB)
+    L(X_F_L2, Y_BUS_L2, X_F_L2, Y_MCB)
+    L(X_F_L3, Y_BUS_L3, X_F_L3, Y_MCB)
+    # Incoming supply from cable entry (below fuse load side → Y_MOT_ENTRY)
+    for xf in (X_F_L1, X_F_L2, X_F_L3):
+        L(xf, Y_FUSE_BOT, xf, Y_MOT_ENTRY)
 
-    # Phase relay A1 — box to the RIGHT of motor protection (matching örnek layout)
+    # ── Phase relay A1 box ────────────────────────────────────────────────
     L(X_RELAY_L, Y_RELAY_T, X_RELAY_R, Y_RELAY_T)
     L(X_RELAY_R, Y_RELAY_T, X_RELAY_R, Y_RELAY_B)
     L(X_RELAY_R, Y_RELAY_B, X_RELAY_L, Y_RELAY_B)
@@ -3364,70 +3399,91 @@ def draw_single_valve(
     T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
     T("3UG4512-1AR20", X_RELAY_L + 0.05, Y_RELAY_B - 0.22, 0.16)
     T("PHASE CONTROL", X_RELAY_L + 0.05, Y_RELAY_B - 0.42, 0.16)
-    # L1/L2/L3 input labels on top of phase relay
-    for xi, lab in zip((X_RELAY_L + 0.1, X_RELAY_L + 0.5, X_RELAY_L + 0.9),
-                       ("L1", "L2", "L3")):
-        T(lab, xi, Y_RELAY_T + 0.38, 0.15)
-        L(xi + 0.05, Y_RELAY_T + 0.35, xi + 0.05, Y_RELAY_T)
-    # NC output wire from relay (goes to 1X1 terminal for control circuit)
-    L(X_RELAY_R, Y_RELAY, X_RELAY_R + 0.4, Y_RELAY)
-    # Bus connections from MCB output to phase lines (before motor prot and relay)
-    for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_MCB - 0.8, xb, Y_MP + 0.8)
+    # L1/L2/L3 supply connections at right end of buses (vertical lines)
+    for xr, ybus in ((205.1, Y_BUS_L1), (204.7, Y_BUS_L2), (204.3, Y_BUS_L3)):
+        L(xr, 105.88, xr, ybus)
+    L(X_RELAY_R, Y_RELAY, X_RELAY_R + 0.4, Y_RELAY)  # NC output to control circuit
 
-    # Q1 Motor protection
+    # ── Q1 Motor protection (CB_TM) ───────────────────────────────────────
+    # Poles at X_L1/L2/L3; each pole taps the supply bus with a BENEK junction
     motor_prot(X_MP, Y_MP)
     T(P + "Q1", X_MP + 0.8, Y_MP + 0.55, 0.22)
     T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
     T(f"Ir={rv_range}A", X_MP + 0.8, Y_MP + 0.08, 0.20)
     T(f"set={rv_set}A", X_MP + 0.8, Y_MP - 0.15, 0.20)
     T("3RV2901-1D", X_MP + 0.8, Y_MP - 0.38, 0.16)
-    for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_MP + 0.8, xb, Y_MP - 0.8)
-        L(xb, Y_MP - 0.8, xb, Y_K + 0.3)
-        dot(xb, Y_MP - 0.8)
+    # CB_TM line-side to supply bus (BENEK at junction)
+    L(X_L1, Y_MCB, X_L1, Y_BUS_L1);  dot(X_L1, Y_BUS_L1)
+    L(X_L2, Y_MCB, X_L2, Y_BUS_L2);  dot(X_L2, Y_BUS_L2)
+    L(X_L3, Y_MCB, X_L3, Y_BUS_L3);  dot(X_L3, Y_BUS_L3)
+    # CB_TM load-side to K1 input (continuous wire through cross-bus BENEK)
+    L(X_L1, Y_CB_BOT_L1, X_L1, Y_K)
+    L(X_L2, Y_CB_BOT_L2, X_L2, 107.24)  # L2 K1 input at 107.24 (block geometry)
+    L(X_L3, Y_CB_BOT_L3, X_L3, Y_K)
 
-    # K1 OPEN contactor
+    # ── K1–K2 cross-bus (distributes CB_TM output to both contactors) ────
+    L(X_L1, Y_CROSS_L1, X_K2_L1, Y_CROSS_L1);  dot(X_L1, Y_CROSS_L1)
+    L(X_L2, Y_CROSS_L2, X_K2_L2, Y_CROSS_L2);  dot(X_L2, Y_CROSS_L2)
+    L(X_L3, Y_CROSS_L3, X_K2_L3, Y_CROSS_L3);  dot(X_L3, Y_CROSS_L3)
+
+    # ── K1 OPEN contactor ────────────────────────────────────────────────
     contactor(X_K1, Y_K)
     T(P + "K1", X_K1 - 0.8, Y_K + 0.30, 0.22)
     T("OPEN", X_K1 - 0.8, Y_K + 0.10, 0.20)
 
-    # K2 CLOSE contactor
+    # ── K2 CLOSE contactor ───────────────────────────────────────────────
     contactor(X_K2, Y_K)
     T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
     T("CLOSE", X_K2 + 0.5, Y_K + 0.10, 0.20)
     T("3TG1010-0BB4", X_K1 - 0.3, Y_K - 0.55, 0.17)
-
-    # Mechanical interlock bar (3TG1010 built-in — no electrical interlock)
     L(X_K1 + 0.7, Y_K, X_K2, Y_K)
     T("MECH. INTERLOCK", X_K1 + 0.75, Y_K - 0.16, 0.11)
 
-    # Wires from contactors to motor
-    for xb in (X_L1, X_L2, X_L3):
-        L(xb, Y_K - 0.3, xb, Y_MOT + 0.6)
-        dot(xb, Y_K - 0.3)
+    # K2 input wires from cross-bus to contactor top
+    L(X_K2_L1, Y_K, X_K2_L1, Y_CROSS_L1)
+    L(X_K2_L2, Y_K, X_K2_L2, Y_CROSS_L2)
+    L(X_K2_L3, Y_K, X_K2_L3, Y_CROSS_L3)
 
-    # Motor symbol + connections
+    # ── Contactor outputs + phase swap for reversing ──────────────────────
+    # K2 outputs go down to phase-swap junction Y
+    L(X_K2_L1, Y_K_BOT, X_K2_L1, Y_MOT_L3)  # K2 L1 → motor L3 junction
+    L(X_K2_L2, Y_K_BOT, X_K2_L2, Y_MOT_L2)  # K2 L2 → motor L2 junction
+    L(X_K2_L3, Y_K_BOT, X_K2_L3, Y_MOT_L1)  # K2 L3 → motor L1 junction
+    # Horizontal phase-swap cross-wires between K1 and K2 outputs
+    L(X_K2_L1, Y_MOT_L3, X_L3, Y_MOT_L3)   # K2 L1 ↔ K1 L3
+    L(X_K2_L2, Y_MOT_L2, X_L2, Y_MOT_L2)   # K2 L2 ↔ K1 L2
+    L(X_K2_L3, Y_MOT_L1, X_L1, Y_MOT_L1)   # K2 L3 ↔ K1 L1
+    # K1 output wires: from K1 load-side down through motor junction to motor entry
+    L(X_L1, Y_K_BOT, X_L1, Y_MOT_ENTRY)
+    L(X_L2, Y_K_BOT, X_L2, Y_MOT_ENTRY)
+    L(X_L3, Y_K_BOT, X_L3, Y_MOT_ENTRY)
+    # BENEK at motor junctions (where K2 cross-wire meets K1 output)
+    dot(X_L1, Y_MOT_L1)
+    dot(X_L2, Y_MOT_L2)
+    dot(X_L3, Y_MOT_L3)
+
+    # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, Y_MOT, 0.55)
     T("M", X_MOT - 0.12, Y_MOT - 0.10, 0.30)
     T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
-    # Valve name label under motor (matching örnek style)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN  CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
 
-    # Heater branch — branches off from L2 bus at contactor level
-    X_HTR_KLESIG = 201.5
-    Y_HTR_KLESIG = 107.24
-    dot(X_HTR_KLESIG + 0.1, Y_SUPPLY)               # junction at supply bus (heater entry)
-    L(X_L2, Y_K + 0.3, X_HTR_KLESIG, Y_K + 0.3)   # horizontal tap from L2
-    dot(X_L2, Y_K + 0.3)
-    T(P + "F3", X_HTR_KLESIG + 0.15, Y_K + 0.55, 0.18)
-    term_blk(X_HTR_KLESIG + 0.1, Y_HTR_KLESIG)
-    term_blk(X_HTR_KLESIG + 0.5, Y_HTR_KLESIG)
-    T("26", X_HTR_KLESIG + 0.05, Y_HTR_KLESIG - 0.28, 0.16)
-    T("27", X_HTR_KLESIG + 0.45, Y_HTR_KLESIG - 0.28, 0.16)
-    T("HEATER", X_HTR_KLESIG + 0.15, Y_HTR_KLESIG - 0.55, 0.16)
-    T("400VAC", X_HTR_KLESIG + 0.15, Y_HTR_KLESIG - 0.75, 0.16)
+    # ── Heater — taps directly from L2 and L3 supply buses ───────────────
+    # BENEK at bus tap points; KLESIG terminals at Y=107.24
+    X_HTR_L1 = 201.59   # heater wire 1 taps from L2 bus
+    X_HTR_L2 = 201.99   # heater wire 2 taps from L3 bus
+    dot(X_HTR_L1, Y_BUS_L2)
+    dot(X_HTR_L2, Y_BUS_L3)
+    L(X_HTR_L1, Y_BUS_L2, X_HTR_L1, Y_MOT_ENTRY)
+    L(X_HTR_L2, Y_BUS_L3, X_HTR_L2, Y_MOT_ENTRY)
+    term_blk(X_HTR_L1, Y_HTR_KLESIG)
+    term_blk(X_HTR_L2, Y_HTR_KLESIG)
+    T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
+    T("26", X_HTR_L1 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
+    T("27", X_HTR_L2 - 0.10, Y_HTR_KLESIG - 0.28, 0.16)
+    T("HEATER", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.55, 0.16)
+    T("400VAC", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.75, 0.16)
 
     # ═══════════════════════════════════════════════════════════════════════
     # CONTROL SECTION  (X ≈ 209–220)
@@ -3493,7 +3549,8 @@ def draw_single_valve(
     X_OPENED_R = 213.63   # AQ terminal 12 NO (OPEN travel limit) → PLC I0.0
     X_CLOSED_R = 214.83   # AQ terminal 14 NC (CLOSE travel limit) → PLC I0.1
     X_OL_AUX_R = 216.03   # Q1 OL aux NC contact (terms 11-14) → PLC I0.2
-    Y_STAT_NA  = 110.14   # Status NA contact Y; above PLC box top (Y_PLC_T=107)
+    Y_STAT_NA  = 110.14   # Status NA contact Y (OPENED/CLOSED travel limit rungs)
+    Y_OL_AUX   = 110.19   # OL_AUX contact Y (from örnek: slightly higher than STAT_NA)
 
     L(X_OPENED_R, Y_TOP_BUS, X_OPENED_R, Y_STAT_NA + 0.40)
     BLK('NA', X_OPENED_R, Y_STAT_NA)
@@ -3510,12 +3567,12 @@ def draw_single_valve(
     L(X_CLOSED_R, Y_STAT_NA - 0.40, X_CLOSED_R, Y_PLC_T + 0.10)
     T("I0.1",          X_CLOSED_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
-    L(X_OL_AUX_R, Y_TOP_BUS, X_OL_AUX_R, Y_STAT_NA + 0.40)
-    BLK('NA', X_OL_AUX_R, Y_STAT_NA)
-    T("11",            X_OL_AUX_R + 0.08, Y_STAT_NA + 0.25, 0.11)
-    T("14",            X_OL_AUX_R + 0.08, Y_STAT_NA - 0.03, 0.11)
-    T(P + "Q1",        X_OL_AUX_R - 0.44, Y_STAT_NA - 0.18, 0.12)
-    L(X_OL_AUX_R, Y_STAT_NA - 0.40, X_OL_AUX_R, Y_PLC_T + 0.10)
+    L(X_OL_AUX_R, Y_TOP_BUS, X_OL_AUX_R, Y_OL_AUX + 0.40)
+    BLK('NA', X_OL_AUX_R, Y_OL_AUX)
+    T("11",            X_OL_AUX_R + 0.08, Y_OL_AUX + 0.25, 0.11)
+    T("14",            X_OL_AUX_R + 0.08, Y_OL_AUX - 0.03, 0.11)
+    T(P + "Q1",        X_OL_AUX_R - 0.44, Y_OL_AUX - 0.18, 0.12)
+    L(X_OL_AUX_R, Y_OL_AUX - 0.40, X_OL_AUX_R, Y_PLC_T + 0.10)
     T("I0.2",          X_OL_AUX_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
     # ── Protection rungs left of bus: A1 phase monitor (I0.3) and thermostat (I0.4) ──
@@ -3612,8 +3669,8 @@ def draw_single_valve(
         L(X_X1 + 2.1, ty + 0.05, X_W1 - 0.8, ty + 0.05)
 
     # OK terminals at terminal section entry (L+ bus level) — matches örnek positions
-    terminal(235.4, 112.36)
-    terminal(235.4, 112.75)
+    terminal(235.42, 112.36)
+    terminal(235.42, 112.75)
     # Travel limit switch contacts drawn in terminal/cable section
     BLK("NK", X_W1 + 2.12, 102.56)   # OPEN limit NC (terminal 11)
     BLK("NK", X_W1 + 3.32, 102.56)   # CLOSE limit NC (terminal 14)
@@ -3621,7 +3678,7 @@ def draw_single_valve(
     BLK("NA", X_W2 + 1.02, 102.56)   # CLOSE limit NO (terminal 15)
 
     # ── W1 power cable column (motor L1/L2/L3/PE + heater 26/27) ──────────
-    cable_lbl(X_W1 - 0.5, 107.5)
+    cable_lbl(247.32, 107.8)
     T("W1",         X_W1 - 0.15, 108.0, 0.22)
     T("7x1.5mm2",   X_W1 - 0.30, 107.7, 0.16)
 
@@ -3637,7 +3694,7 @@ def draw_single_valve(
         T(lbl, cx - 0.18, 110.40, 0.13)
 
     # ── W2 signal cable column (travel limits + thermostat) ───────────────
-    cable_lbl(X_W2 - 0.5, 107.5)
+    cable_lbl(250.16, 107.8)
     T("W2",             X_W2 - 0.15, 108.0, 0.22)
     T("4x2x0.75mm2",    X_W2 - 0.40, 107.7, 0.16)
 
