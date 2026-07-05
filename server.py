@@ -3471,6 +3471,7 @@ def draw_single_valve(
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, Y_MOT, 0.55)
     T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.30)
+    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN CLOSE", X_MOT - 0.68, Y_MOT - 1.48, 0.16)
     # Motor terminal connection arcs (from örnek ET4 entities)
@@ -3495,6 +3496,8 @@ def draw_single_valve(
     L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
     T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
+    T(P + "F4", X_HTR_L2 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)   # second heater fuse
+    T("2A",     X_HTR_L1 + 0.1, Y_HTR_KLESIG + 0.15, 0.14)   # heater fuse current rating
     T("HEATER", 201.42, 101.31, 0.16)
     T("400VAC", 201.45, 101.61, 0.16)
     # Heater terminal numbers at connector plate (örnek exact positions)
@@ -3693,7 +3696,6 @@ def draw_single_valve(
     T("switch", 217.05, 101.93, 0.12)
     T("11K9", 216.99, 99.77, 0.14)
     T("OPEN", 217.02, 97.51, 0.14)
-    T("3TG1010-0BB4", 216.67, 97.76, 0.14)
     T("O",    216.98, 102.65, 0.12)
 
     # ── K2 CLOSE coil rung (X=218.43) — 8 segments matching örnek ───────
@@ -3720,7 +3722,6 @@ def draw_single_valve(
     T("switch", 218.25, 101.96, 0.12)
     T("11K10", 218.13, 99.77, 0.14)
     T("CLOSE", 218.17, 97.51, 0.14)
-    T("3TG1010-0BB4", 217.87, 97.76, 0.14)
     T("C",    218.17, 102.65, 0.12)
 
     # ── Additional DI/DQ channel labels (to right of K2) ─────────────────
@@ -3888,8 +3889,8 @@ def draw_single_valve(
     # W1 cable labels
     T("400VAC", 246.77, 101.42, 0.14)
     T("50Hz",   246.85, 101.28, 0.14)
-    T("3PH",    246.89, 101.15, 0.14)
-    T("3PH",    246.89, 101.94, 0.14)
+    T("3P~",    246.89, 101.15, 0.14)
+    T("3P~",    246.89, 101.94, 0.14)
     T("M",      246.91, 102.14, 0.14)
     T("400VAC", 247.68, 101.07, 0.14)
     T("heater", 247.82, 101.11, 0.14)
