@@ -3319,7 +3319,7 @@ def draw_single_valve(
 
     # PLC box
     X_PLC_L = 210.0;  X_PLC_R = 216.0
-    Y_PLC_T = 110.5;  Y_PLC_B = 103.0
+    Y_PLC_T = 107.0;  Y_PLC_B = 103.0
 
     # Coil columns — vertical rungs (matching örnek's vertical layout)
     X_K1C = 217.2;  X_K2C = 218.4   # K1 OPEN / K2 CLOSE coil column X positions
@@ -3500,6 +3500,40 @@ def draw_single_valve(
         ry = Y_PLC_T - 1.45 - i * 0.25
         T(addr, X_PLC_R - 0.72, ry, 0.16)
         T(lbl,  X_PLC_R - 0.08, ry, 0.12)
+
+    # ── Valve status contact rungs → PLC DI inputs ───────────────────────
+    # Three vertical rungs from 24VDC bus through NA contacts to PLC DI inputs.
+    # Matches örnek X positions (213.63/214.83/216.03) and NA contact at Y=110.14.
+    X_OPENED_R = 213.63   # AQ terminal 12 NO (OPEN travel limit) → PLC I0.0
+    X_CLOSED_R = 214.83   # AQ terminal 14 NC (CLOSE travel limit) → PLC I0.1
+    X_OL_AUX_R = 216.03   # Q1 OL aux NC contact (terms 11-14) → PLC I0.2
+    Y_STAT_NA  = 110.14   # Status NA contact Y; above PLC box top (Y_PLC_T=107)
+
+    dot(X_OPENED_R, Y_TOP_BUS)
+    L(X_OPENED_R, Y_TOP_BUS, X_OPENED_R, Y_STAT_NA + 0.40)
+    BLK('NA', X_OPENED_R, Y_STAT_NA)
+    T("12",            X_OPENED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
+    T("OPENED",        X_OPENED_R - 0.50, Y_STAT_NA - 0.18, 0.12)
+    T(valve_label.upper(), X_OPENED_R - 0.50, Y_STAT_NA - 0.33, 0.09)
+    L(X_OPENED_R, Y_STAT_NA - 0.40, X_OPENED_R, Y_PLC_T + 0.10)
+    T("I0.0",          X_OPENED_R - 0.26, Y_PLC_T + 0.08, 0.11)
+
+    dot(X_CLOSED_R, Y_TOP_BUS)
+    L(X_CLOSED_R, Y_TOP_BUS, X_CLOSED_R, Y_STAT_NA + 0.40)
+    BLK('NA', X_CLOSED_R, Y_STAT_NA)
+    T("14",            X_CLOSED_R + 0.10, Y_STAT_NA + 0.22, 0.11)
+    T("CLOSED",        X_CLOSED_R - 0.52, Y_STAT_NA - 0.18, 0.12)
+    L(X_CLOSED_R, Y_STAT_NA - 0.40, X_CLOSED_R, Y_PLC_T + 0.10)
+    T("I0.1",          X_CLOSED_R - 0.26, Y_PLC_T + 0.08, 0.11)
+
+    dot(X_OL_AUX_R, Y_TOP_BUS)
+    L(X_OL_AUX_R, Y_TOP_BUS, X_OL_AUX_R, Y_STAT_NA + 0.40)
+    BLK('NA', X_OL_AUX_R, Y_STAT_NA)
+    T("11",            X_OL_AUX_R + 0.08, Y_STAT_NA + 0.25, 0.11)
+    T("14",            X_OL_AUX_R + 0.08, Y_STAT_NA - 0.03, 0.11)
+    T(P + "Q1",        X_OL_AUX_R - 0.44, Y_STAT_NA - 0.18, 0.12)
+    L(X_OL_AUX_R, Y_STAT_NA - 0.40, X_OL_AUX_R, Y_PLC_T + 0.10)
+    T("I0.2",          X_OL_AUX_R - 0.26, Y_PLC_T + 0.08, 0.11)
 
     # ── PLC DQ output bus connecting to K1/K2 rung tops ──────────────────
     # In the örnek, PLC DQ outputs feed the coil rungs at this Y level.
