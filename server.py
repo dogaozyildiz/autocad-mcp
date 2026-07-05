@@ -3308,7 +3308,7 @@ def draw_single_valve(
     Y_RELAY_T = Y_RELAY + 0.45;  Y_RELAY_B = Y_RELAY - 0.45
 
     X_K1  = 198.77; X_K2  = 200.72; Y_K = 107.31  # contactor block insertions
-    X_MOT = 198.77; Y_MOT = 102.5   # motor circle centre, r=0.55
+    X_MOT = 198.77; Y_MOT = 103.29  # motor circle centre, r=0.55
 
     # Coil columns — vertical rungs (matching örnek's vertical layout)
     X_K1C = 217.23; X_K2C = 218.43  # K1 OPEN / K2 CLOSE coil column X positions
@@ -3361,13 +3361,16 @@ def draw_single_valve(
     Y_HTR_KLESIG = 107.24  # heater KLESIG terminal strip Y
 
     # ── Three staggered supply buses (horizontal, L1/L2/L3 at different Y) ──
-    T("400V 50Hz", X_F_L1 - 0.2, Y_BUS_L1 + 0.5, 0.22)
+    T("400V 50Hz", 199.81, 112.89, 0.22)   # at supply bus right end (örnek position)
+    T("400V 50Hz", 195.22, 103.89, 0.18)   # at cable entry bottom (örnek position)
+    T("SUPPLY",    195.32, 103.59, 0.16)   # cable entry label (örnek position)
     # Supply cable entry labels (örnek positions at Y=104.54)
     T("R", 195.44, 104.54, 0.18)
     T("S", 195.84, 104.54, 0.18)
     T("T", 196.24, 104.54, 0.18)
     # Cable X1 references (örnek positions)
     T("1X1", 194.76, 104.36, 0.14)
+    T("1X1", 207.89, 103.47, 0.14)   # control section entry (örnek second instance)
     L(X_F_L1, Y_BUS_L1, 205.1, Y_BUS_L1)
     L(X_F_L2, Y_BUS_L2, 204.7, Y_BUS_L2)
     L(X_F_L3, Y_BUS_L3, 204.3, Y_BUS_L3)
@@ -3389,7 +3392,8 @@ def draw_single_valve(
     # ── Phase relay A1 box ────────────────────────────────────────────────
     # Phase relay A1 — labels only (no box in örnek)
     T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
-    T("PHASE CONTROL", X_RELAY_L + 0.05, Y_RELAY_B - 0.42, 0.16)
+    T(P + "A1", 203.23, 105.61, 0.20)   # second instance at cable entry (örnek)
+    T("PHASE CONTROL", 203.75, 104.89, 0.16)
     # L1/L2/L3 supply connections at right end of buses (vertical lines)
     for xr, ybus in ((205.1, Y_BUS_L1), (204.7, Y_BUS_L2), (204.3, Y_BUS_L3)):
         L(xr, 105.88, xr, ybus)
@@ -3404,8 +3408,8 @@ def draw_single_valve(
     T(P + "Q1", X_MP + 0.8, Y_MP + 0.55, 0.22)
     T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
     _rv_r = rv_range.replace('.', ','); _rv_s = rv_set.replace('.', ',')
-    T(f"Ir={_rv_r}A", X_MP + 0.8, Y_MP + 0.08, 0.20)
-    T(f"set={_rv_s}A", X_MP + 0.8, Y_MP - 0.15, 0.20)
+    T(f"Ir={_rv_r}A", X_MP + 0.86, Y_MP - 0.95, 0.20)
+    T(f"set={_rv_s}A", X_MP + 0.86, Y_MP - 1.25, 0.20)
     # CB_TM line-side to supply bus (BENEK at junction)
     L(X_L1, Y_MCB, X_L1, Y_BUS_L1);  dot(X_L1, Y_BUS_L1)
     L(X_L2, Y_MCB, X_L2, Y_BUS_L2);  dot(X_L2, Y_BUS_L2)
@@ -3423,12 +3427,10 @@ def draw_single_valve(
     # ── K1 OPEN contactor ────────────────────────────────────────────────
     contactor(X_K1, Y_K)
     T(P + "K1", X_K1 - 0.8, Y_K + 0.30, 0.22)
-    T("OPEN", X_K1 - 0.8, Y_K + 0.10, 0.20)
 
     # ── K2 CLOSE contactor ───────────────────────────────────────────────
     contactor(X_K2, Y_K)
     T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
-    T("CLOSE", X_K2 + 0.5, Y_K + 0.10, 0.20)
 
     # K2 input wires from cross-bus to contactor top
     L(X_K2_L1, Y_K, X_K2_L1, Y_CROSS_L1)
@@ -3468,10 +3470,9 @@ def draw_single_valve(
 
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, Y_MOT, 0.55)
-    T("M", X_MOT - 0.12, Y_MOT - 0.10, 0.30)
-    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
+    T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.30)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
-    T("OPEN CLOSE", X_MOT - 0.45, Y_MOT - 1.10, 0.16)
+    T("OPEN CLOSE", X_MOT - 0.68, Y_MOT - 1.48, 0.16)
     # Motor terminal connection arcs (from örnek ET4 entities)
     A(198.85, 102.96, 0.075)
     A(199.0,  102.96, 0.075)
@@ -3494,8 +3495,8 @@ def draw_single_valve(
     L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
     T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
-    T("HEATER", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.55, 0.16)
-    T("400VAC", X_HTR_L1 - 0.1, Y_HTR_KLESIG - 0.75, 0.16)
+    T("HEATER", 201.42, 101.31, 0.16)
+    T("400VAC", 201.45, 101.61, 0.16)
     # Heater terminal numbers at connector plate (örnek exact positions)
     T("17", 201.69, 104.49, 0.14)
     T("18", 202.09, 104.49, 0.14)
@@ -3879,10 +3880,10 @@ def draw_single_valve(
         (247.62, "4",  "26","4",  "17"),
         (247.92, "5",  "27","5",  "18"),
     ]:
-        T(_tn,  _x - 0.10, 104.31, 0.12)
-        T(_tb,  _x - 0.10, 103.59, 0.12)
-        T(_tt,  _x - 0.10, 110.06, 0.12)
-        T(_tu,  _x - 0.10, 110.75, 0.12)
+        T(_tn,  _x - 0.04, 104.31, 0.12)
+        T(_tb,  _x - 0.04, 103.59, 0.12)
+        T(_tt,  _x - 0.04, 110.06, 0.12)
+        T(_tu,  _x - 0.04, 110.75, 0.12)
 
     # W1 cable labels
     T("400VAC", 246.77, 101.42, 0.14)
@@ -3895,21 +3896,20 @@ def draw_single_valve(
     T(valve_label.upper() + " W1", 247.8, 100.49, 0.14)
 
     # ── Terminal labels — W2 signal cable ─────────────────────────────────
-    for _x, _tn, _tb, _tt, _tu in [
-        (248.82, "1", "10", "1", "19"),
-        (249.12, "2", "11", "2", "20"),  # NK-NC opened
-        (250.02, "3", "13", "4", "21"),
-        (250.32, "4", "14", "5", "22"),
-        (250.62, "5", "20", "6", "23"),
-        (250.92, "6", "22", "7", "24"),
-        (251.22, "7", "23", "8", "25"),
-        (251.52, "8", "25", None, "26"),
-    ]:
-        T(_tn,  _x - 0.10, 104.31, 0.12)
-        T(_tb,  _x - 0.10, 103.59, 0.12)
+    # Bottom (104.31, 103.59) use conductor X - 0.04
+    # Upper (110.06, 110.75) use upper-stub X positions (249.11 series) - different offset
+    for (_bx, _tx), (_tn, _tb, _tt, _tu) in zip(
+        zip([248.82, 249.12, 250.02, 250.32, 250.62, 250.92, 251.22, 251.52],
+            [249.11, 249.41, 249.71, 250.01, 250.31, 250.61, 250.91, 251.21]),
+        [("1","10","1","19"), ("2","11","2","20"), ("3","13","4","21"),
+         ("4","14","5","22"), ("5","20","6","23"), ("6","22","7","24"),
+         ("7","23","8","25"), ("8","25",None,"26")]
+    ):
+        T(_tn,  _bx - 0.04, 104.31, 0.12)
+        T(_tb,  _bx - 0.04, 103.59, 0.12)
         if _tt:
-            T(_tt, _x - 0.10, 110.06, 0.12)
-        T(_tu,  _x - 0.10, 110.75, 0.12)
+            T(_tt, _tx - 0.03, 110.06, 0.12)
+        T(_tu,  _tx - 0.10, 110.75, 0.12)
 
     # Travel limit and contact labels (field side)
     T("travel limit", 248.88, 100.95, 0.12)
