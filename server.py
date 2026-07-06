@@ -3299,22 +3299,9 @@ def draw_single_valve(
             return None
 
     def HR(x1, y1, x2, y2):
-        """Solid-fill hatch rectangle — connector-crossing squares (matches örnek ET8)."""
-        import array as _arr
-        vpts = win32com.client.VARIANT(
-            pythoncom.VT_ARRAY | pythoncom.VT_R8,
-            list(_arr.array('d', [x1, y1, x2, y1, x2, y2, x1, y2])))
-        pl = ms.AddLightWeightPolyline(vpts)
-        pl.Closed = True
+        """Solid-fill rectangle using SOLID entity (BL, BR, TL, TR point order)."""
         try:
-            loop = win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, [pl])
-            h = ms.AddHatch(1, "SOLID", False)
-            h.AppendOuterLoop(loop)
-            h.Evaluate()
-        except Exception:
-            pass
-        try:
-            pl.Delete()
+            ms.AddSolid(_pt(x1, y1), _pt(x2, y1), _pt(x1, y2), _pt(x2, y2))
         except Exception:
             pass
 
@@ -3642,8 +3629,25 @@ def draw_single_valve(
         L(_xp, 104.62, _xp, 103.32)       # bottom stub
         A(_xp, 104.75, 0.1)               # pin connection arc (örnek ET4)
     L(211.89, 103.32, 211.04, 103.32)     # horizontal connector
+    LK(210.93, 103.47, 212.04, 103.47)   # KESIK segment at PLC interface (örnek ET16)
     L(211.47, 103.32, 211.47, 102.12)     # down to OK terminal
     terminal(211.47, 102.12)              # 0V OK terminal
+
+    # ── PLC DI/DQ terminal slot box outlines ──────────────────────────────
+    # DI row: 41 hollow 0.6×0.4 slots, Y=106.53-106.93, X=210.33-234.93
+    L(210.33, 106.53, 234.93, 106.53)   # DI bottom border
+    L(210.33, 106.93, 234.93, 106.93)   # DI top border
+    for _k in range(42):
+        _x = round(210.33 + _k * 0.6, 2)
+        L(_x, 106.53, _x, 106.93)
+
+    # DQ row: 37 hollow 0.6×0.4 slots, Y=105.13-105.53, X=212.73-234.93
+    L(211.93, 105.13, 212.73, 105.13)   # DQ separator segment (before first channel)
+    L(212.73, 105.13, 234.93, 105.13)   # DQ bottom border
+    L(212.73, 105.53, 234.93, 105.53)   # DQ top border
+    for _k in range(38):
+        _x = round(212.73 + _k * 0.6, 2)
+        L(_x, 105.13, _x, 105.53)
 
     # PLC labels
     T("L+",  210.51, 106.69, 0.18)
