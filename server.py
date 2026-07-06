@@ -3268,6 +3268,14 @@ def draw_single_valve(
     def L(x1, y1, x2, y2):
         ms.AddLine(_pt(x1, y1), _pt(x2, y2))
 
+    def LK(x1, y1, x2, y2):
+        """Line with KESIK (dashed) linetype — travel limit & interlock contact wire segments."""
+        ent = ms.AddLine(_pt(x1, y1), _pt(x2, y2))
+        try:
+            ent.Linetype = "KESIK"
+        except Exception:
+            pass
+
     def C(cx, cy, r):
         ms.AddCircle(_pt(cx, cy), float(r))
 
@@ -3301,6 +3309,21 @@ def draw_single_valve(
             pass
         try:
             pl.Delete()
+        except Exception:
+            pass
+
+    def HC(cx, cy, r):
+        """Solid-fill circle disc — circular hatch boundary (örnek ET8 motor fills)."""
+        circ = ms.AddCircle(_pt(cx, cy), float(r))
+        try:
+            loop = win32com.client.VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, [circ])
+            h = ms.AddHatch(1, "SOLID", False)
+            h.AppendOuterLoop(loop)
+            h.Evaluate()
+        except Exception:
+            pass
+        try:
+            circ.Delete()
         except Exception:
             pass
 
@@ -3556,7 +3579,7 @@ def draw_single_valve(
     BLK('NA', 208.46, 111.31)
     T("1", 208.51, 111.16, 0.11)
     T("2", 208.51, 110.76, 0.11)
-    L(208.44, 110.91, 208.79, 110.91)     # bridge to phase relay
+    LK(208.44, 110.91, 208.79, 110.91)    # bridge to phase relay (KESIK — örnek)
     L(208.46, 110.78, 208.46, 103.6)      # thermostat bottom wire down to supply
 
     # Thermostat device symbol (zig-zag lines at Y≈111)
@@ -3641,15 +3664,15 @@ def draw_single_valve(
 
     # ── OPENED status rung (X=213.63) — 6 segments matching örnek ────────
     L(213.63, 111.44, 213.63, Y_LP)
-    L(213.63, 110.64, 213.63, 111.34)
+    LK(213.63, 110.64, 213.63, 111.34)  # KESIK — inside travel limit contact group
     BLK('NA', 213.63, 110.14)
-    L(213.63, 110.14, 213.63, 110.54)
-    L(213.63, 109.14, 213.63, 109.54)
-    L(213.63, 108.35, 213.63, 109.04)
+    LK(213.63, 110.14, 213.63, 110.54)  # KESIK
+    LK(213.63, 109.14, 213.63, 109.54)  # KESIK
+    LK(213.63, 108.35, 213.63, 109.04)  # KESIK
     L(213.63, 108.24, 213.63, 106.93)
     T("0.0",  213.48, 106.65, 0.14)
-    T(valve_label.upper(), 213.1, 108.69, 0.14)
-    T("OPENED", 213.38, 109.54, 0.14)
+    T(valve_label.upper(), 213.1, 108.69, 0.12)
+    T("OPENED", 213.38, 109.54, 0.10)
     T("1X5",  213.06, 108.22, 0.12)
     T("1X5",  213.06, 111.31, 0.12)
     T("24",   213.78, 108.22, 0.12)
@@ -3659,15 +3682,15 @@ def draw_single_valve(
 
     # ── CLOSED status rung (X=214.83) — 7 segments matching örnek ────────
     L(214.83, 111.44, 214.83, Y_LP)
-    L(214.83, 110.64, 214.83, 111.34)
+    LK(214.83, 110.64, 214.83, 111.34)  # KESIK — inside travel limit contact group
     BLK('NA', 214.83, 110.14)
-    L(214.83, 110.14, 214.83, 110.54)
-    L(214.83, 109.14, 214.83, 109.54)
-    L(214.83, 108.35, 214.83, 109.04)
+    LK(214.83, 110.14, 214.83, 110.54)  # KESIK
+    LK(214.83, 109.14, 214.83, 109.54)  # KESIK
+    LK(214.83, 108.35, 214.83, 109.04)  # KESIK
     L(214.83, 108.24, 214.83, 106.93)
     L(214.83, 105.13, 214.83, Y_0VI)       # continues down to internal 0V bus
     T("0.1",  214.68, 106.65, 0.14)
-    T("CLOSED", 214.58, 109.55, 0.14)
+    T("CLOSED", 214.58, 109.55, 0.10)
     T("1X5",  214.26, 108.22, 0.12)
     T("1X5",  214.26, 111.31, 0.12)
     T("26",   214.98, 108.22, 0.12)
@@ -3691,11 +3714,11 @@ def draw_single_valve(
 
     # ── K1 OPEN coil rung (X=217.23) — 8 segments matching örnek ────────
     L(217.23, 104.46, 217.23, 105.13)
-    L(217.23, 104.36, 217.23, 103.14)
+    LK(217.23, 104.36, 217.23, 103.14)  # KESIK — travel limit contact zone
     BLK('NK', 217.23, Y_NK)
     L(217.23, 103.04, 217.23, Y_NK)
     L(217.23, 102.24, 217.23, 102.04)
-    L(217.23, 101.94, 217.23, 100.76)
+    LK(217.23, 101.94, 217.23, 100.76)  # KESIK
     BLK('BOBIN', 217.23, Y_COIL)
     L(217.23, 100.66, 217.23, Y_COIL)
     L(217.23, Y_0VI, 217.23, Y_0V)        # from internal 0V to external 0V
@@ -3711,7 +3734,7 @@ def draw_single_valve(
     T("10",  217.38, 103.04, 0.12)
     T("1X5", 216.66, 104.34, 0.12)   # cable ref (örnek position)
     T("6",   217.38, 104.34, 0.12)
-    T(valve_label.upper(), 216.64, 101.74, 0.14)
+    T(valve_label.upper(), 216.64, 101.74, 0.12)
     T("travel limit", 216.91, 101.78, 0.12)
     T("switch", 217.05, 101.93, 0.12)
     T("11K9", 216.99, 99.77, 0.14)
@@ -3721,11 +3744,11 @@ def draw_single_valve(
 
     # ── K2 CLOSE coil rung (X=218.43) — 8 segments matching örnek ───────
     L(218.43, 104.46, 218.43, 105.13)
-    L(218.43, 104.36, 218.43, 103.14)
+    LK(218.43, 104.36, 218.43, 103.14)  # KESIK — travel limit contact zone
     BLK('NK', 218.43, Y_NK)
     L(218.43, 103.04, 218.43, Y_NK)
     L(218.43, 102.24, 218.43, 102.04)
-    L(218.43, 101.94, 218.43, 100.76)
+    LK(218.43, 101.94, 218.43, 100.76)  # KESIK
     BLK('BOBIN', 218.43, Y_COIL)
     L(218.43, 100.66, 218.43, Y_COIL)
     L(218.43, Y_0VI, 218.43, Y_0V)
@@ -3908,15 +3931,17 @@ def draw_single_valve(
         T(_tt,  _x - 0.04, 110.06, 0.12)
         T(_tu,  _x - 0.04, 110.75, 0.12)
 
-    # W1 cable labels
+    # W1 cable labels (external labels below motor circle, drawn before disc fill)
     T("400VAC", 246.77, 101.42, 0.14)
     T("50Hz",   246.85, 101.28, 0.14)
     T("3P~",    246.89, 101.15, 0.14)
-    T("3P~",    246.89, 101.94, 0.14)
-    T("M",      246.91, 102.14, 0.14)
     T("400VAC", 247.68, 101.07, 0.14)
     T("heater", 247.82, 101.11, 0.14)
     T(valve_label.upper() + " W1", 247.8, 100.49, 0.14)
+    # Terminal motor: solid disc (no outline), labels inside drawn after fill for z-order
+    HC(247.02, 102.14, 0.35)
+    T("3P~",    246.89, 101.94, 0.14)
+    T("M",      246.91, 102.14, 0.14)
 
     # ── Terminal labels — W2 signal cable ─────────────────────────────────
     # Bottom (104.31, 103.59) use conductor X - 0.04
@@ -3966,8 +3991,6 @@ def draw_single_valve(
     # Motor cable connector plate crossings (L1/L2/L3 at Y=104.39-104.49)
     for _xs in (X_L1, X_L2, X_L3):
         HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
-    # Motor terminal connection box
-    HR(198.22, 102.56, 199.32, 103.66)
     # Heater cable connector plate crossings (upper Y=104.39 and lower Y=103.53)
     for _xs in (X_HTR_L1, X_HTR_L2):
         HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
@@ -3990,8 +4013,7 @@ def draw_single_valve(
     HR(217.99, 102.49, 218.14, 102.64);  HR(216.79, 102.49, 216.94, 102.64)
     # Control section entry squares
     HR(208.41, 103.50, 208.51, 103.60);  HR(208.76, 103.50, 208.86, 103.60)
-    # Terminal section: motor box (W1 area) + NK/NA contact junction squares
-    HR(246.67, 101.79, 247.37, 102.49)
+    # Terminal section: NK/NA contact junction squares (motor disc handled above in W1 section)
     HR(248.87, 102.21, 248.97, 102.31);  HR(250.07, 102.21, 250.17, 102.31)
     HR(250.67, 102.21, 250.77, 102.31);  HR(251.27, 102.21, 251.37, 102.31)
 
