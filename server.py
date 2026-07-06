@@ -3068,6 +3068,7 @@ def draw_eff_system(
 def draw_single_valve(
     aq_model: str = "AQ25",
     valve_label: str = "SEA WATER VALVE",
+    valve_role: str = "discharge",
     tag_prefix: str = "1",
     main_mcb: str = "5SL6316-7",
     ctrl_mcb: str = "5SL6216-7",
@@ -3118,6 +3119,28 @@ def draw_single_valve(
     if not date_str:
         date_str = datetime.date.today().strftime("%d.%m.%Y")
     P = str(tag_prefix)
+
+    # ── NB198 / örnek device tags ────────────────────────────────────────────
+    # Authoritative tag scheme from M25010011D20 EFF SYSTEM UZMAR NB198.dwg.
+    # Per-valve devices (motor protection, contactors, heater fuses) switch with
+    # valve_role; panel-shared devices (main MCB, phase monitor, control fuse) are
+    # fixed. A future two-valve function can reuse both sets.
+    _vr = (valve_role or "discharge").strip().lower()
+    if _vr not in ("suction", "discharge"):
+        _vr = "discharge"
+    _VALVE_TAGS = {
+        "suction":   {"MP": "8Q1", "KO": "11K9",  "KC": "11K10", "HF1": "8F1", "HF2": "8F2"},
+        "discharge": {"MP": "8Q2", "KO": "11K11", "KC": "11K12", "HF1": "8F3", "HF2": "8F4"},
+    }
+    _vt = _VALVE_TAGS[_vr]
+    TAG_MAIN  = "7F1"      # main 3P incoming MCB (5SL6316-7)
+    TAG_PHASE = "8A1"      # phase monitor (3UG4512-1AR20)
+    TAG_CTRL  = "9F1"      # 24VDC control fuse
+    TAG_MP    = _vt["MP"]  # motor protection (3RV2011)
+    TAG_KO    = _vt["KO"]  # OPEN reversing contactor (3TG1010-0BB4)
+    TAG_KC    = _vt["KC"]  # CLOSE reversing contactor
+    TAG_HF1   = _vt["HF1"] # heater fuse 1
+    TAG_HF2   = _vt["HF2"] # heater fuse 2
 
     # ── Template setup ───────────────────────────────────────────────────────
     # The template file already has all corporate blocks (BENEK, BOBIN, etc.)
@@ -3420,10 +3443,11 @@ def draw_single_valve(
 
     # ── F1 Main 3P FUSE — incoming line fuse ─────────────────────────────
     mcb_3p(X_MCB, Y_MCB)
-    T(P + "F1", X_MCB - 0.8, Y_MCB + 0.55, 0.22)
+    T(TAG_MAIN, X_MCB - 0.8, Y_MCB + 0.55, 0.22)
     T(main_mcb, X_MCB - 0.8, Y_MCB + 0.30, 0.18)
     T("16 A", 196.42, 110.68, 0.20)   # örnek position (right of fuse block)
     T("16 A", 207.92, 110.76, 0.20)   # örnek second instance (control entry)
+    T(TAG_CTRL, 207.78, 110.95, 0.14)  # 24VDC control fuse (örnek 9F1)
     # Fuse → supply bus (each pole at its own bus Y)
     L(X_F_L1, Y_BUS_L1, X_F_L1, Y_MCB)
     L(X_F_L2, Y_BUS_L2, X_F_L2, Y_MCB)
@@ -3434,8 +3458,8 @@ def draw_single_valve(
 
     # ── Phase relay A1 box ────────────────────────────────────────────────
     # Phase relay A1 — labels only (no box in örnek)
-    T(P + "A1", X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
-    T(P + "A1", 203.23, 105.61, 0.20)   # second instance at cable entry (örnek)
+    T(TAG_PHASE, X_RELAY_L + 0.05, Y_RELAY_T + 0.12, 0.20)
+    T(TAG_PHASE, 203.23, 105.61, 0.20)   # second instance at cable entry (örnek)
     T("PHASE CONTROL", 203.75, 104.89, 0.16)
     # L1/L2/L3 supply connections at right end of buses (vertical lines)
     for xr, ybus in ((205.1, Y_BUS_L1), (204.7, Y_BUS_L2), (204.3, Y_BUS_L3)):
@@ -3448,7 +3472,7 @@ def draw_single_valve(
     # ── Q1 Motor protection (CB_TM) ───────────────────────────────────────
     # Poles at X_L1/L2/L3; each pole taps the supply bus with a BENEK junction
     motor_prot(X_MP, Y_MP)
-    T(P + "Q1", X_MP + 0.8, Y_MP + 0.55, 0.22)
+    T(TAG_MP, X_MP + 0.8, Y_MP + 0.55, 0.22)
     T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
     _rv_r = rv_range.replace('.', ','); _rv_s = rv_set.replace('.', ',')
     T(f"Ir={_rv_r}A", X_MP + 0.86, Y_MP - 0.95, 0.20)
@@ -3469,11 +3493,11 @@ def draw_single_valve(
 
     # ── K1 OPEN contactor ────────────────────────────────────────────────
     contactor(X_K1, Y_K)
-    T(P + "K1", X_K1 - 0.8, Y_K + 0.30, 0.22)
+    T(TAG_KO, X_K1 - 0.8, Y_K + 0.30, 0.22)
 
     # ── K2 CLOSE contactor ───────────────────────────────────────────────
     contactor(X_K2, Y_K)
-    T(P + "K2", X_K2 + 0.5, Y_K + 0.30, 0.22)
+    T(TAG_KC, X_K2 + 0.5, Y_K + 0.30, 0.22)
 
     # K2 input wires from cross-bus to contactor top
     L(X_K2_L1, Y_K, X_K2_L1, Y_CROSS_L1)
@@ -3512,8 +3536,8 @@ def draw_single_valve(
     T("1X5", 197.8, 104.36, 0.14)
 
     # ── Motor symbol ──────────────────────────────────────────────────────
-    C(X_MOT, Y_MOT, 0.55)
-    T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.30)
+    C(X_MOT, 103.11, 0.55)          # örnek circle centre Y=103.11 (text offsets keep örnek positions)
+    T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.25)
     T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
     T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN CLOSE", X_MOT - 0.68, Y_MOT - 1.48, 0.16)
@@ -3538,8 +3562,8 @@ def draw_single_valve(
     L(X_HTR_L2, 102.81, X_HTR_L2, 103.53)       # HTR L2 middle section
     L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
-    T(P + "F3", 201.48, 106.94, 0.10, 90)                        # heater fuse (rot 90, örnek h=0.10)
-    T(P + "F4", 201.88, 106.94, 0.10, 90)                        # second heater fuse
+    T(TAG_HF1, 201.48, 106.94, 0.10, 90)                         # heater fuse (rot 90, örnek h=0.10)
+    T(TAG_HF2, 201.88, 106.94, 0.10, 90)                         # second heater fuse
     T("2A",     201.88, 106.31, 0.10, 90)                        # heater fuse current rating
     T("HEATER", 201.42, 101.31, 0.16)
     T("400VAC", 201.45, 101.61, 0.16)
@@ -3721,7 +3745,7 @@ def draw_single_valve(
     BLK('NA', 216.03, 110.19)
     L(216.03, 109.59, 216.03, 106.93)
     T("0.2",  215.88, 106.65, 0.14)
-    T("8A1",  215.46, 109.84, 0.14)
+    T(TAG_PHASE,  215.46, 109.84, 0.14)
     T("11",   216.08, 110.09, 0.14)
     T("14",   216.08, 109.64, 0.14)
 
@@ -3754,7 +3778,7 @@ def draw_single_valve(
     T(valve_label.upper(), 216.64, 101.74, 0.12, 90)
     T("travel limit", 216.91, 101.78, 0.08, 90)
     T("switch", 217.05, 101.93, 0.08, 90)
-    T("11K9", 216.99, 99.77, 0.15)
+    T(TAG_KO, 216.99, 99.77, 0.15)
     T("OPEN", 217.02, 97.51, 0.12)
     T("3TG1010-0BB4", 216.67, 97.76, 0.10)
     T("O",    216.98, 102.65, 0.15)
@@ -3781,7 +3805,7 @@ def draw_single_valve(
     T("8",   218.58, 104.34, 0.12)
     T("travel limit", 218.11, 101.81, 0.08, 90)
     T("switch", 218.25, 101.96, 0.08, 90)
-    T("11K10", 218.13, 99.77, 0.15)
+    T(TAG_KC, 218.13, 99.77, 0.15)
     T("CLOSE", 218.17, 97.51, 0.12)
     T("3TG1010-0BB4", 217.87, 97.76, 0.10)
     T("C",    218.17, 102.65, 0.15)
