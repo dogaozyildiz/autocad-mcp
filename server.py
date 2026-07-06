@@ -3320,6 +3320,13 @@ def draw_single_valve(
         except Exception:
             pass
 
+    def E(cx, cy, major_r, ratio):
+        """Ellipse centred at (cx,cy), horizontal major axis, minor/major = ratio."""
+        try:
+            ms.AddEllipse(_pt(cx, cy), _pt(float(major_r), 0.0), float(ratio))
+        except Exception:
+            pass
+
     # Shorthand block helpers using örnek block names
     def dot(x, y):         BLK("BENEK", x, y)            # junction dot
     def nc_contact(x, y):  BLK("NA", x, y)               # NC contact symbol
@@ -3531,9 +3538,9 @@ def draw_single_valve(
     L(X_HTR_L2, 102.81, X_HTR_L2, 103.53)       # HTR L2 middle section
     L(X_HTR_L2, 102.06, X_HTR_L2, 102.21)       # HTR L2 bottom stub
     L(X_HTR_L1, 102.06, X_HTR_L2, 102.06)       # horizontal at cable entry bottom
-    T(P + "F3", X_HTR_L1 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)
-    T(P + "F4", X_HTR_L2 - 0.1, Y_HTR_KLESIG + 0.55, 0.18)   # second heater fuse
-    T("2A",     201.88, 106.31, 0.14)                            # heater fuse current rating
+    T(P + "F3", 201.48, 106.94, 0.10, 90)                        # heater fuse (rot 90, örnek h=0.10)
+    T(P + "F4", 201.88, 106.94, 0.10, 90)                        # second heater fuse
+    T("2A",     201.88, 106.31, 0.10, 90)                        # heater fuse current rating
     T("HEATER", 201.42, 101.31, 0.16)
     T("400VAC", 201.45, 101.61, 0.16)
     # Heater terminal numbers at connector plate (örnek exact positions)
@@ -3942,16 +3949,16 @@ def draw_single_valve(
         T(_tu,  _x - 0.04, 110.75, 0.12)
 
     # W1 cable labels (external labels below motor circle, drawn before disc fill)
-    T("400VAC", 246.77, 101.42, 0.14)
-    T("50Hz",   246.85, 101.28, 0.14)
-    T("3P~",    246.89, 101.15, 0.14)
-    T("400VAC", 247.68, 101.07, 0.14)
-    T("heater", 247.82, 101.11, 0.14)
-    T(valve_label.upper() + " W1", 247.8, 100.49, 0.14)
-    # Terminal motor: solid disc (no outline), labels inside drawn after fill for z-order
-    HC(247.02, 102.14, 0.35)
-    T("3P~",    246.89, 101.94, 0.14)
-    T("M",      246.91, 102.14, 0.14)
+    T("400VAC", 246.77, 101.42, 0.09)
+    T("50Hz",   246.85, 101.28, 0.09)
+    T("3PH",    246.89, 101.15, 0.09)
+    T("400VAC", 247.68, 101.07, 0.09, 90)
+    T("heater", 247.82, 101.11, 0.09, 90)
+    T(valve_label.upper(), 247.8, 100.49, 0.20)
+    # Terminal motor: outline circle (matches örnek AcDbCircle r=0.35), labels inside
+    C(247.02, 102.14, 0.35)
+    T("3PH",    246.89, 101.94, 0.10)
+    T("M",      246.91, 102.14, 0.20)
 
     # ── Terminal labels — W2 signal cable ─────────────────────────────────
     # Bottom (104.31, 103.59) use conductor X - 0.04
@@ -3969,63 +3976,88 @@ def draw_single_valve(
             T(_tt, _tx - 0.03, 110.06, 0.12)
         T(_tu,  _tx - 0.10, 110.75, 0.12)
 
-    # Travel limit and contact labels (field side)
-    T("travel limit", 248.88, 100.95, 0.12)
-    T("switch",       249.02, 101.12, 0.12)
-    T("opened",       249.14, 101.09, 0.12)
-    T("nc",           248.92, 101.96, 0.12)
-    T("1",            249.17, 101.96, 0.12)
-    T("2",            249.17, 102.51, 0.12)
-    T("travel limit", 250.08, 100.95, 0.12)
-    T("switch",       250.22, 101.12, 0.12)
-    T("closed",       250.34, 101.11, 0.12)
-    T("nc",           250.12, 101.96, 0.12)
-    T("1",            250.37, 101.96, 0.12)
-    T("2",            250.37, 102.51, 0.12)
-    T("extra limit",  250.68, 100.96, 0.12)
-    T("switch",       250.82, 101.12, 0.12)
-    T("opened",       250.94, 101.09, 0.12)
-    T("nc",           250.72, 101.96, 0.12)
-    T("1",            250.97, 101.96, 0.12)
-    T("3",            250.97, 102.51, 0.12)
-    T("extra limit",  251.28, 100.96, 0.12)
-    T("switch",       251.42, 101.12, 0.12)
-    T("closed",       251.54, 101.11, 0.12)
-    T("nc",           251.32, 101.96, 0.12)
-    T("1",            251.57, 101.96, 0.12)
-    T("3",            251.57, 102.51, 0.12)
+    # Travel limit and contact labels (field side) — descriptive labels rot=90, örnek h=0.09
+    T("travel limit", 248.88, 100.95, 0.09, 90)
+    T("switch",       249.02, 101.12, 0.09, 90)
+    T("opened",       249.14, 101.09, 0.09, 90)
+    T("nc",           248.92, 101.96, 0.09)
+    T("1",            249.17, 101.96, 0.09)
+    T("2",            249.17, 102.51, 0.09)
+    T("travel limit", 250.08, 100.95, 0.09, 90)
+    T("switch",       250.22, 101.12, 0.09, 90)
+    T("closed",       250.34, 101.11, 0.09, 90)
+    T("nc",           250.12, 101.96, 0.09)
+    T("1",            250.37, 101.96, 0.09)
+    T("2",            250.37, 102.51, 0.09)
+    T("extra limit",  250.68, 100.96, 0.09, 90)
+    T("switch",       250.82, 101.12, 0.09, 90)
+    T("opened",       250.94, 101.09, 0.09, 90)
+    T("nc",           250.72, 101.96, 0.09)
+    T("1",            250.97, 101.96, 0.09)
+    T("3",            250.97, 102.51, 0.09)
+    T("extra limit",  251.28, 100.96, 0.09, 90)
+    T("switch",       251.42, 101.12, 0.09, 90)
+    T("closed",       251.54, 101.11, 0.09, 90)
+    T("nc",           251.32, 101.96, 0.09)
+    T("1",            251.57, 101.96, 0.09)
+    T("3",            251.57, 102.51, 0.09)
 
     # ═══════════════════════════════════════════════════════════════════════
-    # HATCH SQUARES — solid 0.10×0.10 connector-crossing fills (ET8, matches örnek)
+    # CONNECTION MARKERS — hollow circles at wire junctions (matches örnek: 34× AcDbCircle,
+    # NOT filled squares; örnek uses round terminal/connection markers, not solid fills)
     # ═══════════════════════════════════════════════════════════════════════
+    def _mk(x1, y1, x2, y2):
+        """Hollow connection-marker circle centred on the given box, radius = half width."""
+        C((x1 + x2) / 2.0, (y1 + y2) / 2.0, (x2 - x1) / 2.0)
     # Motor cable connector plate crossings (L1/L2/L3 at Y=104.39-104.49)
     for _xs in (X_L1, X_L2, X_L3):
-        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+        _mk(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
     # Heater cable connector plate crossings (upper Y=104.39 and lower Y=103.53)
     for _xs in (X_HTR_L1, X_HTR_L2):
-        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
-        HR(_xs - 0.05, 103.53, _xs + 0.05, 103.63)
+        _mk(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+        _mk(_xs - 0.05, 103.53, _xs + 0.05, 103.63)
     # Supply cable (R/S/T) connector plate crossings
     for _xs in (X_MCB - 0.40, X_MCB, X_MCB + 0.40):
-        HR(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
-    # PLC terminal connection squares (control section)
-    HR(214.78, 109.04, 214.88, 109.14);  HR(214.78, 110.54, 214.88, 110.64)
-    HR(214.78, 111.34, 214.88, 111.44);  HR(213.58, 108.25, 213.68, 108.35)
-    HR(213.58, 109.04, 213.68, 109.14);  HR(213.58, 110.54, 213.68, 110.64)
-    HR(213.58, 111.34, 213.68, 111.44);  HR(214.78, 108.25, 214.88, 108.35)
-    # K1 coil rung junction squares
-    HR(217.18, 104.36, 217.28, 104.46);  HR(217.18, 100.66, 217.28, 100.76)
-    HR(217.18, 101.94, 217.28, 102.04);  HR(217.18, 103.04, 217.28, 103.14)
-    # K2 coil rung junction squares
-    HR(218.38, 100.66, 218.48, 100.76);  HR(218.38, 104.36, 218.48, 104.46)
-    HR(218.38, 101.94, 218.48, 102.04);  HR(218.38, 103.04, 218.48, 103.14)
-    # Interlock junction squares
-    HR(217.99, 102.49, 218.14, 102.64);  HR(216.79, 102.49, 216.94, 102.64)
-    # Control section entry squares
-    HR(208.41, 103.50, 208.51, 103.60);  HR(208.76, 103.50, 208.86, 103.60)
-    # Terminal section: NK/NA contact junction squares (motor disc handled above in W1 section)
-    HR(248.87, 102.21, 248.97, 102.31);  HR(250.07, 102.21, 250.17, 102.31)
-    HR(250.67, 102.21, 250.77, 102.31);  HR(251.27, 102.21, 251.37, 102.31)
+        _mk(_xs - 0.05, 104.39, _xs + 0.05, 104.49)
+    # PLC status-rung terminal circles (control section)
+    _mk(214.78, 109.04, 214.88, 109.14);  _mk(214.78, 110.54, 214.88, 110.64)
+    _mk(214.78, 111.34, 214.88, 111.44);  _mk(213.58, 108.25, 213.68, 108.35)
+    _mk(213.58, 109.04, 213.68, 109.14);  _mk(213.58, 110.54, 213.68, 110.64)
+    _mk(213.58, 111.34, 213.68, 111.44);  _mk(214.78, 108.25, 214.88, 108.35)
+    # K1 coil rung junction circles
+    _mk(217.18, 104.36, 217.28, 104.46);  _mk(217.18, 100.66, 217.28, 100.76)
+    _mk(217.18, 101.94, 217.28, 102.04);  _mk(217.18, 103.04, 217.28, 103.14)
+    # K2 coil rung junction circles
+    _mk(218.38, 100.66, 218.48, 100.76);  _mk(218.38, 104.36, 218.48, 104.46)
+    _mk(218.38, 101.94, 218.48, 102.04);  _mk(218.38, 103.04, 218.48, 103.14)
+    # Interlock junction circles (r=0.075)
+    _mk(217.99, 102.49, 218.14, 102.64);  _mk(216.79, 102.49, 216.94, 102.64)
+    # Control section entry circles
+    _mk(208.41, 103.50, 208.51, 103.60);  _mk(208.76, 103.50, 208.86, 103.60)
+    # Terminal section: NK/NA contact junction circles (motor outline handled above in W1 section)
+    _mk(248.87, 102.21, 248.97, 102.31);  _mk(250.07, 102.21, 250.17, 102.31)
+    _mk(250.67, 102.21, 250.77, 102.31);  _mk(251.27, 102.21, 251.37, 102.31)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # BUS-TAP & PLC-PIN FILLS — small solid marks (örnek: 13 AcDbHatch, drawn here
+    # as visually-identical solid fills) + PLC power-terminal ellipse (örnek AcDbEllipse)
+    # ═══════════════════════════════════════════════════════════════════════
+    # 24VDC bus-tap junction squares (rungs meeting the L+ / protected buses)
+    for _f in [
+        (209.13, 112.70, 209.23, 112.80), (209.93, 112.31, 210.03, 112.41),
+        (210.58, 112.70, 210.68, 112.80), (211.18, 112.31, 211.28, 112.41),
+        (211.78, 112.31, 211.88, 112.41), (213.58, 112.70, 213.68, 112.80),
+        (214.78, 112.70, 214.88, 112.80),
+        # PLC DI pin fills (thin vertical stubs) + DQ pin
+        (211.02, 104.62, 211.07, 104.75), (211.30, 104.62, 211.35, 104.75),
+        (211.59, 104.62, 211.63, 104.75), (211.87, 104.62, 211.92, 104.75),
+        (214.78, 104.74, 214.88, 104.84),
+        # K1 coil 0V bus junction
+        (217.18, 99.25, 217.28, 99.35),
+    ]:
+        HR(*_f)
+    # PLC power-supply terminal marker (flat horizontal ellipse, örnek AcDbEllipse)
+    E(211.48, 103.47, 0.554, 0.093)
 
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
