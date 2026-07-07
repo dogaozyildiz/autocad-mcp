@@ -3688,10 +3688,10 @@ def draw_single_valve(
     T("ETHERNET CONNECTION", 210.66, 105.29, 0.16)
     T("RJ45", 212.13, 104.71, 0.16)
     T("FROM TOUCH SCREEN", 210.29, 101.65, 0.16)
-    T("GW",  211.01, 103.61, 0.16)
-    T("OW",  211.29, 103.61, 0.16)
-    T("G",   211.58, 103.61, 0.16)
-    T("O",   211.86, 103.61, 0.16)
+    T("GW",  211.01, 103.61, 0.15, 90)   # rotated 90° (örnek) — avoids the horizontal overlap
+    T("OW",  211.29, 103.61, 0.15, 90)
+    T("G",   211.58, 103.61, 0.15, 90)
+    T("O",   211.86, 103.61, 0.15, 90)
     T("CAT7", 211.56, 102.85, 0.14)
     T("CAT8", 211.56, 103.09, 0.14)
     T("O  :", 212.4, 103.82, 0.12)
@@ -4082,6 +4082,20 @@ def draw_single_valve(
         HR(*_f)
     # PLC power-supply terminal marker (flat horizontal ellipse, örnek AcDbEllipse)
     E(211.48, 103.47, 0.554, 0.093)
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # ENCLOSURE BOXES — device outlines + dashed group enclosures (örnek polylines)
+    # ═══════════════════════════════════════════════════════════════════════
+    def _box(x1, y1, x2, y2, dashed=False):
+        _fn = LK if dashed else L
+        _fn(x1, y1, x2, y1); _fn(x2, y1, x2, y2)
+        _fn(x2, y2, x1, y2); _fn(x1, y2, x1, y1)
+    _box(203.67, 104.57, 205.72, 105.88)         # phase monitor 8A1 device box (solid)
+    _box(210.90, 104.15, 212.04, 104.99)         # RJ45 connector box (solid)
+    _box(213.14, 108.69, 215.21, 110.99, True)   # OPENED/CLOSED feedback group (dashed)
+    _box(216.68, 100.96, 218.75, 104.16, True)   # K1/K2 coil group (dashed)
+    _box(240.58, 111.67, 251.37, 112.90, True)   # cabinet header strip (dashed)
+    _box(246.27, 100.78, 251.97, 103.96, True)   # field terminal box (dashed)
 
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
