@@ -3260,6 +3260,7 @@ def draw_single_valve(
                 except Exception:
                     pass
             if src_blk_objs:
+                
                 try:
                     _objs_var = win32com.client.VARIANT(
                         pythoncom.VT_ARRAY | pythoncom.VT_DISPATCH, src_blk_objs)
