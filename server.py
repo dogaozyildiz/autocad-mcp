@@ -3078,6 +3078,7 @@ def draw_single_valve(
     drawing_no: str = "M00-IM-0001",
     date_str: str = "",
     company: str = "",
+    show_header: bool = False,
     output_path: str = "",
 ) -> str:
     """Draw single valve control schematic in NB198/ornek style on ISO A1 sheet.
@@ -3141,6 +3142,19 @@ def draw_single_valve(
     TAG_KC    = _vt["KC"]  # CLOSE reversing contactor
     TAG_HF1   = _vt["HF1"] # heater fuse 1
     TAG_HF2   = _vt["HF2"] # heater fuse 2
+
+    # Opposite-role identity for the control / coil-rung cross-reference block.
+    # In the örnek discharge sheet the power section is the DISCHARGE valve
+    # (11K11/11K12) while the coil-rung block at x≈216-218 is the SUCTION valve
+    # (11K9/11K10). Derive the "other" valve so the block reproduces örnek and
+    # mirrors correctly when this function draws a suction sheet.
+    _ROLE_NAME = {"suction": "SUCTION VALVE", "discharge": "DISCHARGE VALVE"}
+    _other_vr  = "suction" if _vr == "discharge" else "discharge"
+    _ot        = _VALVE_TAGS[_other_vr]
+    VALVE_NAME = _ROLE_NAME[_vr]         # this valve  – main power/motor/terminal labels
+    XREF_NAME  = _ROLE_NAME[_other_vr]   # other valve – coil-rung cross-reference block
+    XREF_KO    = _ot["KO"]               # 11K9  on a discharge sheet
+    XREF_KC    = _ot["KC"]               # 11K10 on a discharge sheet
 
     # ── Template setup ───────────────────────────────────────────────────────
     # The template file already has all corporate blocks (BENEK, BOBIN, etc.)
@@ -3445,7 +3459,7 @@ def draw_single_valve(
     # ── F1 Main 3P FUSE — incoming line fuse ─────────────────────────────
     mcb_3p(X_MCB, Y_MCB)
     T(TAG_MAIN, X_MCB - 0.8, Y_MCB + 0.55, 0.22)
-    T(main_mcb, X_MCB - 0.8, Y_MCB + 0.30, 0.18)
+    # NB: örnek prints only the tag + rating, not the Siemens order number.
     T("16 A", 196.42, 110.68, 0.20)   # örnek position (right of fuse block)
     T("16 A", 207.92, 110.76, 0.20)   # örnek second instance (control entry)
     T(TAG_CTRL, 207.78, 110.95, 0.14)  # 24VDC control fuse (örnek 9F1)
@@ -3474,7 +3488,7 @@ def draw_single_valve(
     # Poles at X_L1/L2/L3; each pole taps the supply bus with a BENEK junction
     motor_prot(X_MP, Y_MP)
     T(TAG_MP, X_MP + 0.8, Y_MP + 0.55, 0.22)
-    T(rv_part, X_MP + 0.8, Y_MP + 0.30, 0.18)
+    # NB: örnek prints only the tag + Ir/set rating, not the 3RV order number.
     _rv_r = rv_range.replace('.', ','); _rv_s = rv_set.replace('.', ',')
     T(f"Ir={_rv_r}A", X_MP + 0.86, Y_MP - 0.95, 0.20)
     T(f"set={_rv_s}A", X_MP + 0.86, Y_MP - 1.25, 0.20)
@@ -3539,8 +3553,8 @@ def draw_single_valve(
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, 103.11, 0.55)          # örnek circle centre Y=103.11 (text offsets keep örnek positions)
     T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.25)
-    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)
-    T(valve_label.upper(), X_MOT - 0.55, Y_MOT - 0.85, 0.20)
+    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)   # 3-phase motor: örnek shows "3" + sine-wave symbol; "3~" matches visually
+    T(VALVE_NAME, X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN CLOSE", X_MOT - 0.68, Y_MOT - 1.48, 0.16)
     # Motor terminal connection arcs (from örnek ET4 entities)
     A(198.85, 102.96, 0.075)
@@ -3713,7 +3727,7 @@ def draw_single_valve(
     LK(213.63, 108.35, 213.63, 109.04)  # KESIK
     L(213.63, 108.24, 213.63, 106.93)
     T("0.0",  213.48, 106.65, 0.14)
-    T(valve_label.upper(), 213.1, 108.69, 0.12, 90)
+    T(VALVE_NAME, 213.1, 108.69, 0.12, 90)
     T("OPENED", 213.38, 109.54, 0.10, 90)
     T("1X5",  213.06, 108.22, 0.12)
     T("1X5",  213.06, 111.31, 0.12)
@@ -3776,10 +3790,10 @@ def draw_single_valve(
     T("10",  217.38, 103.04, 0.12)
     T("1X5", 216.66, 104.34, 0.12)   # cable ref (örnek position)
     T("6",   217.38, 104.34, 0.12)
-    T(valve_label.upper(), 216.64, 101.74, 0.12, 90)
+    T(XREF_NAME, 216.64, 101.74, 0.12, 90)
     T("travel limit", 216.91, 101.78, 0.08, 90)
     T("switch", 217.05, 101.93, 0.08, 90)
-    T(TAG_KO, 216.99, 99.77, 0.15)
+    T(XREF_KO, 216.99, 99.77, 0.15)
     T("OPEN", 217.02, 97.51, 0.12)
     T("3TG1010-0BB4", 216.67, 97.76, 0.10)
     T("O",    216.98, 102.65, 0.15)
@@ -3806,7 +3820,7 @@ def draw_single_valve(
     T("8",   218.58, 104.34, 0.12)
     T("travel limit", 218.11, 101.81, 0.08, 90)
     T("switch", 218.25, 101.96, 0.08, 90)
-    T(TAG_KC, 218.13, 99.77, 0.15)
+    T(XREF_KC, 218.13, 99.77, 0.15)
     T("CLOSE", 218.17, 97.51, 0.12)
     T("3TG1010-0BB4", 217.87, 97.76, 0.10)
     T("C",    218.17, 102.65, 0.15)
@@ -3979,7 +3993,7 @@ def draw_single_valve(
     T("3PH",    246.89, 101.15, 0.09)
     T("400VAC", 247.68, 101.07, 0.09, 90)
     T("heater", 247.82, 101.11, 0.09, 90)
-    T(valve_label.upper(), 247.8, 100.49, 0.20)
+    T(VALVE_NAME, 247.8, 100.49, 0.20)
     # Terminal motor: outline circle (matches örnek AcDbCircle r=0.35), labels inside
     C(247.02, 102.14, 0.35)
     T("3PH",    246.89, 101.94, 0.10)
@@ -4101,11 +4115,16 @@ def draw_single_valve(
     # ═══════════════════════════════════════════════════════════════════════
     # HEADER
     # ═══════════════════════════════════════════════════════════════════════
-    T(f"{valve_label.upper()}  CONTROL CABINET", 208.0, Y_TOP + 0.35, 0.35)
-    T(project_name + ("  |  " + ship_name if ship_name else ""), 195.0, Y_TOP - 0.30, 0.22)
-    T(f"DWG: {drawing_no}  |  Date: {date_str}", 230.0, Y_TOP - 0.30, 0.20)
-    if company:
-        T(company, 195.0, Y_TOP + 0.35, 0.22)
+    # örnek carries no header band over the schematic (the only top text is the
+    # "EXTERNAL FIRE FIGHTING SYSTEM / CONTROL CABINET" strip drawn above at
+    # 243.44,112.29). Header text is therefore opt-in: pass show_header=True to
+    # restore the project/drawing block if a title band is wanted.
+    if show_header:
+        T(f"{valve_label.upper()}  CONTROL CABINET", 208.0, Y_TOP + 0.35, 0.35)
+        T(project_name + ("  |  " + ship_name if ship_name else ""), 195.0, Y_TOP - 0.30, 0.22)
+        T(f"DWG: {drawing_no}  |  Date: {date_str}", 230.0, Y_TOP - 0.30, 0.20)
+        if company:
+            T(company, 195.0, Y_TOP + 0.35, 0.22)
 
     # ═══════════════════════════════════════════════════════════════════════
     # LAYOUT VIEWPORT  –  use "ISO A1 Title Block" from template (already set)
