@@ -3553,12 +3553,16 @@ def draw_single_valve(
     # ── Motor symbol ──────────────────────────────────────────────────────
     C(X_MOT, 103.11, 0.55)          # örnek circle centre Y=103.11 (text offsets keep örnek positions)
     T("M", X_MOT - 0.14, Y_MOT - 0.10, 0.25)
-    T("3~", X_MOT - 0.15, Y_MOT - 0.38, 0.18)   # 3-phase motor: örnek shows "3" + sine-wave symbol; "3~" matches visually
+    # örnek renders the 3-phase "~" as two adjacent half-arcs (a sine wave) under
+    # the "3" terminal text (drawn separately at 198.52,102.86); it has NO "3~"
+    # text. Earlier code added a "3~" text that overlapped the "3" ("₃3~" glitch)
+    # to compensate for these arcs defaulting to a 0->360° (zero-sweep, invisible)
+    # angle. Give the arcs örnek's real sweep so the tilde renders; drop the text.
     T(VALVE_NAME, X_MOT - 0.55, Y_MOT - 0.85, 0.20)
     T("OPEN CLOSE", X_MOT - 0.68, Y_MOT - 1.48, 0.16)
-    # Motor terminal connection arcs (from örnek ET4 entities)
-    A(198.85, 102.96, 0.075)
-    A(199.0,  102.96, 0.075)
+    # Motor "~" symbol: two half-arcs (örnek angles 0->171.9° and 171.9°->360°)
+    A(198.85, 102.96, 0.075, 0, 171.887)
+    A(199.0,  102.96, 0.075, 171.887, 360)
 
     # ── Heater — taps directly from L2 and L3 supply buses ───────────────
     # BENEK at bus tap points; KLESIG terminals at Y=107.24
